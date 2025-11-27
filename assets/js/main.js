@@ -156,13 +156,17 @@ function initializeEventListeners() {
         });
     }
     
-    // Expand icons for project skills
+    // Expand icons for project skills and resource projects
     document.addEventListener('click', function(e) {
         const expandIcon = e.target.closest('.expand-icon');
         if (expandIcon) {
             const projectId = expandIcon.getAttribute('data-project');
+            const resourceId = expandIcon.getAttribute('data-resource');
+            
             if (projectId) {
                 toggleProjectSkills(projectId);
+            } else if (resourceId) {
+                toggleResourceProjects(resourceId, expandIcon);
             }
         }
     });
@@ -238,6 +242,27 @@ function filterProjects(searchTerm) {
 function toggleProjectSkills(projectId) {
     alert(`Expandir/contraer detalles de skills para proyecto: ${projectId}`);
     // Future implementation
+}
+
+/**
+ * Toggle resource projects visibility
+ */
+function toggleResourceProjects(resourceId, expandIcon) {
+    // Find all skill rows for this resource
+    const skillRows = document.querySelectorAll(`.skill-row[data-resource="${resourceId}"]`);
+    
+    if (skillRows.length === 0) return;
+    
+    // Check current state
+    const isExpanded = skillRows[0].style.display !== 'none';
+    
+    // Toggle visibility
+    skillRows.forEach(row => {
+        row.style.display = isExpanded ? 'none' : 'table-row';
+    });
+    
+    // Toggle icon
+    expandIcon.textContent = isExpanded ? '+' : '−';
 }
 
 /**

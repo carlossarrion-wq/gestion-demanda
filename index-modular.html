@@ -289,7 +289,7 @@
                 </div>
                 
                 <!-- KPIs Row for Matrix -->
-                <div style="display: grid; grid-template-columns: 200px 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: 200px 200px 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="card">
                         <h3>Proyectos Registrados</h3>
                         <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="matrix-total-projects">7</div>
@@ -302,6 +302,22 @@
                             <div style="display: flex; justify-content: space-between;">
                                 <span>Proyectos:</span>
                                 <span style="font-weight: 600; color: #319795;" id="matrix-proyectos-count">4</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Media Horas por Proyecto</h3>
+                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="matrix-avg-hours-project">914</div>
+                        <div style="color: #718096; margin-bottom: 0.75rem;">horas promedio</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Media Evolutivos:</span>
+                                <span style="font-weight: 600; color: #319795;" id="matrix-avg-evolutivos">640</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Media Proyectos:</span>
+                                <span style="font-weight: 600; color: #319795;" id="matrix-avg-proyectos">1.120</span>
                             </div>
                         </div>
                     </div>
@@ -529,7 +545,7 @@
                 </div>
                 
                 <!-- KPIs and Charts Row for Resources -->
-                <div style="display: grid; grid-template-columns: 200px 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: 200px 200px 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="card">
                         <h3>Recursos Registrados</h3>
                         <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">7</div>
@@ -542,6 +558,22 @@
                             <div style="display: flex; justify-content: space-between;">
                                 <span>Sin asignar:</span>
                                 <span style="font-weight: 600; color: #319795;">1</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Ratio de Ocupación Medio</h3>
+                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="resources-avg-occupation-ratio">78%</div>
+                        <div style="color: #718096; margin-bottom: 0.75rem;">Promedio del equipo</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Ratio más alto:</span>
+                                <span style="font-weight: 600; color: #319795;" id="resources-max-ratio">81%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Ratio más bajo:</span>
+                                <span style="font-weight: 600; color: #319795;" id="resources-min-ratio">75%</span>
                             </div>
                         </div>
                     </div>
@@ -594,8 +626,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td class="project-name"><strong>Juan Pérez</strong></td>
+                                <tr class="resource-row" data-resource="juan">
+                                    <td class="project-name">
+                                        <span class="expand-icon" data-resource="juan">+</span>
+                                        <strong>Juan Pérez</strong>
+                                    </td>
                                     <td style="text-align: center; font-weight: 600; color: #319795;">81%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge construccion">Construcción</span>
@@ -613,8 +648,48 @@
                                     <td><span class="capacity-cell high" data-resource="juan" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                     <td><span class="capacity-cell high" data-resource="juan" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                 </tr>
-                                <tr>
-                                    <td class="project-name"><strong>María García</strong></td>
+                                <!-- Proyectos de Juan Pérez -->
+                                <tr class="skill-row" data-resource="juan" style="display: none;">
+                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
+                                        <strong>NC-249</strong> - Soporte Call Center
+                                    </td>
+                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">40h</td>
+                                    <td style="font-size: 0.85rem;">20h</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                </tr>
+                                <tr class="skill-row" data-resource="juan" style="display: none;">
+                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
+                                        <strong>NC-16</strong> - Pricing
+                                    </td>
+                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">80h</td>
+                                    <td style="font-size: 0.85rem;">100h</td>
+                                    <td style="font-size: 0.85rem;">40h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                </tr>
+                                <tr class="resource-row" data-resource="maria">
+                                    <td class="project-name">
+                                        <span class="expand-icon" data-resource="maria">+</span>
+                                        <strong>María García</strong>
+                                    </td>
                                     <td style="text-align: center; font-weight: 600; color: #319795;">79%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge diseno">Diseño</span>
@@ -632,8 +707,48 @@
                                     <td><span class="capacity-cell high" data-resource="maria" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                     <td><span class="capacity-cell high" data-resource="maria" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                 </tr>
-                                <tr>
-                                    <td class="project-name"><strong>Carlos López</strong></td>
+                                <!-- Proyectos de María García -->
+                                <tr class="skill-row" data-resource="maria" style="display: none;">
+                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
+                                        <strong>NC-15</strong> - Modelo datos
+                                    </td>
+                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">40h</td>
+                                    <td style="font-size: 0.85rem;">80h</td>
+                                    <td style="font-size: 0.85rem;">40h</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                </tr>
+                                <tr class="skill-row" data-resource="maria" style="display: none;">
+                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
+                                        <strong>NC-17</strong> - Direcciones
+                                    </td>
+                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Evolutivo</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">80h</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">80h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                </tr>
+                                <tr class="resource-row" data-resource="carlos">
+                                    <td class="project-name">
+                                        <span class="expand-icon" data-resource="carlos">+</span>
+                                        <strong>Carlos López</strong>
+                                    </td>
                                     <td style="text-align: center; font-weight: 600; color: #319795;">77%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge project-management">Project Management</span>
@@ -651,8 +766,30 @@
                                     <td><span class="capacity-cell high" data-resource="carlos" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                     <td><span class="capacity-cell high" data-resource="carlos" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                 </tr>
-                                <tr>
-                                    <td class="project-name"><strong>Ana Martín</strong></td>
+                                <!-- Proyectos de Carlos López -->
+                                <tr class="skill-row" data-resource="carlos" style="display: none;">
+                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
+                                        <strong>NC-16</strong> - Pricing
+                                    </td>
+                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                </tr>
+                                <tr class="resource-row" data-resource="ana">
+                                    <td class="project-name">
+                                        <span class="expand-icon" data-resource="ana">+</span>
+                                        <strong>Ana Martín</strong>
+                                    </td>
                                     <td style="text-align: center; font-weight: 600; color: #319795;">75%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge qa">QA/Testing</span>
@@ -670,6 +807,43 @@
                                     <td><span class="capacity-cell high" data-resource="ana" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                     <td><span class="capacity-cell high" data-resource="ana" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                 </tr>
+                                <!-- Proyectos de Ana Martín -->
+                                <tr class="skill-row" data-resource="ana" style="display: none;">
+                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
+                                        <strong>NC-18</strong> - Ampliar licencias
+                                    </td>
+                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Evolutivo</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">40h</td>
+                                    <td style="font-size: 0.85rem;">80h</td>
+                                    <td style="font-size: 0.85rem;">80h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                </tr>
+                                <tr class="skill-row" data-resource="ana" style="display: none;">
+                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
+                                        <strong>NC-19</strong> - Securización email
+                                    </td>
+                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">120h</td>
+                                    <td style="font-size: 0.85rem;">80h</td>
+                                    <td style="font-size: 0.85rem;">40h</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                    <td style="font-size: 0.85rem;">-</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -683,7 +857,7 @@
                 </div>
                 
                 <!-- Charts Grid -->
-                <div style="display: grid; grid-template-columns: 200px 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: 200px repeat(3, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="card">
                         <h3>Proyectos Registrados</h3>
                         <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">7</div>
@@ -781,11 +955,6 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" data-action="sync" data-project="NC-249" title="Sincronizar con Jira">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                            </svg>
-                                        </span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -807,11 +976,6 @@
                                         <span class="action-icon" data-action="delete" data-project="NC-15" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                            </svg>
-                                        </span>
-                                        <span class="action-icon" data-action="sync" data-project="NC-15" title="Sincronizar con Jira">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                         </span>
                                     </td>
@@ -837,11 +1001,6 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" data-action="sync" data-project="NC-16" title="Sincronizar con Jira">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                            </svg>
-                                        </span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -863,11 +1022,6 @@
                                         <span class="action-icon" data-action="delete" data-project="NC-17" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                            </svg>
-                                        </span>
-                                        <span class="action-icon" data-action="sync" data-project="NC-17" title="Sincronizar con Jira">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                         </span>
                                     </td>
@@ -893,11 +1047,6 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" data-action="sync" data-project="NC-18" title="Sincronizar con Jira">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                            </svg>
-                                        </span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -921,11 +1070,6 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" data-action="sync" data-project="NC-19" title="Sincronizar con Jira">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                            </svg>
-                                        </span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -947,11 +1091,6 @@
                                         <span class="action-icon" data-action="delete" data-project="NC-20" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                            </svg>
-                                        </span>
-                                        <span class="action-icon" data-action="sync" data-project="NC-20" title="Sincronizar con Jira">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                         </span>
                                     </td>

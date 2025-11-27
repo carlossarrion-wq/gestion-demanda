@@ -47,9 +47,9 @@ table tr:hover {
     text-align: left !important;
     font-weight: 500;
     color: var(--text-primary);
-    min-width: 250px !important;
-    max-width: 350px !important;
-    width: 300px !important;
+    min-width: 210px !important;
+    max-width: 260px !important;
+    width: 234px !important;
     padding: 0.75rem !important;
 }
 
@@ -64,15 +64,26 @@ table tr:hover {
     font-size: 0.8rem;
 }
 
+/* Third column - Dominio Principal (only for matrix tab) */
+#matrix-tab .capacity-matrix table th:nth-child(3),
+#matrix-tab .capacity-matrix table td:nth-child(3) {
+    text-align: center !important;
+    min-width: 90px !important;
+    max-width: 110px !important;
+    width: 99px !important;
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.8rem;
+}
+
 /* All month columns - UNIFORM WIDTH - MAXIMUM SPECIFICITY */
 /* For tables with 3 columns before months (Resources table: Recurso, Ratio de Ocupación, Skills, months...) */
 /* Second column - Ratio de Ocupación */
 #resources-tab .capacity-matrix table th:nth-child(2),
 #resources-tab .capacity-matrix table td:nth-child(2) {
     text-align: center !important;
-    min-width: 100px !important;
-    max-width: 120px !important;
-    width: 110px !important;
+    min-width: 90px !important;
+    max-width: 100px !important;
+    width: 95px !important;
     padding: 0.5rem 0.25rem !important;
     font-size: 0.8rem;
 }
@@ -81,9 +92,9 @@ table tr:hover {
 #resources-tab .capacity-matrix table th:nth-child(3),
 #resources-tab .capacity-matrix table td:nth-child(3) {
     text-align: center !important;
-    min-width: 80px !important;
-    max-width: 100px !important;
-    width: 90px !important;
+    min-width: 100px !important;
+    max-width: 120px !important;
+    width: 110px !important;
     padding: 0.5rem 0.25rem !important;
     font-size: 0.8rem;
 }
@@ -139,9 +150,9 @@ table tr:hover {
 #matrix-tab .capacity-matrix table td:nth-child(14),
 #matrix-tab .capacity-matrix table td:nth-child(15) {
     text-align: center !important;
-    min-width: 65px !important;
-    max-width: 65px !important;
-    width: 65px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    width: 60px !important;
     box-sizing: border-box !important;
     padding: 0.5rem 0.25rem !important;
     font-size: 0.8rem !important;
