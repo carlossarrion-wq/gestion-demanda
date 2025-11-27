@@ -1099,27 +1099,50 @@ function updateMatrixIndicators() {
         }
     });
     
-    // Update indicators
-    document.getElementById('active-projects-count').textContent = activeProjects;
-    document.getElementById('current-month-hours').textContent = totalHours;
-    document.getElementById('current-month-ftes').textContent = (totalHours / 160).toFixed(1);
+    // Update indicators - only if elements exist
+    const activeProjectsElement = document.getElementById('active-projects-count');
+    const currentMonthHoursElement = document.getElementById('current-month-hours');
+    const currentMonthFtesElement = document.getElementById('current-month-ftes');
+    
+    if (activeProjectsElement) {
+        activeProjectsElement.textContent = activeProjects;
+    }
+    if (currentMonthHoursElement) {
+        currentMonthHoursElement.textContent = totalHours;
+    }
+    if (currentMonthFtesElement) {
+        currentMonthFtesElement.textContent = (totalHours / 160).toFixed(2);
+    }
 }
 
 function initializeCommittedHoursChart() {
     const ctx = document.getElementById('committed-hours-chart');
     if (ctx) {
         const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const monthKeys = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
         
-        // Calculate committed hours per month from project data
-        const committedHours = [0, 0, 0, 0, 0, 1120, 1600, 1440, 1120, 960, 320, 0];
+        // Calculate total committed hours per month (combining all projects)
+        const committedHours = new Array(12).fill(0);
         
-        // Calculate available hours (4 resources * 160 hours each, adjusted for vacations/availability)
-        const availableHours = [640, 560, 640, 600, 520, 640, 560, 520, 560, 640, 640, 640];
+        Object.keys(projectSkillBreakdown).forEach(projectId => {
+            const project = projectSkillBreakdown[projectId];
+            
+            monthKeys.forEach((monthKey, index) => {
+                let monthTotal = 0;
+                Object.keys(project.skills).forEach(skillName => {
+                    monthTotal += project.skills[skillName][monthKey] || 0;
+                });
+                
+                committedHours[index] += monthTotal;
+            });
+        });
         
-        // Calculate FTE lines
-        const availableFTEs = availableHours.map(hours => hours / 160);
-        const committedFTEs = committedHours.map(hours => hours / 160);
-        const totalResources = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]; // 4 resources available
+        // Split committed hours: 80% Proyectos, 20% Evolutivos
+        const horasProyectos = committedHours.map(hours => Math.round(hours * 0.8));
+        const horasEvolutivos = committedHours.map(hours => Math.round(hours * 0.2));
+        
+        // Calculate available hours - close to and below theoretical (red line)
+        const availableHours = [1750, 1720, 1760, 1740, 1700, 1780, 1750, 1730, 1760, 1770, 1750, 1740];
 
         new Chart(ctx, {
             type: 'bar',
@@ -1127,33 +1150,32 @@ function initializeCommittedHoursChart() {
                 labels: months,
                 datasets: [
                     {
-                        label: 'Horas Comprometidas',
-                        data: committedHours,
-                        backgroundColor: 'rgba(49, 151, 149, 0.7)',
+                        label: 'Horas Comprometidas Proyectos',
+                        data: horasProyectos,
+                        backgroundColor: 'rgba(49, 151, 149, 0.8)',
                         borderColor: '#319795',
                         borderWidth: 1,
-                        yAxisID: 'y'
+                        stack: 'comprometidas',
+                        order: 2
                     },
                     {
-                        label: 'FTEs Disponibles',
-                        data: availableFTEs,
-                        type: 'line',
-                        borderColor: '#d97706',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        yAxisID: 'y1'
+                        label: 'Horas Comprometidas Evolutivos',
+                        data: horasEvolutivos,
+                        backgroundColor: 'rgba(49, 151, 149, 0.4)',
+                        borderColor: '#4db8b5',
+                        borderWidth: 1,
+                        stack: 'comprometidas',
+                        order: 2
                     },
                     {
-                        label: 'Recursos Teóricos Disponibles',
-                        data: totalResources,
+                        label: 'Capacidad Real Disponible',
+                        data: availableHours,
                         type: 'line',
                         borderColor: '#dc2626',
                         backgroundColor: 'transparent',
                         borderWidth: 2,
-                        borderDash: [5, 5],
                         pointRadius: 4,
-                        yAxisID: 'y1'
+                        order: 1
                     }
                 ]
             },
@@ -1175,38 +1197,25 @@ function initializeCommittedHoursChart() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                if (context.dataset.label.includes('FTEs') || context.dataset.label.includes('Recursos')) {
-                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
-                                }
                                 return `${context.dataset.label}: ${context.parsed.y} horas`;
                             }
                         }
                     }
                 },
                 scales: {
+                    x: {
+                        stacked: true
+                    },
                     y: {
                         type: 'linear',
                         display: true,
                         position: 'left',
                         beginAtZero: true,
+                        stacked: true,
                         title: {
                             display: true,
                             text: 'Horas'
                         }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        beginAtZero: true,
-                        max: 5,
-                        title: {
-                            display: true,
-                            text: 'FTEs / Recursos'
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                        },
                     }
                 }
             }
@@ -1535,16 +1544,30 @@ function initializeOverviewCommittedHoursChart() {
     const ctx = document.getElementById('overview-committed-hours-chart');
     if (ctx) {
         const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const monthKeys = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
         
-        // Calculate committed hours per month from project data
-        const committedHours = [0, 0, 0, 0, 0, 1120, 1600, 1440, 1120, 960, 320, 0];
+        // Calculate total committed hours per month (combining all projects)
+        const committedHours = new Array(12).fill(0);
         
-        // Calculate available hours (4 resources * 160 hours each, adjusted for vacations/availability)
-        const availableHours = [640, 560, 640, 600, 520, 640, 560, 520, 560, 640, 640, 640];
+        Object.keys(projectSkillBreakdown).forEach(projectId => {
+            const project = projectSkillBreakdown[projectId];
+            
+            monthKeys.forEach((monthKey, index) => {
+                let monthTotal = 0;
+                Object.keys(project.skills).forEach(skillName => {
+                    monthTotal += project.skills[skillName][monthKey] || 0;
+                });
+                
+                committedHours[index] += monthTotal;
+            });
+        });
         
-        // Calculate FTE lines
-        const availableFTEs = availableHours.map(hours => hours / 160);
-        const totalResources = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]; // 4 resources available
+        // Split committed hours: 80% Proyectos, 20% Evolutivos
+        const horasProyectos = committedHours.map(hours => Math.round(hours * 0.8));
+        const horasEvolutivos = committedHours.map(hours => Math.round(hours * 0.2));
+        
+        // Calculate available hours - close to and below committed hours (red line)
+        const availableHours = [1750, 1720, 1760, 1740, 1700, 1780, 1750, 1730, 1760, 1770, 1750, 1740];
 
         new Chart(ctx, {
             type: 'bar',
@@ -1552,33 +1575,32 @@ function initializeOverviewCommittedHoursChart() {
                 labels: months,
                 datasets: [
                     {
-                        label: 'Horas Comprometidas',
-                        data: committedHours,
-                        backgroundColor: 'rgba(49, 151, 149, 0.7)',
+                        label: 'Horas Comprometidas Proyectos',
+                        data: horasProyectos,
+                        backgroundColor: 'rgba(49, 151, 149, 0.8)',
                         borderColor: '#319795',
                         borderWidth: 1,
-                        yAxisID: 'y'
+                        stack: 'comprometidas',
+                        order: 2
                     },
                     {
-                        label: 'FTEs Disponibles',
-                        data: availableFTEs,
-                        type: 'line',
-                        borderColor: '#d97706',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        yAxisID: 'y1'
+                        label: 'Horas Comprometidas Evolutivos',
+                        data: horasEvolutivos,
+                        backgroundColor: 'rgba(49, 151, 149, 0.4)',
+                        borderColor: '#4db8b5',
+                        borderWidth: 1,
+                        stack: 'comprometidas',
+                        order: 2
                     },
                     {
-                        label: 'Capacidad Teórica Disponible',
-                        data: totalResources,
+                        label: 'Capacidad Real Disponible',
+                        data: availableHours,
                         type: 'line',
                         borderColor: '#dc2626',
                         backgroundColor: 'transparent',
                         borderWidth: 2,
-                        borderDash: [5, 5],
                         pointRadius: 4,
-                        yAxisID: 'y1'
+                        order: 1
                     }
                 ]
             },
@@ -1600,38 +1622,25 @@ function initializeOverviewCommittedHoursChart() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                if (context.dataset.label.includes('FTEs') || context.dataset.label.includes('Recursos')) {
-                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
-                                }
                                 return `${context.dataset.label}: ${context.parsed.y} horas`;
                             }
                         }
                     }
                 },
                 scales: {
+                    x: {
+                        stacked: true
+                    },
                     y: {
                         type: 'linear',
                         display: true,
                         position: 'left',
                         beginAtZero: true,
+                        stacked: true,
                         title: {
                             display: true,
                             text: 'Horas'
                         }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        beginAtZero: true,
-                        max: 5,
-                        title: {
-                            display: true,
-                            text: 'FTEs / Recursos'
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                        },
                     }
                 }
             }
@@ -1869,6 +1878,372 @@ function populateTopProjectsTable() {
     });
 }
 
+// Function to initialize Capacity by Profile chart
+function initializeOverviewCapacityByProfileChart() {
+    const ctx = document.getElementById('overview-capacity-by-profile-chart');
+    if (ctx) {
+        // Define profiles with their committed and available hours
+        const profiles = ['Construcción', 'Diseño', 'Project Management', 'QA/Testing', 'Análisis', 'General'];
+        
+        // Calculate committed hours per profile from projectSkillBreakdown
+        // Using July 2025 as reference month (index 6)
+        const monthKeys = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        const currentMonth = 'jul'; // July 2025
+        
+        const committedHours = {
+            'Construcción': 0,
+            'Diseño': 0,
+            'Project Management': 0,
+            'QA/Testing': 0,
+            'Análisis': 0,
+            'General': 0
+        };
+        
+        // Sum up committed hours from all projects for current month
+        Object.keys(projectSkillBreakdown).forEach(projectId => {
+            const project = projectSkillBreakdown[projectId];
+            Object.keys(project.skills).forEach(skillName => {
+                const hours = project.skills[skillName][currentMonth] || 0;
+                if (committedHours[skillName] !== undefined) {
+                    committedHours[skillName] += hours;
+                }
+            });
+        });
+        
+        // Define available hours per profile - irregular variations, always >= committed and < theoretical
+        // Red line must be >= bars and not too far above them
+        const availableHours = {
+            'Construcción': 800,  // Increased from 720
+            'Diseño': 220,        // Increased from 180
+            'Project Management': 50,  // Increased from 35
+            'QA/Testing': 100,    // Increased from 80
+            'Análisis': 450,      // Increased from 380
+            'General': 70         // Increased from 50
+        };
+        
+        // Prepare data arrays - Split committed hours: 80% Proyectos, 20% Evolutivos
+        const profileLabels = profiles;
+        const horasProyectos = profiles.map(profile => Math.round(committedHours[profile] * 0.8));
+        const horasEvolutivos = profiles.map(profile => Math.round(committedHours[profile] * 0.2));
+        const availableData = profiles.map(profile => availableHours[profile]);
+
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: profileLabels,
+                datasets: [
+                    {
+                        label: 'Horas Comprometidas Proyectos',
+                        data: horasProyectos,
+                        backgroundColor: 'rgba(49, 151, 149, 0.8)',
+                        borderColor: '#319795',
+                        borderWidth: 1,
+                        stack: 'comprometidas',
+                        order: 2
+                    },
+                    {
+                        label: 'Horas Comprometidas Evolutivos',
+                        data: horasEvolutivos,
+                        backgroundColor: 'rgba(49, 151, 149, 0.4)',
+                        borderColor: '#4db8b5',
+                        borderWidth: 1,
+                        stack: 'comprometidas',
+                        order: 2
+                    },
+                    {
+                        label: 'Capacidad Real Disponible',
+                        data: availableData,
+                        type: 'line',
+                        borderColor: '#dc2626',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        fill: false,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 8,
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y}h`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        beginAtZero: true,
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Horas'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Function to calculate and update Recursos Activos KPI sub-items
+function updateRecursosActivosKPI() {
+    // Get current month (July = index 6 for our data)
+    const currentMonthIndex = 6; // July 2025
+    const monthKeys = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const currentMonth = monthKeys[currentMonthIndex];
+    
+    // Calculate committed hours per profile from projectSkillBreakdown
+    const committedHours = {
+        'Construcción': 0,
+        'Diseño': 0,
+        'Project Management': 0,
+        'QA': 0,
+        'Análisis': 0,
+        'General': 0
+    };
+    
+    // Sum up committed hours from all projects for current month
+    Object.keys(projectSkillBreakdown).forEach(projectId => {
+        const project = projectSkillBreakdown[projectId];
+        Object.keys(project.skills).forEach(skillName => {
+            const hours = project.skills[skillName][currentMonth] || 0;
+            if (committedHours[skillName] !== undefined) {
+                committedHours[skillName] += hours;
+            }
+        });
+    });
+    
+    // Define available hours per profile (from initializeOverviewCapacityByProfileChart)
+    const availableHours = {
+        'Construcción': 720,
+        'Diseño': 180,
+        'Project Management': 35,
+        'QA': 80,
+        'Análisis': 380,
+        'General': 50
+    };
+    
+    // Calculate sub-items
+    let recursosAsignados = 0;
+    let recursosAsignados80 = 0;
+    
+    Object.keys(committedHours).forEach(profile => {
+        const committed = committedHours[profile];
+        const available = availableHours[profile] || 1; // Avoid division by zero
+        
+        // Count as assigned if committed > 0
+        if (committed > 0) {
+            recursosAsignados++;
+        }
+        
+        // Count as >80% if utilization is above 80%
+        const utilization = (committed / available) * 100;
+        if (utilization > 80) {
+            recursosAsignados80++;
+        }
+    });
+    
+    // Update the HTML elements
+    const recursosAsignadosElement = document.getElementById('recursos-asignados');
+    const recursosAsignados80Element = document.getElementById('recursos-asignados-80');
+    
+    if (recursosAsignadosElement) {
+        recursosAsignadosElement.textContent = recursosAsignados;
+    }
+    
+    if (recursosAsignados80Element) {
+        recursosAsignados80Element.textContent = recursosAsignados80;
+    }
+}
+
+// Function to calculate and update Utilización Actual FTEs Equivalentes
+function updateUtilizacionActualFTEs() {
+    // Get current month (July = index 6 for our data)
+    const currentMonthIndex = 6; // July 2025
+    const monthKeys = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const currentMonth = monthKeys[currentMonthIndex];
+    
+    // Calculate total committed hours for current month
+    let totalCommittedHours = 0;
+    
+    Object.keys(projectSkillBreakdown).forEach(projectId => {
+        const project = projectSkillBreakdown[projectId];
+        Object.keys(project.skills).forEach(skillName => {
+            totalCommittedHours += project.skills[skillName][currentMonth] || 0;
+        });
+    });
+    
+    // Calculate FTEs Equivalentes (1 FTE = 160 hours)
+    const ftesEquivalentes = (totalCommittedHours / 160).toFixed(2);
+    
+    // Update the HTML element
+    const ftesElement = document.getElementById('utilizacion-ftes-equivalentes');
+    if (ftesElement) {
+        ftesElement.textContent = ftesEquivalentes;
+    }
+}
+
+// Function to calculate and update FTEs Ineficiencia (Inefficiency FTEs)
+function updateFTEsIneficiencia() {
+    // Get current month (July = index 6 for our data)
+    const currentMonthIndex = 6; // July 2025
+    const monthKeys = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const currentMonth = monthKeys[currentMonthIndex];
+    
+    // Calculate total committed hours for current month
+    let totalCommittedHours = 0;
+    
+    Object.keys(projectSkillBreakdown).forEach(projectId => {
+        const project = projectSkillBreakdown[projectId];
+        Object.keys(project.skills).forEach(skillName => {
+            totalCommittedHours += project.skills[skillName][currentMonth] || 0;
+        });
+    });
+    
+    // Calculate total theoretical hours (Capacidad Teórica Disponible for current month)
+    // Using the theoretical resources data from initializeCommittedHoursChart
+    const totalResourcesHours = [1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800];
+    const currentMonthTheoreticalHours = totalResourcesHours[currentMonthIndex];
+    
+    // Calculate inefficiency hours (Theoretical - Committed)
+    // Formula: (Total Theoretical Hours - Committed Hours) / 160
+    const inefficiencyHours = currentMonthTheoreticalHours - totalCommittedHours;
+    
+    // Calculate FTEs Ineficiencia (1 FTE = 160 hours)
+    const ftesIneficiencia = (inefficiencyHours / 160).toFixed(2);
+    
+    // Update the HTML element
+    const ftesInefElement = document.getElementById('ftes-ineficiencia');
+    if (ftesInefElement) {
+        ftesInefElement.textContent = ftesIneficiencia;
+    }
+}
+
+// Function to update KPI trend indicators
+function updateKPITrends() {
+    // Current month index (July = 6)
+    const currentMonthIndex = 6;
+    const previousMonthIndex = 5; // June
+    const monthKeys = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    
+    // Calculate Proyectos Activos trend
+    const currentProjects = calculateActiveProjects(currentMonthIndex, monthKeys);
+    const previousProjects = calculateActiveProjects(previousMonthIndex, monthKeys);
+    updateTrendIndicator('proyectos-activos-trend', currentProjects, previousProjects);
+    
+    // Calculate Recursos Activos trend
+    const currentResources = calculateActiveResources(currentMonthIndex, monthKeys);
+    const previousResources = calculateActiveResources(previousMonthIndex, monthKeys);
+    updateTrendIndicator('recursos-activos-trend', currentResources, previousResources);
+}
+
+// Helper function to calculate active projects for a given month
+function calculateActiveProjects(monthIndex, monthKeys) {
+    const month = monthKeys[monthIndex];
+    let activeProjects = 0;
+    
+    Object.keys(projectSkillBreakdown).forEach(projectId => {
+        const project = projectSkillBreakdown[projectId];
+        let projectHours = 0;
+        
+        Object.keys(project.skills).forEach(skill => {
+            projectHours += project.skills[skill][month] || 0;
+        });
+        
+        if (projectHours > 0) {
+            activeProjects++;
+        }
+    });
+    
+    return activeProjects;
+}
+
+// Helper function to calculate active resources for a given month
+function calculateActiveResources(monthIndex, monthKeys) {
+    const month = monthKeys[monthIndex];
+    
+    const committedHours = {
+        'Construcción': 0,
+        'Diseño': 0,
+        'Project Management': 0,
+        'QA': 0,
+        'Análisis': 0,
+        'General': 0
+    };
+    
+    // Sum up committed hours from all projects for the month
+    Object.keys(projectSkillBreakdown).forEach(projectId => {
+        const project = projectSkillBreakdown[projectId];
+        Object.keys(project.skills).forEach(skillName => {
+            const hours = project.skills[skillName][month] || 0;
+            if (committedHours[skillName] !== undefined) {
+                committedHours[skillName] += hours;
+            }
+        });
+    });
+    
+    // Count resources with committed hours > 0
+    let activeResources = 0;
+    Object.keys(committedHours).forEach(profile => {
+        if (committedHours[profile] > 0) {
+            activeResources++;
+        }
+    });
+    
+    return activeResources;
+}
+
+// Helper function to update trend indicator element
+function updateTrendIndicator(elementId, currentValue, previousValue) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    // Calculate percentage change
+    let percentageChange = 0;
+    if (previousValue > 0) {
+        percentageChange = ((currentValue - previousValue) / previousValue) * 100;
+    } else if (currentValue > 0) {
+        percentageChange = 100; // If previous was 0 and current is positive, show 100% increase
+    }
+    
+    // Format percentage
+    const formattedPercentage = percentageChange >= 0 
+        ? `+${Math.round(percentageChange)}%` 
+        : `${Math.round(percentageChange)}%`;
+    
+    // Update text
+    element.textContent = formattedPercentage;
+    
+    // Update CSS class based on trend
+    element.classList.remove('positive', 'negative', 'warning');
+    if (percentageChange > 0) {
+        element.classList.add('positive');
+    } else if (percentageChange < 0) {
+        element.classList.add('negative');
+    } else {
+        element.classList.add('warning');
+    }
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize existing charts
@@ -1887,6 +2262,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Vista General overview charts (replicated from Matrix tab)
     initializeOverviewCommittedHoursChart();
     initializeOverviewSkillDistributionChart();
+    initializeOverviewCapacityByProfileChart();
     
     // Initialize new Vista General charts
     initializeCapacityDemandChart();
@@ -1894,6 +2270,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Populate Top 5 Projects table
     populateTopProjectsTable();
+    
+    // Update Recursos Activos KPI sub-items
+    updateRecursosActivosKPI();
+    
+    // Update Utilización Actual FTEs Equivalentes
+    updateUtilizacionActualFTEs();
+    
+    // Update FTEs Ineficiencia
+    updateFTEsIneficiencia();
+    
+    // Update KPI trend indicators
+    updateKPITrends();
     
     // Add event listeners for control panel
     const periodSelect = document.querySelector('.quick-controls select:nth-of-type(1)');

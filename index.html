@@ -81,6 +81,7 @@
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span class="kpi-label">PROYECTOS ACTIVOS</span>
+                                <span class="kpi-trend positive" id="proyectos-activos-trend">+17%</span>
                             </div>
                             <div class="kpi-value" style="color: #509594;">7</div>
                             <div class="kpi-subtitle">Total proyectos</div>
@@ -99,9 +100,20 @@
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span class="kpi-label">RECURSOS ACTIVOS</span>
+                                <span class="kpi-trend positive" id="recursos-activos-trend">+20%</span>
                             </div>
                             <div class="kpi-value" style="color: #509594;">12</div>
                             <div class="kpi-subtitle">Recursos disponibles</div>
+                            <div class="kpi-details">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Recursos Asignados:</span>
+                                    <span style="font-weight: 600; color: #509594;" id="recursos-asignados">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Recursos Asignados >80%:</span>
+                                    <span style="font-weight: 600; color: #509594;" id="recursos-asignados-80">0</span>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="kpi-card">
@@ -111,6 +123,12 @@
                             </div>
                             <div class="kpi-value" style="color: #509594;">1,920</div>
                             <div class="kpi-subtitle">horas/mes disponibles</div>
+                            <div class="kpi-details">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>FTEs Equivalentes:</span>
+                                    <span style="font-weight: 600; color: #509594;">12.0</span>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="kpi-card">
@@ -120,6 +138,12 @@
                             </div>
                             <div class="kpi-value" style="color: #509594;">1,496</div>
                             <div class="kpi-subtitle">horas comprometidas</div>
+                            <div class="kpi-details">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>FTEs Equivalentes:</span>
+                                    <span style="font-weight: 600; color: #509594;" id="utilizacion-ftes-equivalentes">9.35</span>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="kpi-card">
@@ -129,11 +153,17 @@
                             </div>
                             <div class="kpi-value" style="color: #509594;">92%</div>
                             <div class="kpi-subtitle">recursos optimizados</div>
+                            <div class="kpi-details">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>FTEs Inef. Equivalentes:</span>
+                                    <span style="font-weight: 600; color: #509594;" id="ftes-ineficiencia">0.0</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Fila 2: 2 Gráficas -->
-                    <div class="charts-grid-overview">
+                    <!-- Fila 2: 3 Gráficas -->
+                    <div class="charts-grid-overview" style="grid-template-columns: repeat(3, 1fr);">
                         <div class="chart-card">
                             <h4>Horas Comprometidas vs Disponibles</h4>
                             <div class="chart-container" style="height: 300px;">
@@ -142,9 +172,16 @@
                         </div>
                         
                         <div class="chart-card">
-                            <h4>Distribución de Horas por Skill</h4>
+                            <h4>Horas Comprometidas por Perfil</h4>
                             <div class="chart-container" style="height: 300px;">
                                 <canvas id="overview-skill-distribution-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h4>Horas Comprometidas vs Disponibles por Perfil</h4>
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="overview-capacity-by-profile-chart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -248,42 +285,6 @@
             <div id="matrix-tab" class="tab-content">
                 <div class="section-header">
                     <h2>Matriz de Utilización</h2>
-                </div>
-                
-                <!-- Indicadores y Gráficos de Capacidad -->
-                <div style="display: grid; grid-template-columns: 300px 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                    <!-- Indicador de Proyectos Activos -->
-                    <div class="card">
-                        <h3>Proyectos Activos</h3>
-                        <div style="font-size: 3rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="active-projects-count">7</div>
-                        <div style="color: #718096;">En el mes actual</div>
-                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <span style="color: #718096;">Total horas:</span>
-                                <span style="font-weight: 600; color: #319795;" id="current-month-hours">1600</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #718096;">FTEs equiv.:</span>
-                                <span style="font-weight: 600; color: #319795;" id="current-month-ftes">10.0</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Gráfico Horas Comprometidas vs Disponibles -->
-                    <div class="card">
-                        <h3>Horas Comprometidas vs Disponibles</h3>
-                        <div class="chart-container" style="height: 250px;">
-                            <canvas id="committed-hours-chart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Gráfico Distribución de Horas por Skill -->
-                    <div class="card">
-                        <h3>Distribución de Horas por Skill</h3>
-                        <div class="chart-container" style="height: 250px;">
-                            <canvas id="skill-distribution-chart"></canvas>
-                        </div>
-                    </div>
                 </div>
                 
                 <div class="card">
@@ -467,32 +468,6 @@
             <div id="resources-tab" class="tab-content">
                 <div class="section-header">
                     <h2>Gestión de Capacidad</h2>
-                </div>
-                
-                <!-- Indicadores y Gráficos -->
-                <div style="display: grid; grid-template-columns: 300px 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                    <!-- Indicador de Recursos -->
-                    <div class="card">
-                        <h3>Total Recursos</h3>
-                        <div style="font-size: 3rem; font-weight: 600; color: #319795; margin: 1rem 0;">4</div>
-                        <div style="color: #718096;">Recursos activos</div>
-                    </div>
-                    
-                    <!-- Gráfico FTEs por Mes -->
-                    <div class="card">
-                        <h3>FTEs por Mes</h3>
-                        <div class="chart-container" style="height: 250px;">
-                            <canvas id="ftes-per-month-chart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Gráfico FTEs Potenciales por Skill -->
-                    <div class="card">
-                        <h3>FTEs Potenciales por Skill</h3>
-                        <div class="chart-container" style="height: 250px;">
-                            <canvas id="ftes-by-skill-chart"></canvas>
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- Matriz de Recursos -->
