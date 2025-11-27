@@ -1,3 +1,6 @@
+// Verify script is loading
+console.log('script.js loaded successfully');
+
 // Global data storage
 let resources = [
     { id: 'juan', name: 'Juan Pérez', type: 'developer', capacity: 160, cost: 4500, status: 'available' },
@@ -32,7 +35,7 @@ function showTab(tabId) {
     document.getElementById(tabId).classList.add('active');
     
     // Add active class to the button that corresponds to this tab
-    const activeButton = document.querySelector(`[onclick="showTab('${tabId}')"]`);
+    const activeButton = document.querySelector(`[data-tab="${tabId}"]`);
     if (activeButton) {
         activeButton.classList.add('active');
     }
@@ -2246,6 +2249,103 @@ function updateTrendIndicator(elementId, currentValue, previousValue) {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded event fired');
+    
+    // Add event listeners for tab buttons
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            showTab(tabId);
+        });
+    });
+    
+    // Add event listener for period selector
+    const periodSelector = document.getElementById('period-selector');
+    if (periodSelector) {
+        periodSelector.addEventListener('change', function() {
+            changePeriod(this.value);
+        });
+    }
+    
+    // Add event listeners for expand icons (toggleProjectSkills)
+    document.addEventListener('click', function(e) {
+        const expandIcon = e.target.closest('.expand-icon');
+        if (expandIcon) {
+            const projectId = expandIcon.getAttribute('data-project');
+            if (projectId) {
+                toggleProjectSkills(projectId);
+            }
+        }
+    });
+    
+    // Add event listeners for capacity cells
+    document.addEventListener('click', function(e) {
+        const capacityCell = e.target.closest('.capacity-cell');
+        if (capacityCell) {
+            const projectId = capacityCell.getAttribute('data-project');
+            const month = capacityCell.getAttribute('data-month');
+            const resourceId = capacityCell.getAttribute('data-resource');
+            
+            if (projectId && month) {
+                editCapacity(projectId, month);
+            } else if (resourceId && month) {
+                editResourceCapacity(resourceId, month);
+            }
+        }
+    });
+    
+    // Add event listener for add-resource-btn
+    const addResourceBtn = document.getElementById('add-resource-btn');
+    if (addResourceBtn) {
+        addResourceBtn.addEventListener('click', function() {
+            alert('Funcionalidad de añadir recurso en desarrollo');
+        });
+    }
+    
+    // Add event listener for add-project-btn
+    const addProjectBtn = document.getElementById('add-project-btn');
+    if (addProjectBtn) {
+        addProjectBtn.addEventListener('click', function() {
+            addProject();
+        });
+    }
+    
+    // Add event listener for import-jira-btn
+    const importJiraBtn = document.getElementById('import-jira-btn');
+    if (importJiraBtn) {
+        importJiraBtn.addEventListener('click', function() {
+            importFromJira();
+        });
+    }
+    
+    // Add event listener for project-search input
+    const projectSearch = document.getElementById('project-search');
+    if (projectSearch) {
+        projectSearch.addEventListener('keyup', function() {
+            filterProjects();
+        });
+    }
+    
+    // Add event listeners for action icons (edit, delete, sync)
+    document.addEventListener('click', function(e) {
+        const actionIcon = e.target.closest('.action-icon');
+        if (actionIcon) {
+            const action = actionIcon.getAttribute('data-action');
+            const projectId = actionIcon.getAttribute('data-project');
+            
+            if (action && projectId) {
+                if (action === 'edit') {
+                    editProject(projectId);
+                } else if (action === 'delete') {
+                    deleteProject(projectId);
+                } else if (action === 'sync') {
+                    syncWithJira(projectId);
+                }
+            }
+        }
+    });
+    
     // Initialize existing charts
     initializeChart();
     initializeFTEsPerMonthChart();
@@ -2263,10 +2363,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeOverviewCommittedHoursChart();
     initializeOverviewSkillDistributionChart();
     initializeOverviewCapacityByProfileChart();
-    
-    // Initialize new Vista General charts
-    initializeCapacityDemandChart();
-    initializeOverviewSkillsDistributionChart();
     
     // Populate Top 5 Projects table
     populateTopProjectsTable();

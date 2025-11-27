@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planificación de Capacidad - Dashboard</title>
     
-    <!-- AWS Amazon Ember Font -->
-    <link rel="preconnect" href="https://d1tzzh0q3mh5bp.cloudfront.net">
-    <link href="https://d1tzzh0q3mh5bp.cloudfront.net/fonts/amazon-ember/amazon-ember.css" rel="stylesheet">
-    
     <!-- External CSS -->
     <link rel="stylesheet" href="styles.css">
     
@@ -33,25 +29,25 @@
     <div class="container">
         <div class="tab-container">
             <div class="tab-buttons">
-                <button class="tab-button active" onclick="showTab('overview-tab')">
+                <button class="tab-button active" data-tab="overview-tab">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l-1-3m1 3l-1-3m-16.5 0h16.5" />
                     </svg>
                     Vista General
                 </button>
-                <button class="tab-button" onclick="showTab('matrix-tab')">
+                <button class="tab-button" data-tab="matrix-tab">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375a1.125 1.125 0 00-1.125 1.125v13.5" />
                     </svg>
                     Matriz de Utilización
                 </button>
-                <button class="tab-button" onclick="showTab('resources-tab')">
+                <button class="tab-button" data-tab="resources-tab">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                     </svg>
                     Gestión de Capacidad
                 </button>
-                <button class="tab-button" onclick="showTab('projects-tab')">
+                <button class="tab-button" data-tab="projects-tab">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                     </svg>
@@ -68,7 +64,7 @@
                 <!-- Period Section with Selector -->
                 <div class="period-section">
                     <div class="period-header">
-                        <select id="period-selector" class="period-selector" onchange="changePeriod(this.value)">
+                        <select id="period-selector" class="period-selector">
                             <option value="current">Mes en curso</option>
                             <option value="next">Mes próximo</option>
                             <option value="next3">3 próximos meses</option>
@@ -141,7 +137,7 @@
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>FTEs Equivalentes:</span>
-                                    <span style="font-weight: 600; color: #509594;" id="utilizacion-ftes-equivalentes">9.35</span>
+                                    <span style="font-weight: 600; color: #509594;" id="utilizacion-ftes-equivalentes">9.4</span>
                                 </div>
                             </div>
                         </div>
@@ -153,12 +149,6 @@
                             </div>
                             <div class="kpi-value" style="color: #509594;">92%</div>
                             <div class="kpi-subtitle">recursos optimizados</div>
-                            <div class="kpi-details">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>FTEs Inef. Equivalentes:</span>
-                                    <span style="font-weight: 600; color: #509594;" id="ftes-ineficiencia">0.0</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     
@@ -311,79 +301,79 @@
                             <tbody>
                                 <tr class="project-row" data-project="NC-249">
                                     <td class="project-name">
-                                        <span class="expand-icon" onclick="toggleProjectSkills('NC-249')">+</span>
+                                        <span class="expand-icon" data-project="NC-249">+</span>
                                         <strong>NC-249</strong> - Soporte...
                                     </td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'ene')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'feb')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'mar')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'abr')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'may')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-249', 'jun')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell low" onclick="editCapacity('NC-249', 'jul')" title="160 horas">160</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'ago')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'sep')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'oct')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'nov')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-249', 'dic')" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="ene" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="feb" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="mar" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="abr" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="may" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-249" data-month="jun" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell low" data-project="NC-249" data-month="jul" title="160 horas">160</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="ago" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="sep" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="oct" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="nov" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-249" data-month="dic" title="0 horas">-</span></td>
                                 </tr>
                                 <tr class="project-row" data-project="NC-15">
                                     <td class="project-name">
-                                        <span class="expand-icon" onclick="toggleProjectSkills('NC-15')">+</span>
+                                        <span class="expand-icon" data-project="NC-15">+</span>
                                         <strong>NC-15</strong> - Modelo datos: Fase 2
                                     </td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'ene')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'feb')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'mar')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'abr')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'may')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell low" onclick="editCapacity('NC-15', 'jun')" title="160 horas">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-15', 'jul')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell low" onclick="editCapacity('NC-15', 'ago')" title="160 horas">160</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'sep')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'oct')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'nov')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-15', 'dic')" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="ene" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="feb" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="mar" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="abr" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="may" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell low" data-project="NC-15" data-month="jun" title="160 horas">160</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-15" data-month="jul" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell low" data-project="NC-15" data-month="ago" title="160 horas">160</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="sep" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="oct" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="nov" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-15" data-month="dic" title="0 horas">-</span></td>
                                 </tr>
                                 <tr class="project-row" data-project="NC-16">
                                     <td class="project-name">
-                                        <span class="expand-icon" onclick="toggleProjectSkills('NC-16')">+</span>
+                                        <span class="expand-icon" data-project="NC-16">+</span>
                                         <strong>NC-16</strong> - Pricing...
                                     </td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-16', 'ene')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-16', 'feb')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-16', 'mar')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-16', 'abr')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-16', 'may')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-16', 'jun')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell high" onclick="editCapacity('NC-16', 'jul')" title="480 horas">480</span></td>
-                                    <td><span class="capacity-cell high" onclick="editCapacity('NC-16', 'ago')" title="480 horas">480</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-16', 'sep')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-16', 'oct')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-16', 'nov')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-16', 'dic')" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-16" data-month="ene" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-16" data-month="feb" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-16" data-month="mar" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-16" data-month="abr" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-16" data-month="may" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-16" data-month="jun" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell high" data-project="NC-16" data-month="jul" title="480 horas">480</span></td>
+                                    <td><span class="capacity-cell high" data-project="NC-16" data-month="ago" title="480 horas">480</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-16" data-month="sep" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-16" data-month="oct" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-16" data-month="nov" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-16" data-month="dic" title="0 horas">-</span></td>
                                 </tr>
                                 <tr class="project-row" data-project="NC-17">
                                     <td class="project-name">
-                                        <span class="expand-icon" onclick="toggleProjectSkills('NC-17')">+</span>
+                                        <span class="expand-icon" data-project="NC-17">+</span>
                                         <strong>NC-17</strong> - Direcciones...
                                     </td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'ene')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'feb')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'mar')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'abr')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'may')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell low" onclick="editCapacity('NC-17', 'jun')" title="160 horas">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-17', 'jul')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'ago')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'sep')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'oct')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'nov')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-17', 'dic')" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="ene" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="feb" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="mar" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="abr" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="may" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell low" data-project="NC-17" data-month="jun" title="160 horas">160</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-17" data-month="jul" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="ago" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="sep" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="oct" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="nov" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-17" data-month="dic" title="0 horas">-</span></td>
                                 </tr>
                                 <tr class="project-row" data-project="NC-18">
                                     <td class="project-name">
-                                        <span class="expand-icon" onclick="toggleProjectSkills('NC-18')">+</span>
+                                        <span class="expand-icon" data-project="NC-18">+</span>
                                         <strong>NC-18</strong> - Ampliar...
                                     </td>
                                     <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'ene')" title="0 horas">-</span></td>
@@ -474,7 +464,7 @@
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h2 style="margin-bottom: 0;">Matriz de Recursos por Mes</h2>
-                        <button class="btn btn-primary" onclick="showAddResourceModal()">
+                        <button class="btn btn-primary" id="add-resource-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
@@ -507,7 +497,7 @@
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge construccion">Construcción</span>
                                     </td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'ene')" title="Disponible - 160">160</span></td>
+                                    <td><span class="capacity-cell medium" data-resource="juan" data-month="ene" title="Disponible - 160">160</span></td>
                                     <td><span class="capacity-cell high" onclick="editResourceCapacity('juan', 'feb')" title="Asignado - 120">120</span></td>
                                     <td><span class="capacity-cell overload" onclick="editResourceCapacity('juan', 'mar')" title="Sobrecargado - 180">180</span></td>
                                     <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'abr')" title="Disponible - 160">160</span></td>
@@ -635,13 +625,13 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h2 style="margin-bottom: 0;">Proyectos Planificados</h2>
                         <div style="display: flex; gap: 1rem;">
-                            <button class="btn btn-primary" onclick="addProject()" title="Añadir Proyecto">
+                            <button class="btn btn-primary" id="add-project-btn" title="Añadir Proyecto">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
                                 Añadir Proyecto
                             </button>
-                            <button class="btn btn-primary" onclick="importFromJira()" title="Importar desde Jira">
+                            <button class="btn btn-primary" id="import-jira-btn" title="Importar desde Jira">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
                                     <path d="M11.53 2c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.97 4.35 4.35 4.35V2.84a.84.84 0 0 0-.84-.84H11.53zM6.77 6.8c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.97 4.35 4.35 4.35V7.64a.84.84 0 0 0-.84-.84H6.77zM2 11.6c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.97 4.35 4.35 4.35v-9.56a.84.84 0 0 0-.84-.84H2z"/>
                                 </svg>
@@ -650,7 +640,7 @@
                         </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
-                        <input type="text" id="project-search" class="form-control" placeholder="Buscar proyectos..." onkeyup="filterProjects()" style="max-width: 300px; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.375rem;">
+                        <input type="text" id="project-search" class="form-control" placeholder="Buscar proyectos..." style="max-width: 300px; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.375rem;">
                     </div>
                     <div style="overflow-x: auto;">
                         <table>
@@ -680,17 +670,17 @@
                                     <td><span class="status-badge finalizado">Finalizado</span></td>
                                     <td>Proyecto</td>
                                     <td>
-                                        <span class="action-icon" onclick="editProject('NC-249')" title="Editar">
+                                        <span class="action-icon" data-action="edit" data-project="NC-249" title="Editar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="deleteProject('NC-249')" title="Eliminar">
+                                        <span class="action-icon" data-action="delete" data-project="NC-249" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="syncWithJira('NC-249')" title="Sincronizar con Jira">
+                                        <span class="action-icon" data-action="sync" data-project="NC-249" title="Sincronizar con Jira">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
@@ -855,78 +845,25 @@
                                         </span>
                                         <span class="action-icon" onclick="deleteProject('NC-20')" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                                <path stroke-linecap="round" stroke-
-
-    <!-- Modal para Añadir Recurso -->
-    <div id="add-resource-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Añadir Nuevo Recurso</h2>
-                <span class="close" onclick="hideAddResourceModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <div>
-                        <label for="modal-resource-name" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Nombre del Recurso *</label>
-                        <input type="text" id="modal-resource-name" placeholder="Ej: Juan Pérez" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.375rem;">
-                    </div>
-                    <div>
-                        <label for="modal-resource-capacity" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Capacidad (horas/mes) *</label>
-                        <input type="number" id="modal-resource-capacity" min="1" max="200" value="160" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.375rem;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                            </svg>
+                                        </span>
+                                        <span class="action-icon" onclick="syncWithJira('NC-20')" title="Sincronizar con Jira">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                            </svg>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <div>
-                        <label for="modal-resource-start-date" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Fecha Inicio</label>
-                        <input type="date" id="modal-resource-start-date" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.375rem;">
-                    </div>
-                    <div>
-                        <label for="modal-resource-end-date" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Fecha Fin</label>
-                        <input type="date" id="modal-resource-end-date" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.375rem;">
-                    </div>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Skills *</label>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
-                        <div class="skill-option">
-                            <input type="checkbox" id="skill-construccion" value="construccion">
-                            <label for="skill-construccion">Construcción/Desarrollo</label>
-                        </div>
-                        <div class="skill-option">
-                            <input type="checkbox" id="skill-analisis" value="analisis">
-                            <label for="skill-analisis">Análisis</label>
-                        </div>
-                        <div class="skill-option">
-                            <input type="checkbox" id="skill-diseno" value="diseno">
-                            <label for="skill-diseno">Diseño</label>
-                        </div>
-                        <div class="skill-option">
-                            <input type="checkbox" id="skill-qa" value="qa">
-                            <label for="skill-qa">QA/Testing</label>
-                        </div>
-                        <div class="skill-option">
-                            <input type="checkbox" id="skill-pm" value="project-management">
-                            <label for="skill-pm">Project Management</label>
-                        </div>
-                        <div class="skill-option">
-                            <input type="checkbox" id="skill-conceptualizacion" value="conceptualizacion">
-                            <label for="skill-conceptualizacion">Conceptualización</label>
-                        </div>
-                        <div class="skill-option">
-                            <input type="checkbox" id="skill-general" value="general">
-                            <label for="skill-general">General</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="hideAddResourceModal()">Cancelar</button>
-                <button class="btn btn-primary" onclick="submitAddResource()">Añadir Recurso</button>
             </div>
         </div>
     </div>
-    
+
     <!-- Local JavaScript -->
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>
