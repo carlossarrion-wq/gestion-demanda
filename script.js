@@ -1135,14 +1135,6 @@ function initializeCommittedHoursChart() {
                         yAxisID: 'y'
                     },
                     {
-                        label: 'Horas Disponibles',
-                        data: availableHours,
-                        backgroundColor: 'rgba(107, 114, 128, 0.3)',
-                        borderColor: '#6b7280',
-                        borderWidth: 1,
-                        yAxisID: 'y'
-                    },
-                    {
                         label: 'FTEs Disponibles',
                         data: availableFTEs,
                         type: 'line',
@@ -1153,7 +1145,7 @@ function initializeCommittedHoursChart() {
                         yAxisID: 'y1'
                     },
                     {
-                        label: 'Recursos Totales',
+                        label: 'Recursos Teóricos Disponibles',
                         data: totalResources,
                         type: 'line',
                         borderColor: '#dc2626',
@@ -1257,7 +1249,7 @@ function initializeSkillDistributionChart() {
             });
         });
         
-        // Create datasets for stacked bar chart
+        // Create datasets for stacked horizontal bar chart
         const datasets = Object.keys(skillTotals).map(skill => ({
             label: skill,
             data: skillTotals[skill],
@@ -1266,19 +1258,6 @@ function initializeSkillDistributionChart() {
             borderWidth: 1
         }));
 
-        // Add horizontal line for total resources capacity (4 resources * 160 hours = 640 hours)
-        const totalResourcesCapacity = [640, 640, 640, 640, 640, 640, 640, 640, 640, 640, 640, 640];
-        datasets.push({
-            label: 'Capacidad Total Recursos',
-            data: totalResourcesCapacity,
-            type: 'line',
-            borderColor: '#dc2626',
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            pointRadius: 4,
-            fill: false
-        });
         new Chart(ctx, {
             type: 'bar',
             data: {
@@ -1286,6 +1265,7 @@ function initializeSkillDistributionChart() {
                 datasets: datasets
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -1303,25 +1283,22 @@ function initializeSkillDistributionChart() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                if (context.dataset.label === 'Capacidad Total Recursos') {
-                                    return `${context.dataset.label}: ${context.parsed.y} horas`;
-                                }
-                                return `${context.dataset.label}: ${context.parsed.y} horas`;
+                                return `${context.dataset.label}: ${context.parsed.x} horas`;
                             }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        stacked: true
-                    },
-                    y: {
                         stacked: true,
                         beginAtZero: true,
                         title: {
                             display: true,
                             text: 'Horas'
                         }
+                    },
+                    y: {
+                        stacked: true
                     }
                 }
             }
@@ -1583,14 +1560,6 @@ function initializeOverviewCommittedHoursChart() {
                         yAxisID: 'y'
                     },
                     {
-                        label: 'Horas Disponibles',
-                        data: availableHours,
-                        backgroundColor: 'rgba(107, 114, 128, 0.3)',
-                        borderColor: '#6b7280',
-                        borderWidth: 1,
-                        yAxisID: 'y'
-                    },
-                    {
                         label: 'FTEs Disponibles',
                         data: availableFTEs,
                         type: 'line',
@@ -1601,7 +1570,7 @@ function initializeOverviewCommittedHoursChart() {
                         yAxisID: 'y1'
                     },
                     {
-                        label: 'Recursos Totales',
+                        label: 'Capacidad Teórica Disponible',
                         data: totalResources,
                         type: 'line',
                         borderColor: '#dc2626',
@@ -1705,7 +1674,7 @@ function initializeOverviewSkillDistributionChart() {
             });
         });
         
-        // Create datasets for stacked bar chart
+        // Create datasets for stacked horizontal bar chart
         const datasets = Object.keys(skillTotals).map(skill => ({
             label: skill,
             data: skillTotals[skill],
@@ -1713,20 +1682,6 @@ function initializeOverviewSkillDistributionChart() {
             borderColor: skillColors[skill],
             borderWidth: 1
         }));
-
-        // Add horizontal line for total resources capacity (4 resources * 160 hours = 640 hours)
-        const totalResourcesCapacity = [640, 640, 640, 640, 640, 640, 640, 640, 640, 640, 640, 640];
-        datasets.push({
-            label: 'Capacidad Total Recursos',
-            data: totalResourcesCapacity,
-            type: 'line',
-            borderColor: '#dc2626',
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            pointRadius: 4,
-            fill: false
-        });
         
         new Chart(ctx, {
             type: 'bar',
@@ -1735,6 +1690,7 @@ function initializeOverviewSkillDistributionChart() {
                 datasets: datasets
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -1752,25 +1708,22 @@ function initializeOverviewSkillDistributionChart() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                if (context.dataset.label === 'Capacidad Total Recursos') {
-                                    return `${context.dataset.label}: ${context.parsed.y} horas`;
-                                }
-                                return `${context.dataset.label}: ${context.parsed.y} horas`;
+                                return `${context.dataset.label}: ${context.parsed.x} horas`;
                             }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        stacked: true
-                    },
-                    y: {
                         stacked: true,
                         beginAtZero: true,
                         title: {
                             display: true,
                             text: 'Horas'
                         }
+                    },
+                    y: {
+                        stacked: true
                     }
                 }
             }

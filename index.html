@@ -43,13 +43,13 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375a1.125 1.125 0 00-1.125 1.125v13.5" />
                     </svg>
-                    Matriz de Capacidad
+                    Matriz de Utilización
                 </button>
                 <button class="tab-button" onclick="showTab('resources-tab')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                     </svg>
-                    Gestión de Recursos
+                    Gestión de Capacidad
                 </button>
                 <button class="tab-button" onclick="showTab('projects-tab')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
@@ -73,6 +73,7 @@
                             <option value="next">Mes próximo</option>
                             <option value="next3">3 próximos meses</option>
                             <option value="next6">6 próximos meses</option>
+                            <option value="next12">12 próximos meses</option>
                         </select>
                     </div>
                     <!-- Fila 1: 5 Indicadores KPI -->
@@ -148,31 +149,31 @@
                         </div>
                     </div>
                     
-                    <!-- Fila 3: Top 5 Proyectos por Volumen de Horas -->
-                    <div class="card" style="margin-top: 2rem;">
-                        <h3 style="margin-bottom: 1.5rem;">Top 5 Proyectos por Volumen de Horas</h3>
-                        <div style="overflow-x: auto;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th style="text-align: left;">ID</th>
-                                        <th style="text-align: left;">Título</th>
-                                        <th style="text-align: left;">Descripción</th>
-                                        <th style="text-align: left;">Dominio Principal</th>
-                                        <th style="text-align: center;">Prioridad Negocio</th>
-                                        <th style="text-align: right;">Volumen de Horas</th>
-                                        <th style="text-align: right;">Horas Incurridas</th>
-                                        <th style="text-align: center;">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="top-projects-table-body">
-                                    <!-- Content will be populated by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
 
+                <!-- Top 5 Proyectos por Volumen de Horas - Sección Independiente -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem;">Top 5 Proyectos por Volumen de Horas</h3>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">ID</th>
+                                    <th style="text-align: left;">Título</th>
+                                    <th style="text-align: left;">Descripción</th>
+                                    <th style="text-align: left;">Dominio Principal</th>
+                                    <th style="text-align: center;">Prioridad Negocio</th>
+                                    <th style="text-align: right;">Volumen de Horas</th>
+                                    <th style="text-align: right;">Horas Incurridas</th>
+                                    <th style="text-align: center;">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-projects-table-body">
+                                <!-- Content will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <!-- Insights y Recomendaciones -->
                 <div class="insights-recommendations-section">
@@ -243,10 +244,10 @@
                 </div>
             </div>
             
-            <!-- Matriz de Capacidad Tab -->
+            <!-- Matriz de Utilización Tab -->
             <div id="matrix-tab" class="tab-content">
                 <div class="section-header">
-                    <h2>Matriz de Capacidad</h2>
+                    <h2>Matriz de Utilización</h2>
                 </div>
                 
                 <!-- Indicadores y Gráficos de Capacidad -->
@@ -462,10 +463,10 @@
                 </div>
             </div>
             
-            <!-- Gestión de Recursos Tab -->
+            <!-- Gestión de Capacidad Tab -->
             <div id="resources-tab" class="tab-content">
                 <div class="section-header">
-                    <h2>Gestión de Recursos</h2>
+                    <h2>Gestión de Capacidad</h2>
                 </div>
                 
                 <!-- Indicadores y Gráficos -->
@@ -529,9 +530,7 @@
                                 <tr>
                                     <td class="project-name"><strong>Juan Pérez</strong></td>
                                     <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge construccion">Cod</span>
-                                        <span class="skill-badge analisis">Ana</span>
-                                        <span class="skill-badge diseno">Dis</span>
+                                        <span class="skill-badge construccion">Construcción</span>
                                     </td>
                                     <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'ene')" title="Disponible - 160">160</span></td>
                                     <td><span class="capacity-cell high" onclick="editResourceCapacity('juan', 'feb')" title="Asignado - 120">120</span></td>
@@ -549,9 +548,7 @@
                                 <tr>
                                     <td class="project-name"><strong>María García</strong></td>
                                     <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge diseno">Dis</span>
-                                        <span class="skill-badge conceptualizacion">Con</span>
-                                        <span class="skill-badge general">Gen</span>
+                                        <span class="skill-badge diseno">Diseño</span>
                                     </td>
                                     <td><span class="capacity-cell high" onclick="editResourceCapacity('maria', 'ene')" title="Asignada - 140">140</span></td>
                                     <td><span class="capacity-cell high" onclick="editResourceCapacity('maria', 'feb')" title="Asignada - 150">150</span></td>
@@ -569,9 +566,7 @@
                                 <tr>
                                     <td class="project-name"><strong>Carlos López</strong></td>
                                     <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge project-management">PM</span>
-                                        <span class="skill-badge analisis">Ana</span>
-                                        <span class="skill-badge general">Gen</span>
+                                        <span class="skill-badge project-management">Project Management</span>
                                     </td>
                                     <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'ene')" title="Disponible - 160">160</span></td>
                                     <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'feb')" title="Disponible - 160">160</span></td>
@@ -589,9 +584,7 @@
                                 <tr>
                                     <td class="project-name"><strong>Ana Martín</strong></td>
                                     <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge qa">QA</span>
-                                        <span class="skill-badge analisis">Ana</span>
-                                        <span class="skill-badge general">Gen</span>
+                                        <span class="skill-badge qa">QA/Testing</span>
                                     </td>
                                     <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'ene')" title="Disponible - 160">160</span></td>
                                     <td><span class="capacity-cell high" onclick="editResourceCapacity('ana', 'feb')" title="Asignada - 130">130</span></td>
