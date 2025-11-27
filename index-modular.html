@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planificación de Capacidad - Dashboard</title>
+    <title>Planificación de Capacidad - Dashboard Modular</title>
     
-    <!-- External CSS -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- Modular CSS -->
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/tabs.css">
+    <link rel="stylesheet" href="assets/css/tables.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
     
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,7 +22,7 @@
         <div class="header-content">
             <div class="header-title">
                 <h1>Planificación de Capacidad</h1>
-                <p>Herramienta simple para gestión de recursos y proyectos</p>
+                <p>Sistema Modular de Gestión de Recursos y Proyectos</p>
             </div>
             <div class="header-user-section">
                 <div class="app-badge">DARWIN</div>
@@ -41,17 +46,17 @@
                     </svg>
                     Matriz de Utilización
                 </button>
-                <button class="tab-button" data-tab="resources-tab">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                    </svg>
-                    Gestión de Capacidad
-                </button>
                 <button class="tab-button" data-tab="projects-tab">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                     </svg>
                     Gestión de Proyectos
+                </button>
+                <button class="tab-button" data-tab="resources-tab">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    </svg>
+                    Gestión de Capacidad
                 </button>
             </div>
             
@@ -61,7 +66,6 @@
                     <h2>Vista General - Dashboard de Capacidad</h2>
                 </div>
                 
-                <!-- Period Section with Selector -->
                 <div class="period-section">
                     <div class="period-header">
                         <select id="period-selector" class="period-selector">
@@ -72,14 +76,15 @@
                             <option value="next12">12 próximos meses</option>
                         </select>
                     </div>
-                    <!-- Fila 1: 5 Indicadores KPI -->
+                    
+                    <!-- KPI Grid -->
                     <div class="kpi-grid-overview">
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span class="kpi-label">PROYECTOS ACTIVOS</span>
                                 <span class="kpi-trend positive" id="proyectos-activos-trend">+17%</span>
                             </div>
-                            <div class="kpi-value" style="color: #509594;">7</div>
+                            <div class="kpi-value">7</div>
                             <div class="kpi-subtitle">Total proyectos</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
@@ -98,7 +103,7 @@
                                 <span class="kpi-label">RECURSOS ACTIVOS</span>
                                 <span class="kpi-trend positive" id="recursos-activos-trend">+20%</span>
                             </div>
-                            <div class="kpi-value" style="color: #509594;">12</div>
+                            <div class="kpi-value">12</div>
                             <div class="kpi-subtitle">Recursos disponibles</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
@@ -117,7 +122,7 @@
                                 <span class="kpi-label">CAPACIDAD TOTAL</span>
                                 <span class="kpi-trend positive">+5%</span>
                             </div>
-                            <div class="kpi-value" style="color: #509594;">1,920</div>
+                            <div class="kpi-value">1.920</div>
                             <div class="kpi-subtitle">horas/mes disponibles</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
@@ -132,7 +137,7 @@
                                 <span class="kpi-label">UTILIZACIÓN ACTUAL</span>
                                 <span class="kpi-trend warning">78%</span>
                             </div>
-                            <div class="kpi-value" style="color: #509594;">1,496</div>
+                            <div class="kpi-value">1.496</div>
                             <div class="kpi-subtitle">horas comprometidas</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
@@ -147,13 +152,19 @@
                                 <span class="kpi-label">EFICIENCIA</span>
                                 <span class="kpi-trend positive">+12%</span>
                             </div>
-                            <div class="kpi-value" style="color: #509594;">92%</div>
+                            <div class="kpi-value">92%</div>
                             <div class="kpi-subtitle">recursos optimizados</div>
+                            <div class="kpi-details">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>FTEs Ineficiencia Equivalentes:</span>
+                                    <span style="font-weight: 600; color: #509594;" id="ftes-ineficiencia-equivalentes">2.65</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Fila 2: 3 Gráficas -->
-                    <div class="charts-grid-overview" style="grid-template-columns: repeat(3, 1fr);">
+                    <!-- Charts Grid -->
+                    <div class="charts-grid-overview">
                         <div class="chart-card">
                             <h4>Horas Comprometidas vs Disponibles</h4>
                             <div class="chart-container" style="height: 300px;">
@@ -175,10 +186,9 @@
                             </div>
                         </div>
                     </div>
-                    
                 </div>
 
-                <!-- Top 5 Proyectos por Volumen de Horas - Sección Independiente -->
+                <!-- Top 5 Projects -->
                 <div class="card" style="margin-top: 2rem;">
                     <h3 style="margin-bottom: 1.5rem;">Top 5 Proyectos por Volumen de Horas</h3>
                     <div style="overflow-x: auto;">
@@ -192,17 +202,18 @@
                                     <th style="text-align: center;">Prioridad Negocio</th>
                                     <th style="text-align: right;">Volumen de Horas</th>
                                     <th style="text-align: right;">Horas Incurridas</th>
+                                    <th style="text-align: right;">% Incurrido</th>
                                     <th style="text-align: center;">Estado</th>
                                 </tr>
                             </thead>
                             <tbody id="top-projects-table-body">
-                                <!-- Content will be populated by JavaScript -->
+                                <!-- Populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Insights y Recomendaciones -->
+                <!-- Insights and Recommendations -->
                 <div class="insights-recommendations-section">
                     <div class="insights-card">
                         <div class="insights-header">
@@ -214,7 +225,7 @@
                             <div class="insight-icon">📈</div>
                             <div class="insight-content">
                                 <div class="insight-title">Tendencia Positiva</div>
-                                <div class="insight-text">La eficiencia del equipo ha mejorado 12% este trimestre gracias a mejor distribución de skills.</div>
+                                <div class="insight-text">La eficiencia del equipo ha mejorado 12% este trimestre.</div>
                             </div>
                         </div>
                         
@@ -222,7 +233,7 @@
                             <div class="insight-icon">🔍</div>
                             <div class="insight-content">
                                 <div class="insight-title">Cuello de Botella</div>
-                                <div class="insight-text">Los recursos de QA están al 95% de utilización, limitando la velocidad de entrega.</div>
+                                <div class="insight-text">Los recursos de QA están al 95% de utilización.</div>
                             </div>
                         </div>
                         
@@ -230,7 +241,7 @@
                             <div class="insight-icon">💡</div>
                             <div class="insight-content">
                                 <div class="insight-title">Oportunidad</div>
-                                <div class="insight-text">3 recursos con skills de Análisis están subutilizados en Abril-Mayo.</div>
+                                <div class="insight-text">3 recursos con skills de Análisis están subutilizados.</div>
                             </div>
                         </div>
                     </div>
@@ -242,28 +253,28 @@
                         </div>
                         
                         <div class="recommendation-item high-priority">
-                            <div class="priority-badge alta">Alta</div>
+                            <span class="priority-badge alta">Alta</span>
                             <div class="recommendation-content">
                                 <div class="recommendation-title">Contratar QA Specialist</div>
-                                <div class="recommendation-text">Incorporar 1 FTE de QA antes de Q3 para evitar bloqueos en proyectos críticos.</div>
+                                <div class="recommendation-text">Incorporar 1 FTE de QA antes de Q3.</div>
                                 <div class="recommendation-impact">Impacto: +15% velocidad entrega</div>
                             </div>
                         </div>
                         
                         <div class="recommendation-item medium-priority">
-                            <div class="priority-badge media">Media</div>
+                            <span class="priority-badge media">Media</span>
                             <div class="recommendation-content">
                                 <div class="recommendation-title">Cross-training en Análisis</div>
-                                <div class="recommendation-text">Formar 2 desarrolladores en skills de análisis para mayor flexibilidad.</div>
+                                <div class="recommendation-text">Formar 2 desarrolladores en skills de análisis.</div>
                                 <div class="recommendation-impact">Impacto: +20% flexibilidad</div>
                             </div>
                         </div>
                         
                         <div class="recommendation-item low-priority">
-                            <div class="priority-badge baja">Baja</div>
+                            <span class="priority-badge baja">Baja</span>
                             <div class="recommendation-content">
                                 <div class="recommendation-title">Redistribuir Carga Q4</div>
-                                <div class="recommendation-text">Mover NC-19 a Q1 2026 para equilibrar la carga de trabajo.</div>
+                                <div class="recommendation-text">Mover NC-19 a Q1 2026 para equilibrar carga.</div>
                                 <div class="recommendation-impact">Impacto: -12% riesgo sobrecarga</div>
                             </div>
                         </div>
@@ -271,10 +282,50 @@
                 </div>
             </div>
             
-            <!-- Matriz de Utilización Tab -->
+            <!-- Matrix Tab -->
             <div id="matrix-tab" class="tab-content">
                 <div class="section-header">
                     <h2>Matriz de Utilización</h2>
+                </div>
+                
+                <!-- KPIs Row for Matrix -->
+                <div style="display: grid; grid-template-columns: 200px 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="card">
+                        <h3>Proyectos Registrados</h3>
+                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="matrix-total-projects">7</div>
+                        <div style="color: #718096; margin-bottom: 0.75rem;">Total proyectos</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Evolutivos:</span>
+                                <span style="font-weight: 600; color: #319795;" id="matrix-evolutivos-count">3</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Proyectos:</span>
+                                <span style="font-weight: 600; color: #319795;" id="matrix-proyectos-count">4</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Horas Comprometidas vs Disponibles</h3>
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="matrix-committed-hours-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Volumen de Horas por Tipo</h3>
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="matrix-hours-by-type-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Volumen de Horas por Dominio</h3>
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="matrix-hours-by-domain-chart"></canvas>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="card">
@@ -284,6 +335,8 @@
                             <thead>
                                 <tr>
                                     <th class="project-name">Proyecto</th>
+                                    <th>Tipo</th>
+                                    <th>Dominio principal</th>
                                     <th>Ene 2025</th>
                                     <th>Feb 2025</th>
                                     <th>Mar 2025</th>
@@ -304,6 +357,8 @@
                                         <span class="expand-icon" data-project="NC-249">+</span>
                                         <strong>NC-249</strong> - Soporte...
                                     </td>
+                                    <td>Proyecto</td>
+                                    <td>Operación de Sistemas y Ciberseguridad</td>
                                     <td><span class="capacity-cell empty" data-project="NC-249" data-month="ene" title="0 horas">-</span></td>
                                     <td><span class="capacity-cell empty" data-project="NC-249" data-month="feb" title="0 horas">-</span></td>
                                     <td><span class="capacity-cell empty" data-project="NC-249" data-month="mar" title="0 horas">-</span></td>
@@ -322,6 +377,8 @@
                                         <span class="expand-icon" data-project="NC-15">+</span>
                                         <strong>NC-15</strong> - Modelo datos: Fase 2
                                     </td>
+                                    <td>Proyecto</td>
+                                    <td>Atención</td>
                                     <td><span class="capacity-cell empty" data-project="NC-15" data-month="ene" title="0 horas">-</span></td>
                                     <td><span class="capacity-cell empty" data-project="NC-15" data-month="feb" title="0 horas">-</span></td>
                                     <td><span class="capacity-cell empty" data-project="NC-15" data-month="mar" title="0 horas">-</span></td>
@@ -340,6 +397,8 @@
                                         <span class="expand-icon" data-project="NC-16">+</span>
                                         <strong>NC-16</strong> - Pricing...
                                     </td>
+                                    <td>Proyecto</td>
+                                    <td>Facturación y Cobros</td>
                                     <td><span class="capacity-cell empty" data-project="NC-16" data-month="ene" title="0 horas">-</span></td>
                                     <td><span class="capacity-cell empty" data-project="NC-16" data-month="feb" title="0 horas">-</span></td>
                                     <td><span class="capacity-cell empty" data-project="NC-16" data-month="mar" title="0 horas">-</span></td>
@@ -358,6 +417,8 @@
                                         <span class="expand-icon" data-project="NC-17">+</span>
                                         <strong>NC-17</strong> - Direcciones...
                                     </td>
+                                    <td>Proyecto</td>
+                                    <td>Atención</td>
                                     <td><span class="capacity-cell empty" data-project="NC-17" data-month="ene" title="0 horas">-</span></td>
                                     <td><span class="capacity-cell empty" data-project="NC-17" data-month="feb" title="0 horas">-</span></td>
                                     <td><span class="capacity-cell empty" data-project="NC-17" data-month="mar" title="0 horas">-</span></td>
@@ -376,66 +437,73 @@
                                         <span class="expand-icon" data-project="NC-18">+</span>
                                         <strong>NC-18</strong> - Ampliar...
                                     </td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'ene')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'feb')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'mar')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'abr')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'may')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell low" onclick="editCapacity('NC-18', 'jun')" title="160 horas">160</span></td>
-                                    <td><span class="capacity-cell low" onclick="editCapacity('NC-18', 'jul')" title="160 horas">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-18', 'ago')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'sep')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'oct')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'nov')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-18', 'dic')" title="0 horas">-</span></td>
+                                    <td>Evolutivo</td>
+                                    <td>Integración</td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="ene" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="feb" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="mar" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="abr" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="may" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell low" data-project="NC-18" data-month="jun" title="160 horas">160</span></td>
+                                    <td><span class="capacity-cell low" data-project="NC-18" data-month="jul" title="160 horas">160</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-18" data-month="ago" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="sep" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="oct" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="nov" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-18" data-month="dic" title="0 horas">-</span></td>
                                 </tr>
                                 <tr class="project-row" data-project="NC-19">
                                     <td class="project-name">
-                                        <span class="expand-icon" onclick="toggleProjectSkills('NC-19')">+</span>
+                                        <span class="expand-icon" data-project="NC-19">+</span>
                                         <strong>NC-19</strong> - Securización de email
                                     </td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'ene')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'feb')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'mar')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'abr')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'may')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'jun')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'jul')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell low" onclick="editCapacity('NC-19', 'ago')" title="160 horas">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-19', 'sep')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell high" onclick="editCapacity('NC-19', 'oct')" title="480 horas">480</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'nov')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-19', 'dic')" title="0 horas">-</span></td>
+                                    <td>Proyecto</td>
+                                    <td>Datos</td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="ene" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="feb" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="mar" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="abr" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="may" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="jun" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="jul" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell low" data-project="NC-19" data-month="ago" title="160 horas">160</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-19" data-month="sep" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell high" data-project="NC-19" data-month="oct" title="480 horas">480</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="nov" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-19" data-month="dic" title="0 horas">-</span></td>
                                 </tr>
                                 <tr class="project-row" data-project="NC-20">
                                     <td class="project-name">
-                                        <span class="expand-icon" onclick="toggleProjectSkills('NC-20')">+</span>
+                                        <span class="expand-icon" data-project="NC-20">+</span>
                                         <strong>NC-20</strong> - Actuaciones...
                                     </td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-20', 'ene')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-20', 'feb')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-20', 'mar')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-20', 'abr')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-20', 'may')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-20', 'jun')" title="0 horas">-</span></td>
-                                    <td><span class="capacity-cell low" onclick="editCapacity('NC-20', 'jul')" title="160 horas">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-20', 'ago')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell high" onclick="editCapacity('NC-20', 'sep')" title="480 horas">480</span></td>
-                                    <td><span class="capacity-cell high" onclick="editCapacity('NC-20', 'oct')" title="480 horas">480</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editCapacity('NC-20', 'nov')" title="320 horas">320</span></td>
-                                    <td><span class="capacity-cell empty" onclick="editCapacity('NC-20', 'dic')" title="0 horas">-</span></td>
+                                    <td>Evolutivo</td>
+                                    <td>Ventas | Contratación y SW</td>
+                                    <td><span class="capacity-cell empty" data-project="NC-20" data-month="ene" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-20" data-month="feb" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-20" data-month="mar" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-20" data-month="abr" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-20" data-month="may" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-20" data-month="jun" title="0 horas">-</span></td>
+                                    <td><span class="capacity-cell low" data-project="NC-20" data-month="jul" title="160 horas">160</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-20" data-month="ago" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell high" data-project="NC-20" data-month="sep" title="480 horas">480</span></td>
+                                    <td><span class="capacity-cell high" data-project="NC-20" data-month="oct" title="480 horas">480</span></td>
+                                    <td><span class="capacity-cell medium" data-project="NC-20" data-month="nov" title="320 horas">320</span></td>
+                                    <td><span class="capacity-cell empty" data-project="NC-20" data-month="dic" title="0 horas">-</span></td>
                                 </tr>
                                 <tr class="summary-row">
                                     <td class="project-name"><strong>TOTAL HORAS</strong></td>
+                                    <td colspan="2"></td>
                                     <td><strong>0</strong></td>
                                     <td><strong>0</strong></td>
                                     <td><strong>0</strong></td>
                                     <td><strong>0</strong></td>
                                     <td><strong>0</strong></td>
-                                    <td><strong>1120</strong></td>
-                                    <td><strong>1600</strong></td>
-                                    <td><strong>1440</strong></td>
-                                    <td><strong>1120</strong></td>
+                                    <td><strong>1.120</strong></td>
+                                    <td><strong>1.600</strong></td>
+                                    <td><strong>1.440</strong></td>
+                                    <td><strong>1.120</strong></td>
                                     <td><strong>960</strong></td>
                                     <td><strong>320</strong></td>
                                     <td><strong>0</strong></td>
@@ -454,10 +522,43 @@
                 </div>
             </div>
             
-            <!-- Gestión de Capacidad Tab -->
+            <!-- Resources Tab -->
             <div id="resources-tab" class="tab-content">
                 <div class="section-header">
                     <h2>Gestión de Capacidad</h2>
+                </div>
+                
+                <!-- KPIs and Charts Row for Resources -->
+                <div style="display: grid; grid-template-columns: 200px 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="card">
+                        <h3>Recursos Registrados</h3>
+                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">7</div>
+                        <div style="color: #718096; margin-bottom: 0.75rem;">Total recursos</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Asignados:</span>
+                                <span style="font-weight: 600; color: #319795;">6</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Sin asignar:</span>
+                                <span style="font-weight: 600; color: #319795;">1</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Horas Comprometidas vs Disponibles</h3>
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="resources-committed-hours-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Horas Comprometidas vs Disponibles por Skill</h3>
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="resources-hours-by-skill-chart"></canvas>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Matriz de Recursos -->
@@ -475,8 +576,9 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th class="project-name" style="min-width: 200px;">Recurso</th>
-                                    <th style="min-width: 150px;">Skills</th>
+                                    <th class="project-name">Recurso</th>
+                                    <th>Ratio de Ocupación</th>
+                                    <th>Skills</th>
                                     <th>Ene 2025</th>
                                     <th>Feb 2025</th>
                                     <th>Mar 2025</th>
@@ -494,75 +596,79 @@
                             <tbody>
                                 <tr>
                                     <td class="project-name"><strong>Juan Pérez</strong></td>
+                                    <td style="text-align: center; font-weight: 600; color: #319795;">81%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge construccion">Construcción</span>
                                     </td>
-                                    <td><span class="capacity-cell medium" data-resource="juan" data-month="ene" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('juan', 'feb')" title="Asignado - 120">120</span></td>
-                                    <td><span class="capacity-cell overload" onclick="editResourceCapacity('juan', 'mar')" title="Sobrecargado - 180">180</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'abr')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell low" onclick="editResourceCapacity('juan', 'may')" title="Parcialmente asignado - 80">80</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'jun')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'jul')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell low" onclick="editResourceCapacity('juan', 'ago')" title="Vacaciones - 40">40</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'sep')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'oct')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'nov')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('juan', 'dic')" title="Disponible - 160">160</span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="ene" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="feb" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell overload" data-resource="juan" data-month="mar" title="Sobrecargado: 180h, Disponibles: 0h">180<span class="available-hours">(0)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="abr" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell low" data-resource="juan" data-month="may" title="Comprometidas: 80h, Disponibles: 80h">80<span class="available-hours">(80)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="jun" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="jul" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell low" data-resource="juan" data-month="ago" title="Comprometidas: 40h, Disponibles: 120h">40<span class="available-hours">(120)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="sep" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="oct" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="juan" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                 </tr>
                                 <tr>
                                     <td class="project-name"><strong>María García</strong></td>
+                                    <td style="text-align: center; font-weight: 600; color: #319795;">79%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge diseno">Diseño</span>
                                     </td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('maria', 'ene')" title="Asignada - 140">140</span></td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('maria', 'feb')" title="Asignada - 150">150</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('maria', 'mar')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('maria', 'abr')" title="Asignada - 130">130</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('maria', 'may')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('maria', 'jun')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell low" onclick="editResourceCapacity('maria', 'jul')" title="Vacaciones - 80">80</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('maria', 'ago')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('maria', 'sep')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('maria', 'oct')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('maria', 'nov')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('maria', 'dic')" title="Disponible - 160">160</span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="ene" title="Comprometidas: 140h, Disponibles: 20h">140<span class="available-hours">(20)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="feb" title="Comprometidas: 150h, Disponibles: 10h">150<span class="available-hours">(10)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="mar" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="abr" title="Comprometidas: 130h, Disponibles: 30h">130<span class="available-hours">(30)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="may" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="jun" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell low" data-resource="maria" data-month="jul" title="Comprometidas: 80h, Disponibles: 80h">80<span class="available-hours">(80)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="ago" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="sep" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="oct" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="maria" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                 </tr>
                                 <tr>
                                     <td class="project-name"><strong>Carlos López</strong></td>
+                                    <td style="text-align: center; font-weight: 600; color: #319795;">77%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge project-management">Project Management</span>
                                     </td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'ene')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'feb')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('carlos', 'mar')" title="Asignado - 140">140</span></td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('carlos', 'abr')" title="Asignado - 150">150</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'may')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'jun')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'jul')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'ago')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'sep')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'oct')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'nov')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('carlos', 'dic')" title="Disponible - 160">160</span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="ene" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="feb" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="mar" title="Comprometidas: 140h, Disponibles: 20h">140<span class="available-hours">(20)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="abr" title="Comprometidas: 150h, Disponibles: 10h">150<span class="available-hours">(10)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="may" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="jun" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="jul" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="ago" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="sep" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="oct" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                 </tr>
                                 <tr>
                                     <td class="project-name"><strong>Ana Martín</strong></td>
+                                    <td style="text-align: center; font-weight: 600; color: #319795;">75%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
                                         <span class="skill-badge qa">QA/Testing</span>
                                     </td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'ene')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('ana', 'feb')" title="Asignada - 130">130</span></td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('ana', 'mar')" title="Asignada - 140">140</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'abr')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell high" onclick="editResourceCapacity('ana', 'may')" title="Asignada - 120">120</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'jun')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'jul')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'ago')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell low" onclick="editResourceCapacity('ana', 'sep')" title="Vacaciones - 80">80</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'oct')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'nov')" title="Disponible - 160">160</span></td>
-                                    <td><span class="capacity-cell medium" onclick="editResourceCapacity('ana', 'dic')" title="Disponible - 160">160</span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="ene" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="feb" title="Comprometidas: 130h, Disponibles: 30h">130<span class="available-hours">(30)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="mar" title="Comprometidas: 140h, Disponibles: 20h">140<span class="available-hours">(20)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="abr" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="may" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="jun" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="jul" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="ago" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell low" data-resource="ana" data-month="sep" title="Comprometidas: 80h, Disponibles: 80h">80<span class="available-hours">(80)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="oct" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
+                                    <td><span class="capacity-cell high" data-resource="ana" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -570,32 +676,30 @@
                 </div>
             </div>
             
-            <!-- Gestión de Proyectos Tab -->
+            <!-- Projects Tab -->
             <div id="projects-tab" class="tab-content">
                 <div class="section-header">
                     <h2>Gestión de Proyectos</h2>
                 </div>
                 
-                <!-- Indicadores y Gráficos de Proyectos -->
+                <!-- Charts Grid -->
                 <div style="display: grid; grid-template-columns: 200px 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-                    <!-- Indicador de Proyectos -->
                     <div class="card">
-                        <h3>Proyectos Activos</h3>
+                        <h3>Proyectos Registrados</h3>
                         <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">7</div>
-                        <div style="color: #718096;">Total proyectos</div>
-                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <span style="color: #718096;">Evolutivos:</span>
+                        <div style="color: #718096; margin-bottom: 0.75rem;">Total proyectos</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Evolutivos:</span>
                                 <span style="font-weight: 600; color: #319795;">3</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #718096;">Proyectos:</span>
+                                <span>Proyectos:</span>
                                 <span style="font-weight: 600; color: #319795;">4</span>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Gráfico Proyectos por Estado -->
                     <div class="card">
                         <h3>Por Estado</h3>
                         <div class="chart-container" style="height: 200px;">
@@ -603,7 +707,6 @@
                         </div>
                     </div>
                     
-                    <!-- Gráfico Proyectos por Dominio -->
                     <div class="card">
                         <h3>Por Dominio Principal</h3>
                         <div class="chart-container" style="height: 200px;">
@@ -611,7 +714,6 @@
                         </div>
                     </div>
                     
-                    <!-- Gráfico Proyectos por Prioridad -->
                     <div class="card">
                         <h3>Por Prioridad</h3>
                         <div class="chart-container" style="height: 200px;">
@@ -620,7 +722,6 @@
                     </div>
                 </div>
                 
-                <!-- Lista de Proyectos -->
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h2 style="margin-bottom: 0;">Proyectos Planificados</h2>
@@ -663,7 +764,7 @@
                                     <td><strong>NC-249</strong></td>
                                     <td>Soporte incorporación Tercer proveedor Call Center</td>
                                     <td>Integración de nuevo proveedor para...</td>
-                                    <td>Atención</td>
+                                    <td>Operación de Sistemas y Ciberseguridad</td>
                                     <td><span class="priority-badge alta">Alta</span></td>
                                     <td>2025-06-06</td>
                                     <td>2025-07-01</td>
@@ -691,24 +792,24 @@
                                     <td><strong>NC-15</strong></td>
                                     <td>Modelo datos: Fase 2</td>
                                     <td>Desarrollo del modelo de datos...</td>
-                                    <td>Tecnología</td>
+                                    <td>Atención</td>
                                     <td><span class="priority-badge media">Media</span></td>
                                     <td>2025-06-06</td>
                                     <td>2025-08-15</td>
                                     <td><span class="status-badge finalizado">Finalizado</span></td>
                                     <td>Evolutivo</td>
                                     <td>
-                                        <span class="action-icon" onclick="editProject('NC-15')" title="Editar">
+                                        <span class="action-icon" data-action="edit" data-project="NC-15" title="Editar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="deleteProject('NC-15')" title="Eliminar">
+                                        <span class="action-icon" data-action="delete" data-project="NC-15" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="syncWithJira('NC-15')" title="Sincronizar con Jira">
+                                        <span class="action-icon" data-action="sync" data-project="NC-15" title="Sincronizar con Jira">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
@@ -726,17 +827,17 @@
                                     <td><span class="status-badge desarrollo">Desarrollo</span></td>
                                     <td>Proyecto</td>
                                     <td>
-                                        <span class="action-icon" onclick="editProject('NC-16')" title="Editar">
+                                        <span class="action-icon" data-action="edit" data-project="NC-16" title="Editar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="deleteProject('NC-16')" title="Eliminar">
+                                        <span class="action-icon" data-action="delete" data-project="NC-16" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="syncWithJira('NC-16')" title="Sincronizar con Jira">
+                                        <span class="action-icon" data-action="sync" data-project="NC-16" title="Sincronizar con Jira">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
@@ -747,24 +848,24 @@
                                     <td><strong>NC-17</strong></td>
                                     <td>Direcciones: corresp. & fiscal</td>
                                     <td>Gestión de direcciones de...</td>
-                                    <td>Contratación</td>
+                                    <td>Atención</td>
                                     <td><span class="priority-badge media">Media</span></td>
                                     <td>2025-06-06</td>
                                     <td>2025-07-31</td>
                                     <td><span class="status-badge diseno-detallado">Diseño Detallado</span></td>
                                     <td>Evolutivo</td>
                                     <td>
-                                        <span class="action-icon" onclick="editProject('NC-17')" title="Editar">
+                                        <span class="action-icon" data-action="edit" data-project="NC-17" title="Editar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="deleteProject('NC-17')" title="Eliminar">
+                                        <span class="action-icon" data-action="delete" data-project="NC-17" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="syncWithJira('NC-17')" title="Sincronizar con Jira">
+                                        <span class="action-icon" data-action="sync" data-project="NC-17" title="Sincronizar con Jira">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
@@ -775,24 +876,24 @@
                                     <td><strong>NC-18</strong></td>
                                     <td>Ampliar licencias/Partner comunity en SF</td>
                                     <td>Ampliación de licencias para...</td>
-                                    <td>Tecnología</td>
+                                    <td>Integración</td>
                                     <td><span class="priority-badge baja">Baja</span></td>
                                     <td>2025-06-06</td>
                                     <td>2025-08-30</td>
                                     <td><span class="status-badge desarrollo">Desarrollo</span></td>
                                     <td>Evolutivo</td>
                                     <td>
-                                        <span class="action-icon" onclick="editProject('NC-18')" title="Editar">
+                                        <span class="action-icon" data-action="edit" data-project="NC-18" title="Editar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="deleteProject('NC-18')" title="Eliminar">
+                                        <span class="action-icon" data-action="delete" data-project="NC-18" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="syncWithJira('NC-18')" title="Sincronizar con Jira">
+                                        <span class="action-icon" data-action="sync" data-project="NC-18" title="Sincronizar con Jira">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
@@ -803,24 +904,24 @@
                                     <td><strong>NC-19</strong></td>
                                     <td>Securización de email</td>
                                     <td>Implementación de medidas de...</td>
-                                    <td>Tecnología</td>
+                                    <td>Datos</td>
                                     <td><span class="priority-badge alta">Alta</span></td>
                                     <td>2025-06-06</td>
                                     <td>2025-10-15</td>
                                     <td><span class="status-badge diseno-detallado">Diseño Detallado</span></td>
                                     <td>Proyecto</td>
                                     <td>
-                                        <span class="action-icon" onclick="editProject('NC-19')" title="Editar">
+                                        <span class="action-icon" data-action="edit" data-project="NC-19" title="Editar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="deleteProject('NC-19')" title="Eliminar">
+                                        <span class="action-icon" data-action="delete" data-project="NC-19" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="syncWithJira('NC-19')" title="Sincronizar con Jira">
+                                        <span class="action-icon" data-action="sync" data-project="NC-19" title="Sincronizar con Jira">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
@@ -831,24 +932,24 @@
                                     <td><strong>NC-20</strong></td>
                                     <td>Actuaciones para asegurar el plan de aceleración de Portabilidad</td>
                                     <td>Plan de aceleración para...</td>
-                                    <td>Operaciones</td>
+                                    <td>Ventas | Contratación y SW</td>
                                     <td><span class="priority-badge muy-alta">Muy Alta</span></td>
                                     <td>2025-06-06</td>
                                     <td>2025-11-30</td>
                                     <td><span class="status-badge desarrollo">Desarrollo</span></td>
                                     <td>Proyecto</td>
                                     <td>
-                                        <span class="action-icon" onclick="editProject('NC-20')" title="Editar">
+                                        <span class="action-icon" data-action="edit" data-project="NC-20" title="Editar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="deleteProject('NC-20')" title="Eliminar">
+                                        <span class="action-icon" data-action="delete" data-project="NC-20" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                         </span>
-                                        <span class="action-icon" onclick="syncWithJira('NC-20')" title="Sincronizar con Jira">
+                                        <span class="action-icon" data-action="sync" data-project="NC-20" title="Sincronizar con Jira">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
@@ -863,7 +964,7 @@
         </div>
     </div>
 
-    <!-- Local JavaScript -->
-    <script src="script.js?v=3"></script>
+    <!-- Modular JavaScript (ES6 Modules) -->
+    <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>

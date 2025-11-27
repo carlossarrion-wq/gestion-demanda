@@ -1,0 +1,402 @@
+/* Reusable Components */
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    font-weight: 400;
+    transition: all var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(49, 151, 149, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(49, 151, 149, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(49, 151, 149, 0.1);
+    color: var(--primary-color);
+    border: 2px solid rgba(49, 151, 149, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(49, 151, 149, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Cards */
+.card {
+    background: var(--bg-white);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card h2 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Badges */
+.priority-badge,
+.status-badge,
+.skill-badge,
+.resource-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Priority Badges */
+.priority-badge.muy-alta {
+    background: rgba(220, 38, 127, 0.15);
+    color: #be185d;
+}
+
+.priority-badge.alta {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+.priority-badge.media {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+}
+
+.priority-badge.baja {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+}
+
+.priority-badge.muy-baja {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+}
+
+/* Status Badges - Consistent with "Por Estado" chart colors */
+.status-badge.idea {
+    background: #e0f2f1;
+    color: #00695c;
+}
+
+.status-badge.conceptualizacion {
+    background: #b2dfdb;
+    color: #00695c;
+}
+
+.status-badge.viabilidad {
+    background: #80cbc4;
+    color: #004d40;
+}
+
+.status-badge.diseno-detallado {
+    background: #4db6ac;
+    color: #004d40;
+}
+
+.status-badge.desarrollo {
+    background: #26a69a;
+    color: #ffffff;
+}
+
+.status-badge.implantado {
+    background: #009688;
+    color: #ffffff;
+}
+
+.status-badge.finalizado {
+    background: #00796b;
+    color: #ffffff;
+}
+
+.status-badge.cancelado {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+/* Skill Badges - Consistent with "Horas Comprometidas por Perfil" chart colors */
+.skill-badge {
+    padding: 0.2rem 0.4rem;
+    margin: 0.1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.6rem;
+    font-weight: 600;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.skill-badge.construccion {
+    background: rgba(77, 182, 172, 0.2);
+    color: #00695c;
+    border-color: rgba(77, 182, 172, 0.4);
+}
+
+.skill-badge.construccion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(77, 182, 172, 0.3);
+    background: rgba(77, 182, 172, 0.3);
+    color: #004d40;
+}
+
+.skill-badge.analisis {
+    background: rgba(100, 181, 246, 0.2);
+    color: #1565c0;
+    border-color: rgba(100, 181, 246, 0.4);
+}
+
+.skill-badge.analisis:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
+    background: rgba(100, 181, 246, 0.3);
+    color: #0d47a1;
+}
+
+.skill-badge.diseno {
+    background: rgba(255, 183, 77, 0.2);
+    color: #e65100;
+    border-color: rgba(255, 183, 77, 0.4);
+}
+
+.skill-badge.diseno:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 183, 77, 0.3);
+    background: rgba(255, 183, 77, 0.3);
+    color: #bf360c;
+}
+
+.skill-badge.qa {
+    background: rgba(129, 199, 132, 0.2);
+    color: #2e7d32;
+    border-color: rgba(129, 199, 132, 0.4);
+}
+
+.skill-badge.qa:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(129, 199, 132, 0.3);
+    background: rgba(129, 199, 132, 0.3);
+    color: #1b5e20;
+}
+
+.skill-badge.project-management {
+    background: rgba(186, 104, 200, 0.2);
+    color: #6a1b9a;
+    border-color: rgba(186, 104, 200, 0.4);
+}
+
+.skill-badge.project-management:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(186, 104, 200, 0.3);
+    background: rgba(186, 104, 200, 0.3);
+    color: #4a148c;
+}
+
+.skill-badge.general {
+    background: rgba(144, 164, 174, 0.2);
+    color: #455a64;
+    border-color: rgba(144, 164, 174, 0.4);
+}
+
+.skill-badge.general:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(144, 164, 174, 0.3);
+    background: rgba(144, 164, 174, 0.3);
+    color: #263238;
+}
+
+/* Resource Badges */
+.resource-badge.developer {
+    background: rgba(66, 153, 225, 0.15);
+    color: #3182ce;
+}
+
+.resource-badge.designer {
+    background: rgba(236, 64, 122, 0.15);
+    color: #d53f8c;
+}
+
+.resource-badge.pm {
+    background: rgba(237, 137, 54, 0.15);
+    color: #dd6b20;
+}
+
+.resource-badge.qa {
+    background: rgba(56, 178, 172, 0.15);
+    color: #319795;
+}
+
+/* Alerts */
+.alert {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 400;
+}
+
+.alert.info {
+    background: rgba(66, 153, 225, 0.1);
+    color: #3182ce;
+    border-left: 4px solid #4299e1;
+}
+
+.alert.warning {
+    background: rgba(237, 137, 54, 0.1);
+    color: #dd6b20;
+    border-left: 4px solid #ed8936;
+}
+
+.alert.critical {
+    background: rgba(229, 62, 62, 0.1);
+    color: #c53030;
+    border-left: 4px solid #e53e3e;
+}
+
+/* Forms */
+.form-section {
+    background: var(--bg-white);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.form-group label {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.form-control {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    transition: all var(--transition-normal);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(49, 151, 149, 0.1);
+}
+
+/* Action Icons */
+.action-icon {
+    display: inline-block;
+    margin: 0 0.25rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-normal);
+    font-size: 1.2rem;
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+
+.action-icon:hover {
+    filter: grayscale(0%);
+    opacity: 1;
+    background: rgba(49, 151, 149, 0.1);
+    transform: scale(1.1);
+}
+
+.action-icon:first-child {
+    margin-left: 0;
+}
+
+.action-icon:last-child {
+    margin-right: 0;
+}
+
+/* App Badge */
+.app-badge {
+    background: var(--primary-light);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* User Avatar */
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* AI Badge */
+.ai-badge {
+    background: #E5EDEC;
+    color: #2d5f5d;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* Score Badge */
+.score-badge {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 600;
+}

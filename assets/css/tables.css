@@ -1,0 +1,311 @@
+/* Tables and Matrix Styles */
+
+/* Base Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+table th {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+    color: var(--text-primary);
+    padding: var(--spacing-sm);
+    text-align: left;
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+table td {
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.9rem;
+}
+
+table tr:hover {
+    background: rgba(49, 151, 149, 0.05);
+}
+
+/* Capacity Matrix */
+.capacity-matrix {
+    overflow-x: auto;
+    margin-top: var(--spacing-sm);
+}
+
+.capacity-matrix table {
+    min-width: 800px;
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+
+/* First column - Project name */
+.capacity-matrix .project-name {
+    text-align: left !important;
+    font-weight: 500;
+    color: var(--text-primary);
+    min-width: 250px !important;
+    max-width: 350px !important;
+    width: 300px !important;
+    padding: 0.75rem !important;
+}
+
+/* Second column - Tipo */
+.capacity-matrix th:nth-child(2),
+.capacity-matrix td:nth-child(2) {
+    text-align: center !important;
+    min-width: 80px !important;
+    max-width: 100px !important;
+    width: 90px !important;
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.8rem;
+}
+
+/* All month columns - UNIFORM WIDTH - MAXIMUM SPECIFICITY */
+/* For tables with 3 columns before months (Resources table: Recurso, Ratio de Ocupación, Skills, months...) */
+/* Second column - Ratio de Ocupación */
+#resources-tab .capacity-matrix table th:nth-child(2),
+#resources-tab .capacity-matrix table td:nth-child(2) {
+    text-align: center !important;
+    min-width: 100px !important;
+    max-width: 120px !important;
+    width: 110px !important;
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.8rem;
+}
+
+/* Third column - Skills */
+#resources-tab .capacity-matrix table th:nth-child(3),
+#resources-tab .capacity-matrix table td:nth-child(3) {
+    text-align: center !important;
+    min-width: 80px !important;
+    max-width: 100px !important;
+    width: 90px !important;
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.8rem;
+}
+
+/* Month columns starting from column 4 */
+#resources-tab .capacity-matrix table th:nth-child(4),
+#resources-tab .capacity-matrix table th:nth-child(5),
+#resources-tab .capacity-matrix table th:nth-child(6),
+#resources-tab .capacity-matrix table th:nth-child(7),
+#resources-tab .capacity-matrix table th:nth-child(8),
+#resources-tab .capacity-matrix table th:nth-child(9),
+#resources-tab .capacity-matrix table th:nth-child(10),
+#resources-tab .capacity-matrix table th:nth-child(11),
+#resources-tab .capacity-matrix table th:nth-child(12),
+#resources-tab .capacity-matrix table th:nth-child(13),
+#resources-tab .capacity-matrix table th:nth-child(14),
+#resources-tab .capacity-matrix table th:nth-child(15),
+#resources-tab .capacity-matrix table td:nth-child(4),
+#resources-tab .capacity-matrix table td:nth-child(5),
+#resources-tab .capacity-matrix table td:nth-child(6),
+#resources-tab .capacity-matrix table td:nth-child(7),
+#resources-tab .capacity-matrix table td:nth-child(8),
+#resources-tab .capacity-matrix table td:nth-child(9),
+#resources-tab .capacity-matrix table td:nth-child(10),
+#resources-tab .capacity-matrix table td:nth-child(11),
+#resources-tab .capacity-matrix table td:nth-child(12),
+#resources-tab .capacity-matrix table td:nth-child(13),
+#resources-tab .capacity-matrix table td:nth-child(14),
+#resources-tab .capacity-matrix table td:nth-child(15),
+/* For tables with 3 columns before months (Projects table: Proyecto, Tipo, Dominio, months...) */
+#matrix-tab .capacity-matrix table th:nth-child(4),
+#matrix-tab .capacity-matrix table th:nth-child(5),
+#matrix-tab .capacity-matrix table th:nth-child(6),
+#matrix-tab .capacity-matrix table th:nth-child(7),
+#matrix-tab .capacity-matrix table th:nth-child(8),
+#matrix-tab .capacity-matrix table th:nth-child(9),
+#matrix-tab .capacity-matrix table th:nth-child(10),
+#matrix-tab .capacity-matrix table th:nth-child(11),
+#matrix-tab .capacity-matrix table th:nth-child(12),
+#matrix-tab .capacity-matrix table th:nth-child(13),
+#matrix-tab .capacity-matrix table th:nth-child(14),
+#matrix-tab .capacity-matrix table th:nth-child(15),
+#matrix-tab .capacity-matrix table td:nth-child(4),
+#matrix-tab .capacity-matrix table td:nth-child(5),
+#matrix-tab .capacity-matrix table td:nth-child(6),
+#matrix-tab .capacity-matrix table td:nth-child(7),
+#matrix-tab .capacity-matrix table td:nth-child(8),
+#matrix-tab .capacity-matrix table td:nth-child(9),
+#matrix-tab .capacity-matrix table td:nth-child(10),
+#matrix-tab .capacity-matrix table td:nth-child(11),
+#matrix-tab .capacity-matrix table td:nth-child(12),
+#matrix-tab .capacity-matrix table td:nth-child(13),
+#matrix-tab .capacity-matrix table td:nth-child(14),
+#matrix-tab .capacity-matrix table td:nth-child(15) {
+    text-align: center !important;
+    min-width: 65px !important;
+    max-width: 65px !important;
+    width: 65px !important;
+    box-sizing: border-box !important;
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.8rem !important;
+    position: relative;
+}
+
+/* General fallback for any th/td in capacity-matrix not covered above */
+.capacity-matrix th {
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+}
+
+.capacity-matrix td {
+    text-align: center;
+    position: relative;
+    padding: 0.5rem 0.25rem;
+}
+
+/* Capacity Cells */
+.capacity-cell {
+    display: inline-block;
+    min-width: 40px;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    background: transparent;
+    color: var(--text-primary);
+}
+
+/* Available Hours Styling */
+.available-hours {
+    color: #10b981;
+    font-size: 0.85em;
+    font-weight: 600;
+    vertical-align: sub;
+    margin-left: 2px;
+}
+
+.capacity-cell:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.capacity-cell.empty {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.capacity-cell.low {
+    background: transparent;
+    color: var(--text-primary);
+}
+
+.capacity-cell.medium {
+    background: transparent;
+    color: var(--text-primary);
+}
+
+.capacity-cell.high {
+    background: transparent;
+    color: var(--text-primary);
+}
+
+.capacity-cell.overload {
+    background: transparent;
+    color: var(--text-primary);
+}
+
+/* Summary Row */
+.summary-row {
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    font-weight: 600;
+}
+
+.summary-row td {
+    border-top: 2px solid var(--primary-color);
+}
+
+/* Skill Row (expandable project details) */
+.skill-row {
+    background: rgba(49, 151, 149, 0.03);
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all var(--transition-normal);
+}
+
+.skill-row.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.skill-row td {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.skill-row .project-name {
+    padding-left: 2rem;
+}
+
+/* Expand Icon */
+.expand-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    margin-right: var(--spacing-xs);
+    cursor: pointer;
+    border-radius: 4px;
+    background: rgba(49, 151, 149, 0.1);
+    color: var(--primary-color);
+    font-weight: bold;
+    transition: all var(--transition-normal);
+}
+
+.expand-icon:hover {
+    background: rgba(49, 151, 149, 0.2);
+    transform: scale(1.1);
+}
+
+.expand-icon.expanded {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Project Row */
+.project-row {
+    transition: all var(--transition-normal);
+}
+
+.project-row:hover {
+    background: rgba(49, 151, 149, 0.05);
+}
+
+/* Projects Table Column Width Control */
+#projects-table-body tr td:nth-child(2),
+#projects-tab table th:nth-child(2) {
+    max-width: 200px;
+    width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#projects-table-body tr td:nth-child(5),
+#projects-tab table th:nth-child(5) {
+    max-width: 120px;
+    width: 120px;
+    text-align: center;
+}
+
+/* Drill Down Section */
+#drill-down-section {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: rgba(49, 151, 149, 0.05);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-color);
+}
+
+#drill-down-content {
+    margin-top: var(--spacing-sm);
+}

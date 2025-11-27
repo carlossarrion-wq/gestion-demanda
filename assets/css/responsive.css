@@ -1,0 +1,256 @@
+/* Responsive Design - Media Queries */
+
+@media (max-width: 768px) {
+    /* Container */
+    .container {
+        padding: var(--spacing-sm);
+    }
+
+    /* Header */
+    .header h1 {
+        font-size: 2rem;
+    }
+
+    .header p {
+        font-size: 0.9rem;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .header-title {
+        text-align: center;
+    }
+
+    /* Dashboard */
+    .dashboard {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    /* Tab Buttons */
+    .tab-buttons {
+        flex-direction: column;
+    }
+
+    .tab-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Section Header */
+    .section-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: stretch;
+    }
+
+    /* Capacity Matrix */
+    .capacity-matrix {
+        font-size: 0.8rem;
+    }
+
+    /* Period Section */
+    .period-section {
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .period-selector {
+        font-size: 1.5rem;
+    }
+
+    /* KPI Grid */
+    .kpi-grid-overview {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .kpi-card {
+        min-height: auto;
+    }
+
+    .kpi-value {
+        font-size: 2.5rem;
+    }
+
+    /* Charts Grid */
+    .charts-grid-overview {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    /* Insights and Recommendations */
+    .insights-recommendations-section {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .recommendation-item,
+    .insight-item {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .insights-card,
+    .recommendations-card {
+        padding: var(--spacing-md);
+    }
+
+    /* Cards */
+    .card {
+        padding: var(--spacing-md);
+    }
+
+    /* Forms */
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Tables */
+    table {
+        font-size: 0.85rem;
+    }
+
+    table th,
+    table td {
+        padding: 0.5rem;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Typography */
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
+
+    /* Header */
+    .header {
+        padding: var(--spacing-sm) 0;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    /* Period Selector */
+    .period-selector {
+        font-size: 1.25rem;
+        padding: 0.25rem 0.5rem;
+        padding-right: 2.5rem;
+    }
+
+    /* KPI Value */
+    .kpi-value {
+        font-size: 2rem;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    /* Badges */
+    .priority-badge,
+    .status-badge,
+    .skill-badge,
+    .resource-badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    /* Tables */
+    .capacity-matrix {
+        font-size: 0.75rem;
+    }
+
+    /* Action Icons */
+    .action-icon {
+        padding: 0.25rem;
+        font-size: 1rem;
+    }
+}
+
+/* Tablet Landscape */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .kpi-grid-overview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .charts-grid-overview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .insights-recommendations-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Large Screens */
+@media (min-width: 1920px) {
+    .container {
+        max-width: 2400px;
+    }
+
+    .header-content {
+        max-width: 2400px;
+    }
+
+    .kpi-grid-overview {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .charts-grid-overview {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+    }
+
+    .header {
+        position: static;
+        box-shadow: none;
+    }
+
+    .tab-buttons,
+    .btn,
+    .action-icon {
+        display: none;
+    }
+
+    .tab-content {
+        display: block !important;
+    }
+
+    .card,
+    .kpi-card,
+    .chart-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    .insights-recommendations-section {
+        break-inside: avoid;
+    }
+}
