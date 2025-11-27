@@ -819,30 +819,45 @@ function initializeProjectsByPriorityChart() {
 function initializeProjectsByStatusChart() {
     const ctx = document.getElementById('projects-by-status-chart');
     if (ctx) {
-        // Count projects by status from the table data, ordered by project lifecycle
+        // Count projects by status from the table data, ordered by project lifecycle (funnel style)
         const statusData = {
-            'Idea': 0,
-            'Conceptualización': 0,
-            'Diseño Detallado': 2,
-            'Viabilidad': 0,
-            'Desarrollo': 3,
-            'Implantado': 0,
-            'Finalizado': 2,
-            'Cancelado': 0
+            'Idea': 8,
+            'Conceptualización': 5,
+            'Viabilidad': 4,
+            'Diseño Detallado': 3,
+            'Desarrollo': 2,
+            'Implantado': 1,
+            'Finalizado': 1
         };
 
-        const colors = ['#cbd5e0', '#a0aec0', '#d69e2e', '#ed8936', '#319795', '#38a169', '#48bb78', '#718096'];
+        // Calculate cumulative values for funnel effect (inverted - wider at top)
+        const labels = Object.keys(statusData);
+        const values = Object.values(statusData);
+        const total = values.reduce((a, b) => a + b, 0);
+        
+        // Create funnel data - cumulative from top to bottom
+        const funnelData = [];
+        let cumulative = total;
+        values.forEach(value => {
+            funnelData.push(cumulative);
+            cumulative -= value;
+        });
+
+        // Colors gradient from light to dark (top to bottom of funnel)
+        const colors = ['#e0f2f1', '#b2dfdb', '#80cbc4', '#4db6ac', '#26a69a', '#009688', '#00796b'];
 
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: Object.keys(statusData),
+                labels: labels,
                 datasets: [{
-                    label: 'Proyectos',
-                    data: Object.values(statusData),
+                    label: 'Proyectos en Fase',
+                    data: funnelData,
                     backgroundColor: colors,
-                    borderWidth: 1,
-                    borderColor: '#ffffff'
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    barPercentage: 0.9,
+                    categoryPercentage: 0.95
                 }]
             },
             options: {
@@ -856,9 +871,10 @@ function initializeProjectsByStatusChart() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? ((context.parsed.x / total) * 100).toFixed(1) : 0;
-                                return `${context.label}: ${context.parsed.x} proyectos (${percentage}%)`;
+                                const index = context.dataIndex;
+                                const actualValue = values[index];
+                                const percentage = total > 0 ? ((actualValue / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${actualValue} proyectos (${percentage}%)`;
                             }
                         }
                     }
@@ -866,18 +882,19 @@ function initializeProjectsByStatusChart() {
                 scales: {
                     x: {
                         beginAtZero: true,
+                        max: total + 1,
                         ticks: {
                             stepSize: 1
                         },
                         title: {
                             display: true,
-                            text: 'Número de Proyectos'
+                            text: 'Proyectos Acumulados'
                         }
                     },
                     y: {
                         title: {
                             display: true,
-                            text: 'Estado'
+                            text: 'Fase del Proyecto'
                         }
                     }
                 }
