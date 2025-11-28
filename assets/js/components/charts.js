@@ -144,8 +144,23 @@ function initializeOverviewSkillDistributionChart() {
         data: skillTotals[skill],
         backgroundColor: skillColors[skill],
         borderColor: skillColors[skill],
-        borderWidth: 1
+        borderWidth: 1,
+        stack: 'skills',
+        order: 2
     }));
+    
+    // Add the red capacity line
+    const availableHours = [1750, 1720, 1760, 1740, 1700, 1780, 1750, 1730, 1760, 1770, 1750, 1740];
+    datasets.push({
+        label: 'Capacidad Real Disponible',
+        data: availableHours,
+        type: 'line',
+        borderColor: '#dc2626',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 4,
+        order: 1
+    });
     
     new Chart(ctx, {
         type: 'bar',
@@ -154,7 +169,6 @@ function initializeOverviewSkillDistributionChart() {
             datasets: datasets
         },
         options: {
-            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
@@ -170,8 +184,8 @@ function initializeOverviewSkillDistributionChart() {
                             if (label) {
                                 label += ': ';
                             }
-                            if (context.parsed.x !== null) {
-                                label += formatNumber(context.parsed.x);
+                            if (context.parsed.y !== null) {
+                                label += formatNumber(context.parsed.y);
                             }
                             return label;
                         }
@@ -179,7 +193,8 @@ function initializeOverviewSkillDistributionChart() {
                 }
             },
             scales: {
-                x: {
+                x: { stacked: true },
+                y: {
                     stacked: true,
                     beginAtZero: true,
                     title: { display: true, text: 'Horas' },
@@ -188,8 +203,7 @@ function initializeOverviewSkillDistributionChart() {
                             return formatNumber(value);
                         }
                     }
-                },
-                y: { stacked: true }
+                }
             }
         }
     });
@@ -202,13 +216,12 @@ function initializeOverviewCapacityByProfileChart() {
     const ctx = document.getElementById('overview-capacity-by-profile-chart');
     if (!ctx) return;
     
-    const profiles = ['Construcción', 'Diseño', 'Project Management', 'QA', 'Análisis', 'General'];
+    const profiles = ['Project Management', 'Análisis', 'Diseño', 'Construcción', 'QA', 'General'];
     const currentMonth = 'jul';
     
     const committedHours = calculateCommittedHoursByProfile(currentMonth);
     const horasProyectos = profiles.map(profile => Math.round(committedHours[profile] * 0.8));
     const horasEvolutivos = profiles.map(profile => Math.round(committedHours[profile] * 0.2));
-    const availableHours = [800, 220, 50, 100, 450, 70];
 
     new Chart(ctx, {
         type: 'bar',
@@ -219,22 +232,17 @@ function initializeOverviewCapacityByProfileChart() {
                     label: 'Horas Comprometidas Proyectos',
                     data: horasProyectos,
                     backgroundColor: 'rgba(49, 151, 149, 0.8)',
+                    borderColor: '#319795',
+                    borderWidth: 1,
                     stack: 'comprometidas'
                 },
                 {
                     label: 'Horas Comprometidas Evolutivos',
                     data: horasEvolutivos,
                     backgroundColor: 'rgba(49, 151, 149, 0.4)',
+                    borderColor: '#4db8b5',
+                    borderWidth: 1,
                     stack: 'comprometidas'
-                },
-                {
-                    label: 'Capacidad Real Disponible',
-                    data: availableHours,
-                    type: 'line',
-                    borderColor: '#dc2626',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointRadius: 4
                 }
             ]
         },
@@ -834,20 +842,36 @@ function initializeResourcesCommittedHoursChart() {
 }
 
 /**
- * Initialize Resources Hours by Skill Chart (Vertical Bar Chart - Committed vs Available)
+ * Initialize Resources Hours by Skill Chart (Stacked Vertical Bar Chart - Potential Available Hours by Profile)
  */
 function initializeResourcesHoursBySkillChart() {
     const ctx = document.getElementById('resources-hours-by-skill-chart');
     if (!ctx) return;
     
     const tableData = extractResourceTableData();
-    const committedBySkill = tableData.committedBySkill;
     const availableBySkill = tableData.availableBySkill;
+    const availableBySkillByMonth = tableData.availableBySkillByMonth;
     
-    // Sort skills by committed hours (descending)
-    const sortedSkills = Object.keys(committedBySkill).sort((a, b) => committedBySkill[b] - committedBySkill[a]);
-    const committedHours = sortedSkills.map(skill => committedBySkill[skill]);
-    const availableHours = sortedSkills.map(skill => availableBySkill[skill] || 0);
+    // Order skills in the specified order
+    const skillOrder = ['Project Management', 'Análisis', 'Diseño', 'Construcción', 'QA', 'General'];
+    const sortedSkills = skillOrder.filter(skill => availableBySkill[skill] !== undefined);
+    
+    // Current month index (July = 6)
+    const currentMonthIdx = 6;
+    
+    // Calculate available hours for current month and future months for each skill
+    const currentMonthHours = sortedSkills.map(skill => {
+        return availableBySkillByMonth[skill] ? availableBySkillByMonth[skill][currentMonthIdx] : 0;
+    });
+    
+    const futureMonthsHours = sortedSkills.map(skill => {
+        if (!availableBySkillByMonth[skill]) return 0;
+        let total = 0;
+        for (let i = currentMonthIdx + 1; i < 12; i++) {
+            total += availableBySkillByMonth[skill][i] || 0;
+        }
+        return total;
+    });
     
     new Chart(ctx, {
         type: 'bar',
@@ -855,18 +879,20 @@ function initializeResourcesHoursBySkillChart() {
             labels: sortedSkills,
             datasets: [
                 {
-                    label: 'Horas Comprometidas',
-                    data: committedHours,
-                    backgroundColor: '#9ca3af',
-                    borderColor: '#6b7280',
-                    borderWidth: 1
+                    label: 'Mes Actual (Jul)',
+                    data: currentMonthHours,
+                    backgroundColor: '#4db6ac',
+                    borderColor: '#26a69a',
+                    borderWidth: 1,
+                    stack: 'availability'
                 },
                 {
-                    label: 'Horas Disponibles',
-                    data: availableHours,
-                    backgroundColor: '#10b981',
-                    borderColor: '#059669',
-                    borderWidth: 1
+                    label: 'Meses Futuros (Ago-Dic)',
+                    data: futureMonthsHours,
+                    backgroundColor: '#80cbc4',
+                    borderColor: '#4db6ac',
+                    borderWidth: 1,
+                    stack: 'availability'
                 }
             ]
         },
@@ -887,7 +913,7 @@ function initializeResourcesHoursBySkillChart() {
                                 label += ': ';
                             }
                             if (context.parsed.y !== null) {
-                                label += formatNumber(context.parsed.y);
+                                label += formatNumber(context.parsed.y) + ' horas';
                             }
                             return label;
                         }
@@ -895,10 +921,11 @@ function initializeResourcesHoursBySkillChart() {
                 }
             },
             scales: {
-                x: { stacked: false },
+                x: { stacked: true },
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Horas' },
+                    stacked: true,
+                    title: { display: true, text: 'Horas Disponibles' },
                     ticks: {
                         callback: function(value) {
                             return formatNumber(value);
@@ -919,7 +946,8 @@ function extractResourceTableData() {
         committedByMonth: new Array(12).fill(0),
         availableByMonth: new Array(12).fill(0),
         committedBySkill: {},
-        availableBySkill: {}
+        availableBySkill: {},
+        availableBySkillByMonth: {}
     };
     
     // Find the resources table in the Resources tab
@@ -942,13 +970,14 @@ function extractResourceTableData() {
         if (!result.committedBySkill[skillName]) {
             result.committedBySkill[skillName] = 0;
             result.availableBySkill[skillName] = 0;
+            result.availableBySkillByMonth[skillName] = new Array(12).fill(0);
         }
         
-        // Get all capacity cells (skip first two columns: name and skills)
+        // Get all capacity cells (skip first three columns: name, ratio, and skills)
         const cells = row.querySelectorAll('td');
         
-        // Start from index 2 (first two are name and skills columns)
-        for (let i = 2; i < cells.length && i < 14; i++) {
+        // Start from index 3 (first three are name, ratio, and skills columns)
+        for (let i = 3; i < cells.length && i < 15; i++) {
             const cell = cells[i];
             const capacityCell = cell.querySelector('.capacity-cell');
             
@@ -966,14 +995,15 @@ function extractResourceTableData() {
                     availableHours = parseInt(availableText.replace(/[()]/g, '')) || 0;
                 }
                 
-                // Add to month totals (i-2 because we skip first two columns)
-                const monthIndex = i - 2;
+                // Add to month totals (i-3 because we skip first three columns)
+                const monthIndex = i - 3;
                 result.committedByMonth[monthIndex] += committedHours;
                 result.availableByMonth[monthIndex] += availableHours;
                 
                 // Add to skill totals
                 result.committedBySkill[skillName] += committedHours;
                 result.availableBySkill[skillName] += availableHours;
+                result.availableBySkillByMonth[skillName][monthIndex] += availableHours;
             }
         }
     });

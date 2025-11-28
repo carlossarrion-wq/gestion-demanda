@@ -85,7 +85,7 @@
                                 <span class="kpi-trend positive" id="proyectos-activos-trend">+17%</span>
                             </div>
                             <div class="kpi-value">7</div>
-                            <div class="kpi-subtitle">Total proyectos</div>
+                            <div class="kpi-subtitle">total proyectos</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Evolutivos:</span>
@@ -104,15 +104,15 @@
                                 <span class="kpi-trend positive" id="recursos-activos-trend">+20%</span>
                             </div>
                             <div class="kpi-value">12</div>
-                            <div class="kpi-subtitle">Recursos disponibles</div>
+                            <div class="kpi-subtitle">total recursos</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
-                                    <span>Recursos Asignados:</span>
-                                    <span style="font-weight: 600; color: #509594;" id="recursos-asignados">0</span>
+                                    <span>Recursos Asignados >50%:</span>
+                                    <span style="font-weight: 600; color: #509594;" id="recursos-asignados-50">9</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Recursos Asignados >80%:</span>
-                                    <span style="font-weight: 600; color: #509594;" id="recursos-asignados-80">0</span>
+                                    <span style="font-weight: 600; color: #509594;" id="recursos-asignados-80">3</span>
                                 </div>
                             </div>
                         </div>
@@ -123,7 +123,7 @@
                                 <span class="kpi-trend positive">+5%</span>
                             </div>
                             <div class="kpi-value">1.920</div>
-                            <div class="kpi-subtitle">horas/mes disponibles</div>
+                            <div class="kpi-subtitle">horas disponibles</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>FTEs Equivalentes:</span>
@@ -180,7 +180,7 @@
                         </div>
                         
                         <div class="chart-card">
-                            <h4>Horas Comprometidas vs Disponibles por Perfil</h4>
+                            <h4>Horas Comprometidas por Perfil y Tipo</h4>
                             <div class="chart-container" style="height: 300px;">
                                 <canvas id="overview-capacity-by-profile-chart"></canvas>
                             </div>
@@ -289,7 +289,7 @@
                 </div>
                 
                 <!-- KPIs Row for Matrix -->
-                <div style="display: grid; grid-template-columns: 200px 200px 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: 250px 250px 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="card">
                         <h3>Proyectos Registrados</h3>
                         <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="matrix-total-projects">7</div>
@@ -545,19 +545,19 @@
                 </div>
                 
                 <!-- KPIs and Charts Row for Resources -->
-                <div style="display: grid; grid-template-columns: 200px 200px 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: 250px 250px 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="card">
                         <h3>Recursos Registrados</h3>
-                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">7</div>
+                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">4</div>
                         <div style="color: #718096; margin-bottom: 0.75rem;">Total recursos</div>
                         <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
                             <div style="display: flex; justify-content: space-between;">
-                                <span>Asignados:</span>
-                                <span style="font-weight: 600; color: #319795;">6</span>
+                                <span>Con asignación a futuro:</span>
+                                <span style="font-weight: 600; color: #319795;">4</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
-                                <span>Sin asignar:</span>
-                                <span style="font-weight: 600; color: #319795;">1</span>
+                                <span>Sin asignación a futuro:</span>
+                                <span style="font-weight: 600; color: #319795;">0</span>
                             </div>
                         </div>
                     </div>
@@ -568,11 +568,11 @@
                         <div style="color: #718096; margin-bottom: 0.75rem;">Promedio del equipo</div>
                         <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
                             <div style="display: flex; justify-content: space-between;">
-                                <span>Ratio más alto:</span>
+                                <span>Mes Actual:</span>
                                 <span style="font-weight: 600; color: #319795;" id="resources-max-ratio">81%</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
-                                <span>Ratio más bajo:</span>
+                                <span>A futuro:</span>
                                 <span style="font-weight: 600; color: #319795;" id="resources-min-ratio">75%</span>
                             </div>
                         </div>
@@ -586,7 +586,7 @@
                     </div>
                     
                     <div class="card">
-                        <h3>Horas Comprometidas vs Disponibles por Skill</h3>
+                        <h3>Horas potenciales disponibles por perfil</h3>
                         <div class="chart-container" style="height: 200px;">
                             <canvas id="resources-hours-by-skill-chart"></canvas>
                         </div>
@@ -792,7 +792,7 @@
                                     </td>
                                     <td style="text-align: center; font-weight: 600; color: #319795;">75%</td>
                                     <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge qa">QA/Testing</span>
+                                        <span class="skill-badge qa">QA</span>
                                     </td>
                                     <td><span class="capacity-cell high" data-resource="ana" data-month="ene" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
                                     <td><span class="capacity-cell high" data-resource="ana" data-month="feb" title="Comprometidas: 130h, Disponibles: 30h">130<span class="available-hours">(30)</span></span></td>
@@ -857,7 +857,7 @@
                 </div>
                 
                 <!-- Charts Grid -->
-                <div style="display: grid; grid-template-columns: 200px repeat(3, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: 250px repeat(3, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="card">
                         <h3>Proyectos Registrados</h3>
                         <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">7</div>
