@@ -879,7 +879,7 @@ function initializeResourcesHoursBySkillChart() {
             labels: sortedSkills,
             datasets: [
                 {
-                    label: 'Mes Actual (Jul)',
+                    label: 'Mes Actual',
                     data: currentMonthHours,
                     backgroundColor: '#4db6ac',
                     borderColor: '#26a69a',
@@ -887,7 +887,7 @@ function initializeResourcesHoursBySkillChart() {
                     stack: 'availability'
                 },
                 {
-                    label: 'Meses Futuros (Ago-Dic)',
+                    label: 'Meses Futuros',
                     data: futureMonthsHours,
                     backgroundColor: '#80cbc4',
                     borderColor: '#4db6ac',
@@ -960,18 +960,32 @@ function extractResourceTableData() {
     const rows = table.querySelectorAll('tbody tr');
     
     rows.forEach(row => {
-        // Get the skill badge for this resource
-        const skillBadge = row.querySelector('.skill-badge');
-        if (!skillBadge) return;
+        // Get all skill badges for this resource (can have multiple)
+        const skillBadges = row.querySelectorAll('.skill-badge');
+        if (skillBadges.length === 0) return;
         
-        const skillName = skillBadge.textContent.trim();
+        // Map abbreviated names to full skill names
+        const skillMap = {
+            'PM': 'Project Management',
+            'Ana': 'Análisis',
+            'Dis': 'Diseño',
+            'Cons': 'Construcción',
+            'QA': 'QA',
+            'Gen': 'General'
+        };
         
-        // Initialize skill totals if not exists
-        if (!result.committedBySkill[skillName]) {
-            result.committedBySkill[skillName] = 0;
-            result.availableBySkill[skillName] = 0;
-            result.availableBySkillByMonth[skillName] = new Array(12).fill(0);
-        }
+        // Process each skill badge for this resource
+        skillBadges.forEach(skillBadge => {
+            const abbreviatedName = skillBadge.textContent.trim();
+            const skillName = skillMap[abbreviatedName] || abbreviatedName;
+            
+            // Initialize skill totals if not exists
+            if (!result.committedBySkill[skillName]) {
+                result.committedBySkill[skillName] = 0;
+                result.availableBySkill[skillName] = 0;
+                result.availableBySkillByMonth[skillName] = new Array(12).fill(0);
+            }
+        });
         
         // Get all capacity cells (skip first three columns: name, ratio, and skills)
         const cells = row.querySelectorAll('td');
@@ -1000,10 +1014,17 @@ function extractResourceTableData() {
                 result.committedByMonth[monthIndex] += committedHours;
                 result.availableByMonth[monthIndex] += availableHours;
                 
-                // Add to skill totals
-                result.committedBySkill[skillName] += committedHours;
-                result.availableBySkill[skillName] += availableHours;
-                result.availableBySkillByMonth[skillName][monthIndex] += availableHours;
+                // Add to skill totals for each skill this resource has
+                skillBadges.forEach(skillBadge => {
+                    const abbreviatedName = skillBadge.textContent.trim();
+                    const skillName = skillMap[abbreviatedName] || abbreviatedName;
+                    
+                    // Divide hours equally among all skills for this resource
+                    const hoursPerSkill = availableHours / skillBadges.length;
+                    result.committedBySkill[skillName] += committedHours / skillBadges.length;
+                    result.availableBySkill[skillName] += hoursPerSkill;
+                    result.availableBySkillByMonth[skillName][monthIndex] += hoursPerSkill;
+                });
             }
         }
     });
