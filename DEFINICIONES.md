@@ -29,7 +29,9 @@ De los anteriores, SAP-ISU, Mulesoft, Darwin y SAP Commissions son mantenidos po
 
 **Recurso**: se corresponde con una persona física. Cada recurso está asociado a uno o varios skills. Los skills de un recurso determinarán el tipo de tareas que puede acometer en un proyecto.
 * Los **skills** disponibles son: PM (Project Management), Conceptualización, Análisis, Construcción, QA y General
-* Las tareas de los proyectos son las mismas que los skills. Un recurso no podrá ser asignado a una tarea específica si no dispone del skill equivalente. 
+* En la interfaz, los skills se muestran mediante **badges abreviados**: PM, Ana (Análisis), Dis (Diseño), Cons (Construcción), QA, Gen (General)
+* Un recurso puede tener **múltiples skills** simultáneamente, lo que le permite trabajar en diferentes tipos de tareas
+* Las tareas de los proyectos son las mismas que los skills. Un recurso no podrá ser asignado a una tarea específica si no dispone del skill equivalente.
 
 ---
 
@@ -227,11 +229,13 @@ GRÁFICO "Horas Comprometidas vs Disponibles": Este gráfico de barras verticale
 
 Este gráfico permite identificar periodos de sobrecarga o subutilización del equipo completo.
 
-GRÁFICO "Horas Comprometidas vs Disponibles por Skill": Este gráfico de barras verticales no apiladas muestra la distribución de horas comprometidas versus disponibles, desglosado por cada skill o perfil. Los skills están ordenados en el eje X como: Project Management, Análisis, Diseño, Construcción, QA, General. Para cada skill se muestran dos barras:
-* Horas Comprometidas (barras grises): Total de horas asignadas para ese skill
-* Horas Disponibles (barras verdes): Total de horas libres para ese skill
+GRÁFICO "Horas potenciales disponibles por perfil": Este gráfico de barras verticales apiladas muestra las horas disponibles por skill o perfil, diferenciando entre el mes actual y los meses futuros. Los skills están ordenados en el eje X como: Project Management, Análisis, Diseño, Construcción, QA, General. Para cada skill se muestran dos segmentos apilados:
+* Mes Actual (verde oscuro): Horas disponibles en el mes actual (julio)
+* Meses Futuros (verde claro): Suma de horas disponibles desde agosto hasta diciembre
 
-Este gráfico permite identificar cuellos de botella por tipo de recurso y detectar qué perfiles están más saturados o subutilizados.
+Este gráfico permite identificar la capacidad potencial disponible por perfil, tanto inmediata como a futuro. Es especialmente útil para planificar nuevas asignaciones y detectar qué perfiles tienen mayor disponibilidad.
+
+**NOTA TÉCNICA**: Cuando un recurso tiene múltiples skills, sus horas disponibles se distribuyen equitativamente entre todos sus skills. Por ejemplo, si un recurso con skills "Diseño" y "Construcción" tiene 80 horas disponibles, se asignarán 40 horas a cada skill.
 
 **DEFINICIÓN DE TABLA MATRIZ**:
 
@@ -240,7 +244,14 @@ TABLA "Matriz de Recursos por Mes": Esta tabla matricial muestra la planificaci�
 * Cada fila representa un recurso individual, mostrando:
   - **Nombre del Recurso**: Nombre completo de la persona
   - **Ratio de Ocupación**: Porcentaje promedio de ocupación del recurso a lo largo del periodo
-  - **Skills**: Badges visuales que indican los skills o perfiles del recurso (PM, Análisis, Construcción, Diseño, QA, General)
+  - **Skills**: Badges visuales abreviados que indican los skills o perfiles del recurso:
+    * PM (Project Management)
+    * Ana (Análisis)
+    * Dis (Diseño)
+    * Cons (Construcción)
+    * QA (Quality Assurance)
+    * Gen (General)
+  - Un recurso puede mostrar múltiples badges si posee varios skills
   
 * Las columnas mensuales muestran para cada mes:
   - **Horas Comprometidas**: Número de horas asignadas a proyectos (número principal en negro)
