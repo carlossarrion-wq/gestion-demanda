@@ -25,8 +25,28 @@
                 <p>Sistema Modular de Gestión de Recursos y Proyectos</p>
             </div>
             <div class="header-user-section">
-                <div class="app-badge">DARWIN</div>
-                <div class="user-avatar">D</div>
+                <button id="team-name-btn" class="user-info-btn team-btn"></button>
+                <div style="position: relative;">
+                    <button id="user-initial-btn" class="user-info-btn initial-btn" onclick="toggleUserDropdown()"></button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div id="dropdown-avatar" class="user-dropdown-avatar"></div>
+                            <div class="user-dropdown-info">
+                                <div id="dropdown-name" class="user-dropdown-name"></div>
+                                <div id="dropdown-email" class="user-dropdown-email"></div>
+                            </div>
+                        </div>
+                        <div class="user-dropdown-divider"></div>
+                        <div class="user-dropdown-section">
+                            <div class="user-dropdown-item user-dropdown-logout" onclick="logout()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 005.25 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                                </svg>
+                                Cerrar Sesión
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1105,6 +1125,98 @@
             </div>
         </div>
     </div>
+
+    <!-- Authentication Check Script -->
+    <script>
+        // Check authentication on page load
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('user_authenticated');
+            
+            if (isAuthenticated !== 'true') {
+                // Not authenticated, redirect to login
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // User is authenticated, populate user information dynamically
+            const username = sessionStorage.getItem('username') || 'Usuario';
+            const userFullName = sessionStorage.getItem('user_full_name') || username;
+            const userTeam = sessionStorage.getItem('user_team');
+            const userTeamFull = sessionStorage.getItem('user_team_full');
+            const userEmail = sessionStorage.getItem('user_email') || 'usuario@example.com';
+            
+            // Populate team button with user's team keyword (DYNAMIC)
+            const teamBtn = document.getElementById('team-name-btn');
+            if (teamBtn && userTeam) {
+                teamBtn.textContent = userTeam.toUpperCase();
+            } else if (teamBtn && userTeamFull) {
+                // Fallback to full team name if keyword not available
+                teamBtn.textContent = userTeamFull;
+            }
+            
+            // Populate initial button with user's first initial (DYNAMIC)
+            const initialBtn = document.getElementById('user-initial-btn');
+            if (initialBtn && userFullName) {
+                initialBtn.textContent = userFullName.charAt(0).toUpperCase();
+            }
+            
+            // Populate dropdown with user information
+            const dropdownAvatar = document.getElementById('dropdown-avatar');
+            if (dropdownAvatar && userFullName) {
+                dropdownAvatar.textContent = userFullName.charAt(0).toUpperCase();
+            }
+            
+            const dropdownName = document.getElementById('dropdown-name');
+            if (dropdownName) {
+                dropdownName.textContent = userFullName;
+            }
+            
+            const dropdownEmail = document.getElementById('dropdown-email');
+            if (dropdownEmail) {
+                dropdownEmail.textContent = userEmail;
+            }
+            
+            // Optional: Log authentication info for debugging
+            console.log('User authenticated:', {
+                username: username,
+                fullName: userFullName,
+                team: userTeam,
+                email: userEmail,
+                loginTime: sessionStorage.getItem('login_timestamp')
+            });
+        })();
+        
+        // Toggle user dropdown visibility
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            if (dropdown) {
+                const isVisible = dropdown.style.display === 'block';
+                dropdown.style.display = isVisible ? 'none' : 'block';
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            // Clear session storage
+            sessionStorage.clear();
+            
+            // Redirect to login
+            window.location.href = 'login.html';
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('user-dropdown');
+            const initialBtn = document.getElementById('user-initial-btn');
+            
+            if (dropdown && initialBtn) {
+                // Check if click is outside both the button and dropdown
+                if (!initialBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
+    </script>
 
     <!-- Modular JavaScript (ES6 Modules) -->
     <script type="module" src="assets/js/main.js"></script>
