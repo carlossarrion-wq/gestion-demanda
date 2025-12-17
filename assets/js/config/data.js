@@ -1,5 +1,16 @@
 // Data Configuration and Storage
 
+// API Configuration
+export const API_CONFIG = {
+    BASE_URL: 'https://xrqo2gedpl.execute-api.eu-west-1.amazonaws.com/prod',
+    ENDPOINTS: {
+        PROJECTS: '/projects',
+        RESOURCES: '/resources',
+        ASSIGNMENTS: '/assignments',
+        CAPACITY: '/capacity'
+    }
+};
+
 // Global data storage
 export let resources = [
     { id: 'juan', name: 'Juan Pérez', type: 'developer', capacity: 160, cost: 4500, status: 'available' },

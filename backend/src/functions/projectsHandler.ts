@@ -15,15 +15,33 @@ export const handler = async (
   const pathParameters = event.pathParameters || {};
   const projectId = pathParameters.id;
 
+  // Handle OPTIONS preflight request for CORS
+  if (method === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,x-user-team',
+      },
+      body: '',
+    };
+  }
+
   try {
+    // Extract user team from headers
+    const userTeam = event.headers['x-user-team'] || event.headers['X-User-Team'];
+    console.log('User team from headers:', userTeam);
+
     switch (method) {
       case 'GET':
         if (projectId) {
           // GET /projects/{id} - Obtener proyecto por ID
           return await getProjectById(projectId);
         } else {
-          // GET /projects - Listar todos los proyectos
-          return await listProjects(event.queryStringParameters || {});
+          // GET /projects - Listar todos los proyectos filtrados por equipo
+          console.log('Calling listProjects with userTeam:', userTeam);
+          return await listProjects(event.queryStringParameters || {}, userTeam);
         }
 
       case 'POST':
@@ -57,39 +75,25 @@ export const handler = async (
 /**
  * GET /projects - Listar proyectos con filtros opcionales
  */
-async function listProjects(queryParams: Record<string, string | undefined>): Promise<APIGatewayProxyResult> {
+async function listProjects(queryParams: Record<string, string | undefined>, userTeam?: string): Promise<APIGatewayProxyResult> {
   const { type, status, domain, priority } = queryParams;
 
   const projects = await prisma.project.findMany({
     where: {
       ...(type && { type }),
-      ...(status && { status: { name: status } }),
-      ...(domain && { domain: { name: domain } }),
+      ...(status && { status: parseInt(status, 10) }),
+      ...(domain && { domain: parseInt(domain, 10) }),
       ...(priority && { priority }),
+      ...(userTeam && { team: userTeam }),
     },
     include: {
-      status: {
-        select: {
-          id: true,
-          name: true,
-          order: true,
-        },
-      },
-      domain: {
-        select: {
-          id: true,
-          name: true,
-          description: true,
-        },
-      },
       projectSkillBreakdowns: {
-        include: {
-          skill: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+        select: {
+          id: true,
+          skillName: true,
+          month: true,
+          year: true,
+          hours: true,
         },
         orderBy: [
           { year: 'asc' },
@@ -100,7 +104,7 @@ async function listProjects(queryParams: Record<string, string | undefined>): Pr
         select: {
           id: true,
           resourceId: true,
-          skillId: true,
+          skillName: true,
           month: true,
           year: true,
           hours: true,
@@ -154,11 +158,13 @@ async function getProjectById(projectId: string): Promise<APIGatewayProxyResult>
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: {
-      status: true,
-      domain: true,
       projectSkillBreakdowns: {
-        include: {
-          skill: true,
+        select: {
+          id: true,
+          skillName: true,
+          month: true,
+          year: true,
+          hours: true,
         },
         orderBy: [
           { year: 'asc' },
@@ -173,12 +179,6 @@ async function getProjectById(projectId: string): Promise<APIGatewayProxyResult>
               code: true,
               name: true,
               email: true,
-            },
-          },
-          skill: {
-            select: {
-              id: true,
-              name: true,
             },
           },
         },
@@ -247,36 +247,19 @@ async function createProject(body: string | null): Promise<APIGatewayProxyResult
     return errorResponse(`Project with code '${data.code}' already exists`, 409);
   }
 
-  // Verificar que status y domain existan
-  const [status, domain] = await Promise.all([
-    prisma.status.findUnique({ where: { id: data.statusId } }),
-    prisma.domain.findUnique({ where: { id: data.domainId } }),
-  ]);
-
-  if (!status) {
-    return errorResponse(`Status with ID '${data.statusId}' not found`, 404);
-  }
-
-  if (!domain) {
-    return errorResponse(`Domain with ID '${data.domainId}' not found`, 404);
-  }
-
   // Crear proyecto
   const project = await prisma.project.create({
     data: {
       code: data.code,
       title: data.title,
       description: data.description || null,
-      type: data.type,
+      type: data.type && data.type.trim() !== '' ? data.type : null,
       priority: data.priority,
       startDate: data.startDate ? new Date(data.startDate) : null,
       endDate: data.endDate ? new Date(data.endDate) : null,
-      statusId: data.statusId,
-      domainId: data.domainId,
-    },
-    include: {
-      status: true,
-      domain: true,
+      status: data.status,
+      domain: data.domain,
+      team: data.team,
     },
   });
 
@@ -333,21 +316,6 @@ async function updateProject(projectId: string, body: string | null): Promise<AP
     }
   }
 
-  // Verificar que status y domain existan (si se están actualizando)
-  if (data.statusId) {
-    const status = await prisma.status.findUnique({ where: { id: data.statusId } });
-    if (!status) {
-      return errorResponse(`Status with ID '${data.statusId}' not found`, 404);
-    }
-  }
-
-  if (data.domainId) {
-    const domain = await prisma.domain.findUnique({ where: { id: data.domainId } });
-    if (!domain) {
-      return errorResponse(`Domain with ID '${data.domainId}' not found`, 404);
-    }
-  }
-
   // Actualizar proyecto
   const updatedProject = await prisma.project.update({
     where: { id: projectId },
@@ -363,12 +331,9 @@ async function updateProject(projectId: string, body: string | null): Promise<AP
       ...(data.endDate !== undefined && { 
         endDate: data.endDate ? new Date(data.endDate) : null 
       }),
-      ...(data.statusId && { statusId: data.statusId }),
-      ...(data.domainId && { domainId: data.domainId }),
-    },
-    include: {
-      status: true,
-      domain: true,
+      ...(data.status && { status: data.status }),
+      ...(data.domain && { domain: data.domain }),
+      ...(data.team && { team: data.team }),
     },
   });
 
@@ -389,20 +354,16 @@ async function deleteProject(projectId: string): Promise<APIGatewayProxyResult> 
     throw error;
   }
 
-  // Verificar que el proyecto exista
+  // Verificar que el proyecto exista (sin incluir relaciones)
   const existingProject = await prisma.project.findUnique({
     where: { id: projectId },
-    include: {
-      projectSkillBreakdowns: true,
-      assignments: true,
-    },
   });
 
   if (!existingProject) {
     throw new NotFoundError('Project', projectId);
   }
 
-  // Eliminar proyecto (cascade eliminará skill breakdowns y assignments)
+  // Eliminar proyecto (cascade eliminará skill breakdowns y assignments automáticamente)
   await prisma.project.delete({
     where: { id: projectId },
   });

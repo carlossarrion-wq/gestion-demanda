@@ -3,7 +3,22 @@
 import { initializeTabs } from './components/tabs.js';
 import { initializeAllCharts } from './components/charts.js';
 import { initializeKPIs } from './components/kpi.js';
-import { projectMetadata, projectSkillBreakdown, monthKeys } from './config/data.js';
+import { 
+    initProjectModal, 
+    openCreateProjectModal, 
+    openEditProjectModal, 
+    openDeleteModal 
+} from './components/projectModal.js';
+import { 
+    initResourceModal,
+    openCreateResourceModal,
+    openEditResourceModal,
+    openDeleteResourceModal
+} from './components/resourceModal.js';
+import { openTaskModal } from './components/taskModal.js';
+import { openAssignmentView } from './components/assignmentView.js';
+import { initializeResourceCapacity } from './components/resourceCapacity.js';
+import { projectMetadata, projectSkillBreakdown, monthKeys, API_CONFIG } from './config/data.js';
 import { 
     getPriorityText, 
     getPriorityClass, 
@@ -24,9 +39,15 @@ function initializeApp() {
     initializeTabs();
     initializeKPIs();
     initializeAllCharts();
+    initProjectModal();
+    initResourceModal();
+    initializeResourceCapacity();
     
     // Initialize tables
     populateTopProjectsTable();
+    
+    // Load projects from API
+    loadProjectsFromAPI();
     
     // Update Matrix KPIs
     updateMatrixKPIs();
@@ -35,6 +56,58 @@ function initializeApp() {
     initializeEventListeners();
     
     console.log('Application initialized successfully!');
+}
+
+/**
+ * Load projects from API and populate the table
+ */
+async function loadProjectsFromAPI() {
+    try {
+        // Get authentication tokens
+        const awsAccessKey = sessionStorage.getItem('aws_access_key');
+        const userTeam = sessionStorage.getItem('user_team');
+        
+        if (!awsAccessKey || !userTeam) {
+            console.warn('No authentication tokens found, skipping project load');
+            console.warn('awsAccessKey:', awsAccessKey ? 'present' : 'missing');
+            console.warn('userTeam:', userTeam ? userTeam : 'missing');
+            return;
+        }
+        
+        console.log('Loading projects from API...');
+        console.log('User team:', userTeam);
+        console.log('API URL:', `${API_CONFIG.BASE_URL}/projects`);
+        
+        // Fetch projects
+        const response = await fetch(`${API_CONFIG.BASE_URL}/projects`, {
+            headers: {
+                'Authorization': awsAccessKey,
+                'x-user-team': userTeam
+            }
+        });
+        
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error('Error al cargar proyectos');
+        }
+        
+        const data = await response.json();
+        console.log('Projects data received:', data);
+        
+        // Extract projects array from response
+        // The API returns: {success: true, data: {projects: [...], count: N}}
+        const projects = data.data?.projects || data.projects || [];
+        console.log(`Filtered projects for team "${userTeam}":`, projects.length);
+        
+        // Update table
+        updateProjectsTable(projects);
+        
+        console.log(`Loaded ${projects.length} projects from API`);
+        
+    } catch (error) {
+        console.error('Error loading projects from API:', error);
+        // Don't show error notification on page load, just log it
+    }
 }
 
 /**
@@ -136,16 +209,23 @@ function initializeEventListeners() {
     const addResourceBtn = document.getElementById('add-resource-btn');
     if (addResourceBtn) {
         addResourceBtn.addEventListener('click', function() {
-            alert('Funcionalidad de añadir recurso en desarrollo');
+            console.log('Add resource button clicked!');
+            openCreateResourceModal();
         });
     }
     
     // Add project button
     const addProjectBtn = document.getElementById('add-project-btn');
+    console.log('Add project button found:', addProjectBtn);
     if (addProjectBtn) {
         addProjectBtn.addEventListener('click', function() {
-            alert('Funcionalidad de añadir proyecto en desarrollo');
+            console.log('Add project button clicked!');
+            console.log('openCreateProjectModal function:', typeof openCreateProjectModal);
+            openCreateProjectModal();
         });
+        console.log('Event listener attached to add-project-btn');
+    } else {
+        console.error('Add project button NOT found!');
     }
     
     // Import Jira button
@@ -155,6 +235,15 @@ function initializeEventListeners() {
             importFromJira();
         });
     }
+    
+    // Tab change listener - reload projects when Projects tab is opened
+    document.addEventListener('click', function(e) {
+        const tabButton = e.target.closest('.tab-button');
+        if (tabButton && tabButton.getAttribute('data-tab') === 'projects') {
+            console.log('Projects tab opened, reloading projects...');
+            loadProjectsFromAPI();
+        }
+    });
     
     // Expand icons for project skills and resource projects
     document.addEventListener('click', function(e) {
@@ -197,6 +286,10 @@ function initializeEventListeners() {
             if (action && projectId) {
                 if (action === 'edit') {
                     editProject(projectId);
+                } else if (action === 'tasks') {
+                    openTasksModal(projectId);
+                } else if (action === 'resources') {
+                    assignResources(projectId);
                 } else if (action === 'delete') {
                     deleteProject(projectId);
                 } else if (action === 'sync') {
@@ -205,6 +298,42 @@ function initializeEventListeners() {
             }
         }
     });
+}
+
+/**
+ * Open tasks modal for a project
+ */
+function openTasksModal(projectCode) {
+    console.log('Opening tasks modal for project:', projectCode);
+    
+    // Find project in allProjects array
+    const project = allProjects.find(p => p.code === projectCode);
+    
+    if (!project) {
+        console.error(`Project ${projectCode} not found`);
+        return;
+    }
+    
+    // Open task modal with project ID and code
+    openTaskModal(project.id, project.code);
+}
+
+/**
+ * Assign resources to a project
+ */
+function assignResources(projectCode) {
+    console.log('Opening assignment view for project:', projectCode);
+    
+    // Find project in allProjects array
+    const project = allProjects.find(p => p.code === projectCode);
+    
+    if (!project) {
+        console.error(`Project ${projectCode} not found`);
+        return;
+    }
+    
+    // Open assignment view with project ID and code
+    openAssignmentView(project.id, project.code);
 }
 
 /**
@@ -286,17 +415,60 @@ function editResourceCapacity(resourceId, month) {
 /**
  * Edit project
  */
-function editProject(projectId) {
-    alert(`Editar proyecto: ${projectId} (funcionalidad en desarrollo)`);
+function editProject(projectCode) {
+    console.log('Edit project called for code:', projectCode);
+    
+    // Find project in allProjects array (loaded from API)
+    const project = allProjects.find(p => p.code === projectCode);
+    
+    if (!project) {
+        console.error(`Project ${projectCode} not found in allProjects`);
+        return;
+    }
+    
+    console.log('Project found for editing:', project);
+    
+    // The project object from API already has the correct structure
+    // that openEditProjectModal expects: {id, code, type, title, description, domain, priority, startDate, endDate, status}
+    openEditProjectModal(project);
 }
 
 /**
  * Delete project
  */
-function deleteProject(projectId) {
-    if (confirm(`¿Estás seguro de que quieres eliminar el proyecto ${projectId}?`)) {
-        alert('Proyecto eliminado (funcionalidad en desarrollo)');
+function deleteProject(projectCode) {
+    console.log('Delete project called for code:', projectCode);
+    
+    // Find project in allProjects array (loaded from API)
+    const project = allProjects.find(p => p.code === projectCode);
+    
+    if (!project) {
+        console.error(`Project ${projectCode} not found in allProjects`);
+        // Fallback: try to find in projectMetadata (for backward compatibility)
+        const metadata = projectMetadata[projectCode];
+        if (metadata) {
+            const fallbackProject = {
+                id: metadata.id || projectCode,
+                code: projectCode,
+                title: metadata.title
+            };
+            openDeleteModal(fallbackProject);
+            return;
+        }
+        console.error(`Project ${projectCode} not found anywhere`);
+        return;
     }
+    
+    console.log('Project found:', project);
+    
+    // Create project object for modal with the correct structure
+    const projectForModal = {
+        id: project.id,
+        code: project.code,
+        title: project.title
+    };
+    
+    openDeleteModal(projectForModal);
 }
 
 /**
@@ -328,31 +500,300 @@ function importFromJira() {
  * Update Matrix KPIs
  */
 function updateMatrixKPIs() {
-    // Count projects by type
+    // Count projects by type from real data
     let totalProjects = 0;
     let evolutivosCount = 0;
     let proyectosCount = 0;
     
-    Object.keys(projectMetadata).forEach(projectId => {
-        const metadata = projectMetadata[projectId];
-        totalProjects++;
+    // Use window.allProjects array (loaded from API)
+    if (window.allProjects && Array.isArray(window.allProjects)) {
+        totalProjects = window.allProjects.length;
         
-        if (metadata.tipo === 'Evolutivo') {
-            evolutivosCount++;
-        } else {
-            proyectosCount++;
+        window.allProjects.forEach(project => {
+            if (project.type === 'Evolutivo') {
+                evolutivosCount++;
+            } else if (project.type === 'Proyecto') {
+                proyectosCount++;
+            }
+        });
+    }
+    
+    // Update Matrix tab elements
+    const matrixTotalElement = document.getElementById('matrix-total-projects');
+    const matrixEvolutivosElement = document.getElementById('matrix-evolutivos-count');
+    const matrixProyectosElement = document.getElementById('matrix-proyectos-count');
+    
+    if (matrixTotalElement) matrixTotalElement.textContent = totalProjects;
+    if (matrixEvolutivosElement) matrixEvolutivosElement.textContent = evolutivosCount;
+    if (matrixProyectosElement) matrixProyectosElement.textContent = proyectosCount;
+    
+    // Update Projects tab elements
+    const projectsTotalElement = document.getElementById('projects-total-count');
+    const projectsEvolutivosElement = document.getElementById('projects-evolutivos-count');
+    const projectsProyectosElement = document.getElementById('projects-proyectos-count');
+    
+    if (projectsTotalElement) projectsTotalElement.textContent = totalProjects;
+    if (projectsEvolutivosElement) projectsEvolutivosElement.textContent = evolutivosCount;
+    if (projectsProyectosElement) projectsProyectosElement.textContent = proyectosCount;
+    
+    console.log('Matrix and Projects KPIs updated:', { totalProjects, evolutivosCount, proyectosCount });
+}
+
+// Pagination state
+let currentPage = 1;
+const projectsPerPage = 10;
+let allProjects = [];
+
+/**
+ * Update projects table with new data from API
+ * Called after CRUD operations to refresh the table
+ * @param {Array} projects - Array of project objects from API
+ */
+function updateProjectsTable(projects) {
+    const tableBody = document.getElementById('projects-table-body');
+    if (!tableBody) {
+        console.warn('Projects table body not found');
+        return;
+    }
+    
+    // Store all projects for pagination
+    allProjects = projects || [];
+    
+    // Make allProjects globally available
+    window.allProjects = allProjects;
+    
+    // Update KPIs immediately after loading projects
+    updateMatrixKPIs();
+    
+    // Update charts with real data
+    initializeAllCharts();
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    // Check if there are no projects
+    if (!allProjects || allProjects.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="10" style="text-align: center; padding: 2rem; color: #6b7280;">
+                No hay proyectos disponibles. Haz clic en "Añadir Proyecto" para crear uno.
+            </td>
+        `;
+        tableBody.appendChild(row);
+        console.log('No projects to display');
+        
+        // Hide pagination if no projects
+        const paginationContainer = document.getElementById('pagination-container');
+        if (paginationContainer) {
+            paginationContainer.style.display = 'none';
         }
+        return;
+    }
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(allProjects.length / projectsPerPage);
+    const startIndex = (currentPage - 1) * projectsPerPage;
+    const endIndex = startIndex + projectsPerPage;
+    const projectsToDisplay = allProjects.slice(startIndex, endIndex);
+    
+    // Populate with paginated data
+    projectsToDisplay.forEach(project => {
+        const row = document.createElement('tr');
+        
+        // Debug logging
+        console.log('Project data:', {
+            code: project.code,
+            domain: project.domain,
+            domainType: typeof project.domain,
+            status: project.status,
+            statusType: typeof project.status,
+            type: project.type
+        });
+        
+        const priorityClass = getPriorityClass(project.priority);
+        const priorityText = getPriorityText(project.priority);
+        const statusClass = getStatusClass(project.status);
+        const statusText = getStatusText(project.status);
+        const domainText = getDomainText(project.domain);
+        
+        console.log('Converted values:', {
+            code: project.code,
+            domainText: domainText,
+            statusText: statusText
+        });
+        
+        // Format dates if they exist
+        const startDate = project.startDate ? new Date(project.startDate).toLocaleDateString('es-ES') : '-';
+        const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString('es-ES') : '-';
+        
+        row.innerHTML = `
+            <td style="text-align: left;"><strong>${project.code}</strong></td>
+            <td style="text-align: left;">${project.title}</td>
+            <td style="text-align: left;">${truncateText(project.description || '', 50)}</td>
+            <td style="text-align: left;">${domainText}</td>
+            <td style="text-align: center;">
+                <span class="priority-badge ${priorityClass}">${priorityText}</span>
+            </td>
+            <td style="text-align: center;">${startDate}</td>
+            <td style="text-align: center;">${endDate}</td>
+            <td style="text-align: center;">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+            </td>
+            <td style="text-align: center;">${project.type || '-'}</td>
+            <td style="text-align: center;">
+                <span class="action-icon" data-action="edit" data-project="${project.code}" title="Editar Proyecto">✏️</span>
+                <span class="action-icon" data-action="tasks" data-project="${project.code}" title="Gestión de Tareas">📋</span>
+                <span class="action-icon" data-action="resources" data-project="${project.code}" title="Asignación de Recursos">👤</span>
+                <span class="action-icon" data-action="delete" data-project="${project.code}" title="Eliminar Proyecto">🗑️</span>
+            </td>
+        `;
+        
+        tableBody.appendChild(row);
     });
     
-    // Update DOM elements
-    const totalElement = document.getElementById('matrix-total-projects');
-    const evolutivosElement = document.getElementById('matrix-evolutivos-count');
-    const proyectosElement = document.getElementById('matrix-proyectos-count');
+    // Render pagination controls
+    renderPagination(totalPages);
     
-    if (totalElement) totalElement.textContent = totalProjects;
-    if (evolutivosElement) evolutivosElement.textContent = evolutivosCount;
-    if (proyectosElement) proyectosElement.textContent = proyectosCount;
+    console.log(`Projects table updated with ${allProjects.length} projects (showing page ${currentPage} of ${totalPages})`);
 }
+
+/**
+ * Render pagination controls
+ * @param {number} totalPages - Total number of pages
+ */
+function renderPagination(totalPages) {
+    const paginationContainer = document.getElementById('pagination-container');
+    
+    if (!paginationContainer) {
+        console.warn('Pagination container not found');
+        return;
+    }
+    
+    // Hide pagination if only one page or no projects
+    if (totalPages <= 1) {
+        paginationContainer.style.display = 'none';
+        return;
+    }
+    
+    paginationContainer.style.display = 'flex';
+    paginationContainer.innerHTML = '';
+    
+    // Previous button
+    const prevButton = document.createElement('button');
+    prevButton.className = 'pagination-btn';
+    prevButton.innerHTML = '&laquo; Anterior';
+    prevButton.disabled = currentPage === 1;
+    prevButton.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updateProjectsTable(allProjects);
+        }
+    };
+    paginationContainer.appendChild(prevButton);
+    
+    // Page numbers
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    // First page button if not visible
+    if (startPage > 1) {
+        const firstButton = document.createElement('button');
+        firstButton.className = 'pagination-btn';
+        firstButton.textContent = '1';
+        firstButton.onclick = () => {
+            currentPage = 1;
+            updateProjectsTable(allProjects);
+        };
+        paginationContainer.appendChild(firstButton);
+        
+        if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'pagination-ellipsis';
+            ellipsis.textContent = '...';
+            paginationContainer.appendChild(ellipsis);
+        }
+    }
+    
+    // Page number buttons
+    for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = 'pagination-btn';
+        if (i === currentPage) {
+            pageButton.classList.add('active');
+        }
+        pageButton.textContent = i;
+        pageButton.onclick = () => {
+            currentPage = i;
+            updateProjectsTable(allProjects);
+        };
+        paginationContainer.appendChild(pageButton);
+    }
+    
+    // Last page button if not visible
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'pagination-ellipsis';
+            ellipsis.textContent = '...';
+            paginationContainer.appendChild(ellipsis);
+        }
+        
+        const lastButton = document.createElement('button');
+        lastButton.className = 'pagination-btn';
+        lastButton.textContent = totalPages;
+        lastButton.onclick = () => {
+            currentPage = totalPages;
+            updateProjectsTable(allProjects);
+        };
+        paginationContainer.appendChild(lastButton);
+    }
+    
+    // Next button
+    const nextButton = document.createElement('button');
+    nextButton.className = 'pagination-btn';
+    nextButton.innerHTML = 'Siguiente &raquo;';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updateProjectsTable(allProjects);
+        }
+    };
+    paginationContainer.appendChild(nextButton);
+}
+
+/**
+ * Update dashboard (KPIs and charts) after CRUD operations
+ * Called from projectModal.js after successful operations
+ */
+function updateDashboard() {
+    console.log('Updating dashboard...');
+    
+    // Update KPIs
+    initializeKPIs();
+    
+    // Update charts
+    initializeAllCharts();
+    
+    // Update Matrix KPIs
+    updateMatrixKPIs();
+    
+    // Update Top Projects table
+    populateTopProjectsTable();
+    
+    console.log('Dashboard updated successfully');
+}
+
+// Make functions globally available for projectModal.js
+window.updateProjectsTable = updateProjectsTable;
+window.updateDashboard = updateDashboard;
+window.loadProjectsFromAPI = loadProjectsFromAPI;
 
 // Initialize app when DOM is ready
 if (document.readyState === 'loading') {
@@ -362,4 +803,4 @@ if (document.readyState === 'loading') {
 }
 
 // Export for external use if needed
-export { initializeApp };
+export { initializeApp, updateProjectsTable, updateDashboard, loadProjectsFromAPI };

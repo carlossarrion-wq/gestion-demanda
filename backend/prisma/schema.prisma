@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
@@ -10,66 +8,44 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// TABLAS DE CATÁLOGO (MAESTROS)
-// ============================================
-
 model Domain {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String    @unique @db.VarChar(100)
-  description String?   @db.Text
-  projects    Project[]
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String  @unique @db.VarChar(100)
+  description String?
 
   @@map("domains")
 }
 
 model Status {
-  id       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name     String    @unique @db.VarChar(100)
-  order    Int
-  projects Project[]
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String @unique @db.VarChar(100)
+  order Int
 
   @@map("statuses")
 }
 
-model Skill {
-  id                      String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                    String                   @unique @db.VarChar(100)
-  description             String?                  @db.Text
-  resourceSkills          ResourceSkill[]
-  projectSkillBreakdowns  ProjectSkillBreakdown[]
-  assignments             Assignment[]
-
-  @@map("skills")
-}
-
-// ============================================
-// TABLAS PRINCIPALES
-// ============================================
-
 model Project {
-  id                      String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code                    String                   @unique @db.VarChar(50)
-  title                   String                   @db.VarChar(255)
-  description             String?                  @db.Text
-  type                    String                   @db.VarChar(20) // 'Proyecto' o 'Evolutivo'
-  priority                String                   @db.VarChar(20) // 'muy-alta', 'alta', 'media', 'baja', 'muy-baja'
-  startDate               DateTime?                @map("start_date") @db.Date
-  endDate                 DateTime?                @map("end_date") @db.Date
-  statusId                String                   @map("status_id") @db.Uuid
-  domainId                String                   @map("domain_id") @db.Uuid
-  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt               DateTime                 @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  
-  status                  Status                   @relation(fields: [statusId], references: [id])
-  domain                  Domain                   @relation(fields: [domainId], references: [id])
-  projectSkillBreakdowns  ProjectSkillBreakdown[]
-  assignments             Assignment[]
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                   String                  @unique @db.VarChar(50)
+  title                  String                  @db.VarChar(255)
+  description            String?
+  type                   String?                 @db.VarChar(20)
+  priority               String                  @db.VarChar(20)
+  startDate              DateTime?               @map("start_date") @db.Date
+  endDate                DateTime?               @map("end_date") @db.Date
+  status                 Int                     @map("status")
+  domain                 Int                     @map("domain")
+  team                   String                  @db.VarChar(50)
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt              DateTime                @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  assignments            Assignment[]
+  projectSkillBreakdowns ProjectSkillBreakdown[]
 
-  @@index([code], name: "idx_projects_code")
-  @@index([type], name: "idx_projects_type")
-  @@index([statusId], name: "idx_projects_status")
-  @@index([domainId], name: "idx_projects_domain")
+  @@index([code], map: "idx_projects_code")
+  @@index([type], map: "idx_projects_type")
+  @@index([status], map: "idx_projects_status")
+  @@index([domain], map: "idx_projects_domain")
+  @@index([team], map: "idx_projects_team")
   @@map("projects")
 }
 
@@ -78,103 +54,88 @@ model Resource {
   code            String          @unique @db.VarChar(50)
   name            String          @db.VarChar(255)
   email           String?         @unique @db.VarChar(255)
+  team            String          @db.VarChar(50)
   defaultCapacity Int             @default(160) @map("default_capacity")
   active          Boolean         @default(true)
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  
-  resourceSkills  ResourceSkill[]
-  capacities      Capacity[]
   assignments     Assignment[]
+  capacities      Capacity[]
+  resourceSkills  ResourceSkill[]
 
-  @@index([code], name: "idx_resources_code")
-  @@index([active], name: "idx_resources_active")
+  @@index([code], map: "idx_resources_code")
+  @@index([active], map: "idx_resources_active")
+  @@index([team], map: "idx_resources_team")
   @@map("resources")
 }
 
-// ============================================
-// TABLAS DE RELACIÓN
-// ============================================
-
 model ResourceSkill {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  resourceId  String    @map("resource_id") @db.Uuid
-  skillId     String    @map("skill_id") @db.Uuid
-  proficiency String?   @db.VarChar(20) // 'junior', 'mid', 'senior'
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  
-  resource    Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  skill       Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resourceId  String   @map("resource_id") @db.Uuid
+  skillName   String   @map("skill_name") @db.VarChar(100)
+  proficiency String?  @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 
-  @@unique([resourceId, skillId])
-  @@index([resourceId], name: "idx_resource_skills_resource")
-  @@index([skillId], name: "idx_resource_skills_skill")
+  @@unique([resourceId, skillName])
+  @@index([resourceId], map: "idx_resource_skills_resource")
+  @@index([skillName], map: "idx_resource_skills_skill_name")
   @@map("resource_skills")
 }
 
 model ProjectSkillBreakdown {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   projectId String   @map("project_id") @db.Uuid
-  skillId   String   @map("skill_id") @db.Uuid
-  month     Int      // 1-12
+  skillName String   @map("skill_name") @db.VarChar(100)
+  month     Int
   year      Int
   hours     Decimal  @default(0) @db.Decimal(10, 2)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
-  @@unique([projectId, skillId, month, year])
-  @@index([projectId], name: "idx_psb_project")
-  @@index([skillId], name: "idx_psb_skill")
-  @@index([year, month], name: "idx_psb_period")
+  @@unique([projectId, skillName, month, year])
+  @@index([projectId], map: "idx_psb_project")
+  @@index([skillName], map: "idx_psb_skill_name")
+  @@index([year, month], map: "idx_psb_period")
   @@map("project_skill_breakdown")
 }
 
 model Capacity {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   resourceId String   @map("resource_id") @db.Uuid
-  month      Int      // 1-12
+  month      Int
   year       Int
   totalHours Decimal  @map("total_hours") @db.Decimal(10, 2)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  
   resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 
   @@unique([resourceId, month, year])
-  @@index([resourceId], name: "idx_capacity_resource")
-  @@index([year, month], name: "idx_capacity_period")
+  @@index([resourceId], map: "idx_capacity_resource")
+  @@index([year, month], map: "idx_capacity_period")
   @@map("capacity")
 }
 
 model Assignment {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  projectId  String   @map("project_id") @db.Uuid
-  resourceId String   @map("resource_id") @db.Uuid
-  skillId    String   @map("skill_id") @db.Uuid
-  month      Int      // 1-12
-  year       Int
-  hours      Decimal  @db.Decimal(10, 2)
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  
-  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  skill      Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId   String    @map("project_id") @db.Uuid
+  resourceId  String?   @map("resource_id") @db.Uuid
+  title       String    @db.VarChar(255)
+  description String?
+  skillName   String?   @map("skill_name") @db.VarChar(100)
+  month       Int
+  year        Int
+  hours       Decimal   @db.Decimal(10, 2)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  resource    Resource? @relation(fields: [resourceId], references: [id], onDelete: SetNull)
 
-  @@unique([projectId, resourceId, skillId, month, year])
-  @@index([projectId], name: "idx_assignments_project")
-  @@index([resourceId], name: "idx_assignments_resource")
-  @@index([skillId], name: "idx_assignments_skill")
-  @@index([year, month], name: "idx_assignments_period")
+  @@unique([projectId, title, month, year])
+  @@index([projectId], map: "idx_assignments_project")
+  @@index([resourceId], map: "idx_assignments_resource")
+  @@index([year, month], map: "idx_assignments_period")
+  @@index([skillName], map: "idx_assignments_skill_name")
   @@map("assignments")
 }
-
-// ============================================
-// VISTAS MATERIALIZADAS
-// ============================================
-// Nota: Las vistas materializadas se crearán directamente en PostgreSQL
-// mediante SQL, ya que Prisma no soporta vistas materializadas nativamente.
-// Se pueden consultar usando prisma.$queryRaw

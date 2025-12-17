@@ -1,49 +1,84 @@
 // Charts Initialization Component
 
 import { projectSkillBreakdown, monthKeys, monthLabels } from '../config/data.js';
-import { formatNumber } from '../utils/helpers.js';
+import { formatNumber, getStatusText, getDomainText, getPriorityText } from '../utils/helpers.js';
+
+// Store chart instances to destroy them before recreating
+const chartInstances = {};
+
+// Flag to prevent multiple simultaneous chart initializations
+let isInitializing = false;
+
+/**
+ * Destroy a chart instance if it exists
+ * @param {string} chartId - The ID of the chart canvas element
+ */
+function destroyChart(chartId) {
+    if (chartInstances[chartId]) {
+        chartInstances[chartId].destroy();
+        delete chartInstances[chartId];
+    }
+}
 
 /**
  * Initialize all charts in the application
  */
-export function initializeAllCharts() {
-    // Overview tab charts
-    initializeOverviewCommittedHoursChart();
-    initializeOverviewSkillDistributionChart();
-    initializeOverviewCapacityByProfileChart();
+export async function initializeAllCharts() {
+    // Prevent multiple simultaneous initializations
+    if (isInitializing) {
+        console.log('Chart initialization already in progress, skipping...');
+        return;
+    }
     
-    // Projects tab charts
-    initializeProjectsByStatusChart();
-    initializeProjectsByDomainChart();
-    initializeProjectsByPriorityChart();
+    isInitializing = true;
     
-    // Matrix tab charts
-    initializeMatrixCommittedHoursChart();
-    initializeCommittedHoursChart();
-    initializeSkillDistributionChart();
-    initializeMatrixHoursByTypeChart();
-    initializeMatrixHoursByDomainChart();
-    
-    // Resources tab charts
-    initializeResourcesCommittedHoursChart();
-    initializeResourcesHoursBySkillChart();
-    
-    console.log('All charts initialized');
+    try {
+        // Overview tab charts
+        initializeOverviewCommittedHoursChart();
+        initializeOverviewSkillDistributionChart();
+        initializeOverviewCapacityByProfileChart();
+        
+        // Projects tab charts
+        initializeProjectsByStatusChart();
+        initializeProjectsByDomainChart();
+        initializeProjectsByPriorityChart();
+        
+        // Matrix tab charts
+        initializeMatrixCommittedHoursChart();
+        initializeCommittedHoursChart();
+        initializeSkillDistributionChart();
+        
+        // Matrix charts with async imports - await them to prevent race conditions
+        await initializeMatrixHoursByTypeChart();
+        await initializeMatrixHoursByDomainChart();
+        
+        // Resources tab charts
+        initializeResourcesCommittedHoursChart();
+        initializeResourcesHoursBySkillChart();
+        
+        console.log('All charts initialized');
+    } finally {
+        isInitializing = false;
+    }
 }
 
 /**
  * Initialize Overview Committed Hours Chart
  */
 function initializeOverviewCommittedHoursChart() {
-    const ctx = document.getElementById('overview-committed-hours-chart');
+    const chartId = 'overview-committed-hours-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
     const committedHours = calculateCommittedHoursByMonth();
     const horasProyectos = committedHours.map(hours => Math.round(hours * 0.8));
     const horasEvolutivos = committedHours.map(hours => Math.round(hours * 0.2));
     const availableHours = [1750, 1720, 1760, 1740, 1700, 1780, 1750, 1730, 1760, 1770, 1750, 1740];
 
-    new Chart(ctx, {
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: monthLabels,
@@ -126,8 +161,12 @@ function initializeOverviewCommittedHoursChart() {
  * Initialize Overview Skill Distribution Chart
  */
 function initializeOverviewSkillDistributionChart() {
-    const ctx = document.getElementById('overview-skill-distribution-chart');
+    const chartId = 'overview-skill-distribution-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
     const skillTotals = calculateSkillTotalsByMonth();
     const skillColors = {
@@ -162,7 +201,7 @@ function initializeOverviewSkillDistributionChart() {
         order: 1
     });
     
-    new Chart(ctx, {
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: monthLabels,
@@ -213,8 +252,12 @@ function initializeOverviewSkillDistributionChart() {
  * Initialize Overview Capacity by Profile Chart
  */
 function initializeOverviewCapacityByProfileChart() {
-    const ctx = document.getElementById('overview-capacity-by-profile-chart');
+    const chartId = 'overview-capacity-by-profile-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
     const profiles = ['Project Management', 'Análisis', 'Diseño', 'Construcción', 'QA', 'General'];
     const currentMonth = 'jul';
@@ -223,7 +266,7 @@ function initializeOverviewCapacityByProfileChart() {
     const horasProyectos = profiles.map(profile => Math.round(committedHours[profile] * 0.8));
     const horasEvolutivos = profiles.map(profile => Math.round(committedHours[profile] * 0.2));
 
-    new Chart(ctx, {
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: profiles,
@@ -291,35 +334,83 @@ function initializeOverviewCapacityByProfileChart() {
  * Initialize Projects by Status Chart
  */
 function initializeProjectsByStatusChart() {
-    const ctx = document.getElementById('projects-by-status-chart');
+    const chartId = 'projects-by-status-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
     
-    const statusData = {
-        'Idea': 8, 'Conceptualización': 5, 'Viabilidad': 4,
-        'Diseño Detallado': 3, 'Desarrollo': 2, 'Implantado': 1, 'Finalizado': 1
-    };
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
-    const labels = Object.keys(statusData);
-    const values = Object.values(statusData);
-    const total = values.reduce((a, b) => a + b, 0);
+    // Get real projects from global allProjects array
+    const allProjects = window.allProjects || [];
     
-    const funnelData = [];
-    let cumulative = total;
-    values.forEach(value => {
-        funnelData.push(cumulative);
-        cumulative -= value;
+    // Count projects by status
+    const statusCounts = {};
+    allProjects.forEach(project => {
+        const statusText = getStatusText(project.status);
+        statusCounts[statusText] = (statusCounts[statusText] || 0) + 1;
     });
     
-    const colors = ['#e0f2f1', '#b2dfdb', '#80cbc4', '#4db6ac', '#26a69a', '#009688', '#00796b'];
+    // Define status order for funnel (from early to late stages)
+    const statusOrder = [
+        'Idea',
+        'Concepto',
+        'Viabilidad (TEC-ECO)',
+        'Diseño Detallado',
+        'Desarrollo',
+        'Implantado',
+        'Finalizado',
+        'On Hold',
+        'Cancelado'
+    ];
     
-    new Chart(ctx, {
+    // Filter to only include statuses that exist in the data
+    const labels = statusOrder.filter(status => statusCounts[status] > 0);
+    const values = labels.map(status => statusCounts[status] || 0);
+    const total = values.reduce((a, b) => a + b, 0);
+    
+    // Handle case when no projects
+    if (total === 0) {
+        chartInstances[chartId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Sin datos'],
+                datasets: [{
+                    label: 'Proyectos por Estado',
+                    data: [0],
+                    backgroundColor: ['#e0f2f1'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 1,
+                        title: { display: true, text: 'Número de Proyectos' }
+                    }
+                }
+            }
+        });
+        return;
+    }
+    
+    // Use actual counts (not cumulative) for horizontal bar chart
+    const colors = ['#e0f2f1', '#b2dfdb', '#80cbc4', '#4db6ac', '#26a69a', '#009688', '#00796b', '#ef5350', '#f44336'];
+    
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Proyectos en Fase',
-                data: funnelData,
-                backgroundColor: colors,
+                label: 'Proyectos por Estado',
+                data: values,
+                backgroundColor: colors.slice(0, labels.length),
                 borderWidth: 2,
                 borderColor: '#ffffff'
             }]
@@ -328,12 +419,28 @@ function initializeProjectsByStatusChart() {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Proyectos: ' + context.parsed.x;
+                        }
+                    }
+                }
+            },
             scales: {
                 x: {
                     beginAtZero: true,
-                    max: total + 1,
-                    title: { display: true, text: 'Proyectos Acumulados' }
+                    title: { display: true, text: 'Número de Proyectos' },
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            if (Number.isInteger(value)) {
+                                return value;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -344,21 +451,64 @@ function initializeProjectsByStatusChart() {
  * Initialize Projects by Domain Chart
  */
 function initializeProjectsByDomainChart() {
-    const ctx = document.getElementById('projects-by-domain-chart');
+    const chartId = 'projects-by-domain-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
     
-    const domainData = {
-        'Atención': 1, 'Tecnología': 3, 'Facturación y Cobros': 1,
-        'Contratación': 1, 'Operaciones': 1
-    };
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
-    new Chart(ctx, {
+    // Get real projects from global allProjects array
+    const allProjects = window.allProjects || [];
+    
+    // Count projects by domain
+    const domainCounts = {};
+    allProjects.forEach(project => {
+        const domainText = getDomainText(project.domain);
+        domainCounts[domainText] = (domainCounts[domainText] || 0) + 1;
+    });
+    
+    const labels = Object.keys(domainCounts);
+    const values = Object.values(domainCounts);
+    
+    // Handle case when no projects
+    if (labels.length === 0) {
+        chartInstances[chartId] = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Sin datos'],
+                datasets: [{
+                    data: [1],
+                    backgroundColor: ['#e0e0e0'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 8, font: { size: 10 } }
+                    }
+                }
+            }
+        });
+        return;
+    }
+    
+    // Generate colors for each domain
+    const colors = ['#4db6ac', '#64b5f6', '#ffb74d', '#81c784', '#ba68c8', '#ef5350', '#ab47bc', '#26a69a', '#42a5f5', '#ffa726', '#66bb6a', '#ec407a'];
+    
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: Object.keys(domainData),
+            labels: labels,
             datasets: [{
-                data: Object.values(domainData),
-                backgroundColor: ['#4db6ac', '#64b5f6', '#ffb74d', '#81c784', '#ba68c8'],
+                data: values,
+                backgroundColor: colors.slice(0, labels.length),
                 borderWidth: 2,
                 borderColor: '#ffffff'
             }]
@@ -381,18 +531,83 @@ function initializeProjectsByDomainChart() {
  * Initialize Projects by Priority Chart
  */
 function initializeProjectsByPriorityChart() {
-    const ctx = document.getElementById('projects-by-priority-chart');
+    const chartId = 'projects-by-priority-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
     
-    const priorityData = { 'Muy Alta': 2, 'Alta': 2, 'Media': 2, 'Baja': 1 };
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
-    new Chart(ctx, {
+    // Get real projects from global allProjects array
+    const allProjects = window.allProjects || [];
+    
+    // Debug: Log priority values from projects
+    console.log('Priority Chart Debug - Total projects:', allProjects.length);
+    const rawPriorities = allProjects.map(p => p.priority);
+    console.log('Raw priority values:', rawPriorities);
+    
+    // Count projects by priority
+    const priorityCounts = {};
+    allProjects.forEach(project => {
+        const priorityText = getPriorityText(project.priority);
+        priorityCounts[priorityText] = (priorityCounts[priorityText] || 0) + 1;
+    });
+    
+    console.log('Priority counts:', priorityCounts);
+    
+    // Define priority order (from highest to lowest)
+    const priorityOrder = ['Muy Alta', 'Alta', 'Media', 'Baja', 'Muy Baja'];
+    
+    // Show only priorities that exist in the data (count > 0)
+    const labels = priorityOrder.filter(priority => priorityCounts[priority] > 0);
+    const values = labels.map(priority => priorityCounts[priority] || 0);
+    
+    // Handle case when no projects
+    if (labels.length === 0) {
+        chartInstances[chartId] = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Sin datos'],
+                datasets: [{
+                    data: [1],
+                    backgroundColor: ['#e0e0e0'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 8, font: { size: 10 } }
+                    }
+                }
+            }
+        });
+        return;
+    }
+    
+    // Colors for priorities (red to green)
+    const priorityColors = {
+        'Muy Alta': '#ef5350',
+        'Alta': '#ff9800',
+        'Media': '#ffca28',
+        'Baja': '#66bb6a',
+        'Muy Baja': '#81c784'
+    };
+    
+    const colors = labels.map(label => priorityColors[label] || '#90a4ae');
+    
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: Object.keys(priorityData),
+            labels: labels,
             datasets: [{
-                data: Object.values(priorityData),
-                backgroundColor: ['#ef5350', '#ff9800', '#ffca28', '#66bb6a'],
+                data: values,
+                backgroundColor: colors,
                 borderWidth: 2,
                 borderColor: '#ffffff'
             }]
@@ -415,15 +630,19 @@ function initializeProjectsByPriorityChart() {
  * Initialize Matrix Committed Hours Chart (new chart in Matrix tab)
  */
 function initializeMatrixCommittedHoursChart() {
-    const ctx = document.getElementById('matrix-committed-hours-chart');
+    const chartId = 'matrix-committed-hours-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
     const committedHours = calculateCommittedHoursByMonth();
     const horasProyectos = committedHours.map(hours => Math.round(hours * 0.8));
     const horasEvolutivos = committedHours.map(hours => Math.round(hours * 0.2));
     const availableHours = [1750, 1720, 1760, 1740, 1700, 1780, 1750, 1730, 1760, 1770, 1750, 1740];
 
-    new Chart(ctx, {
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: monthLabels,
@@ -601,113 +820,119 @@ function calculateCommittedHoursByProfile(month) {
 /**
  * Initialize Matrix Hours by Type Chart (Vertical Bar Chart)
  */
-function initializeMatrixHoursByTypeChart() {
-    const ctx = document.getElementById('matrix-hours-by-type-chart');
+async function initializeMatrixHoursByTypeChart() {
+    const chartId = 'matrix-hours-by-type-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
     
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
+    
     // Import projectMetadata to get tipo information
-    import('../config/data.js').then(module => {
-        const { projectMetadata } = module;
-        
-        const hoursByType = calculateHoursByType(projectMetadata);
-        
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Proyecto', 'Evolutivo'],
-                datasets: [{
-                    label: 'Horas Totales',
-                    data: [hoursByType.Proyecto, hoursByType.Evolutivo],
-                    backgroundColor: ['#4db6ac', '#64b5f6'],
-                    borderColor: ['#26a69a', '#42a5f5'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Horas: ' + formatNumber(context.parsed.y);
-                            }
+    const module = await import('../config/data.js');
+    const { projectMetadata } = module;
+    
+    const hoursByType = calculateHoursByType(projectMetadata);
+    
+    chartInstances[chartId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Proyecto', 'Evolutivo'],
+            datasets: [{
+                label: 'Horas Totales',
+                data: [hoursByType.Proyecto, hoursByType.Evolutivo],
+                backgroundColor: ['#4db6ac', '#64b5f6'],
+                borderColor: ['#26a69a', '#42a5f5'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Horas: ' + formatNumber(context.parsed.y);
                         }
                     }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Horas' },
-                        ticks: {
-                            callback: function(value) {
-                                return formatNumber(value);
-                            }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Horas' },
+                    ticks: {
+                        callback: function(value) {
+                            return formatNumber(value);
                         }
                     }
                 }
             }
-        });
+        }
     });
 }
 
 /**
  * Initialize Matrix Hours by Domain Chart (Horizontal Bar Chart)
  */
-function initializeMatrixHoursByDomainChart() {
-    const ctx = document.getElementById('matrix-hours-by-domain-chart');
+async function initializeMatrixHoursByDomainChart() {
+    const chartId = 'matrix-hours-by-domain-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
     
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
+    
     // Import projectMetadata to get dominiosPrincipales information
-    import('../config/data.js').then(module => {
-        const { projectMetadata } = module;
-        
-        const hoursByDomain = calculateHoursByDomain(projectMetadata);
-        const domains = Object.keys(hoursByDomain).sort((a, b) => hoursByDomain[b] - hoursByDomain[a]);
-        const hours = domains.map(domain => hoursByDomain[domain]);
-        
-        const colors = ['#4db6ac', '#64b5f6', '#ffb74d', '#81c784', '#ba68c8', '#90a4ae', '#ef5350'];
-        
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: domains,
-                datasets: [{
-                    label: 'Horas Totales',
-                    data: hours,
-                    backgroundColor: colors.slice(0, domains.length),
-                    borderColor: colors.slice(0, domains.length).map(c => c),
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Horas: ' + formatNumber(context.parsed.x);
-                            }
+    const module = await import('../config/data.js');
+    const { projectMetadata } = module;
+    
+    const hoursByDomain = calculateHoursByDomain(projectMetadata);
+    const domains = Object.keys(hoursByDomain).sort((a, b) => hoursByDomain[b] - hoursByDomain[a]);
+    const hours = domains.map(domain => hoursByDomain[domain]);
+    
+    const colors = ['#4db6ac', '#64b5f6', '#ffb74d', '#81c784', '#ba68c8', '#90a4ae', '#ef5350'];
+    
+    chartInstances[chartId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: domains,
+            datasets: [{
+                label: 'Horas Totales',
+                data: hours,
+                backgroundColor: colors.slice(0, domains.length),
+                borderColor: colors.slice(0, domains.length).map(c => c),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Horas: ' + formatNumber(context.parsed.x);
                         }
                     }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Horas' },
-                        ticks: {
-                            callback: function(value) {
-                                return formatNumber(value);
-                            }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Horas' },
+                    ticks: {
+                        callback: function(value) {
+                            return formatNumber(value);
                         }
                     }
                 }
             }
-        });
+        }
     });
 }
 
@@ -773,14 +998,18 @@ function calculateHoursByDomain(projectMetadata) {
  * Initialize Resources Committed Hours Chart (Vertical Bar Chart)
  */
 function initializeResourcesCommittedHoursChart() {
-    const ctx = document.getElementById('resources-committed-hours-chart');
+    const chartId = 'resources-committed-hours-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
     const tableData = extractResourceTableData();
     const committedHours = tableData.committedByMonth;
     const availableHours = tableData.availableByMonth;
 
-    new Chart(ctx, {
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: monthLabels,
@@ -845,8 +1074,12 @@ function initializeResourcesCommittedHoursChart() {
  * Initialize Resources Hours by Skill Chart (Stacked Vertical Bar Chart - Potential Available Hours by Profile)
  */
 function initializeResourcesHoursBySkillChart() {
-    const ctx = document.getElementById('resources-hours-by-skill-chart');
+    const chartId = 'resources-hours-by-skill-chart';
+    const ctx = document.getElementById(chartId);
     if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    destroyChart(chartId);
     
     const tableData = extractResourceTableData();
     const availableBySkill = tableData.availableBySkill;
@@ -873,7 +1106,7 @@ function initializeResourcesHoursBySkillChart() {
         return total;
     });
     
-    new Chart(ctx, {
+    chartInstances[chartId] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: sortedSkills,

@@ -4,7 +4,6 @@
 table {
     width: 100%;
     border-collapse: collapse;
-    border-radius: var(--radius-md);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
 }
@@ -76,10 +75,32 @@ table tr:hover {
 }
 
 /* All month columns - UNIFORM WIDTH - MAXIMUM SPECIFICITY */
-/* For tables with 3 columns before months (Resources table: Recurso, Ratio de Ocupación, Skills, months...) */
-/* Second column - Ratio de Ocupación */
+/* Resources tab structure: Column 1 (expand), Column 2 (Recurso), Column 3 (Ratio), Column 4 (Skills), Columns 5-16 (months) */
+
+/* First column - Expand icon */
+#resources-tab .capacity-matrix table th:nth-child(1),
+#resources-tab .capacity-matrix table td:nth-child(1) {
+    text-align: center !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    width: 40px !important;
+    padding: 0.5rem 0.25rem !important;
+}
+
+/* Second column - Recurso */
 #resources-tab .capacity-matrix table th:nth-child(2),
 #resources-tab .capacity-matrix table td:nth-child(2) {
+    text-align: left !important;
+    min-width: 150px !important;
+    max-width: 200px !important;
+    width: 150px !important;
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.8rem;
+}
+
+/* Third column - Ratio de Ocupación */
+#resources-tab .capacity-matrix table th:nth-child(3),
+#resources-tab .capacity-matrix table td:nth-child(3) {
     text-align: center !important;
     min-width: 90px !important;
     max-width: 100px !important;
@@ -88,10 +109,10 @@ table tr:hover {
     font-size: 0.8rem;
 }
 
-/* Third column - Skills */
-#resources-tab .capacity-matrix table th:nth-child(3),
-#resources-tab .capacity-matrix table td:nth-child(3) {
-    text-align: center !important;
+/* Fourth column - Skills */
+#resources-tab .capacity-matrix table th:nth-child(4),
+#resources-tab .capacity-matrix table td:nth-child(4) {
+    text-align: left !important;
     min-width: 100px !important;
     max-width: 120px !important;
     width: 110px !important;
@@ -99,8 +120,9 @@ table tr:hover {
     font-size: 0.8rem;
 }
 
-/* Month columns starting from column 4 */
-#resources-tab .capacity-matrix table th:nth-child(4),
+/* Month columns starting from column 5 (after expand icon, recurso, ratio, skills) */
+/* IMPORTANT: Resources tab has 4 columns before months (expand, recurso, ratio, skills) */
+/* So months are columns 5-16 (ENE through DIC) */
 #resources-tab .capacity-matrix table th:nth-child(5),
 #resources-tab .capacity-matrix table th:nth-child(6),
 #resources-tab .capacity-matrix table th:nth-child(7),
@@ -112,7 +134,7 @@ table tr:hover {
 #resources-tab .capacity-matrix table th:nth-child(13),
 #resources-tab .capacity-matrix table th:nth-child(14),
 #resources-tab .capacity-matrix table th:nth-child(15),
-#resources-tab .capacity-matrix table td:nth-child(4),
+#resources-tab .capacity-matrix table th:nth-child(16),
 #resources-tab .capacity-matrix table td:nth-child(5),
 #resources-tab .capacity-matrix table td:nth-child(6),
 #resources-tab .capacity-matrix table td:nth-child(7),
@@ -124,6 +146,7 @@ table tr:hover {
 #resources-tab .capacity-matrix table td:nth-child(13),
 #resources-tab .capacity-matrix table td:nth-child(14),
 #resources-tab .capacity-matrix table td:nth-child(15),
+#resources-tab .capacity-matrix table td:nth-child(16),
 /* For tables with 3 columns before months (Projects table: Proyecto, Tipo, Dominio, months...) */
 #matrix-tab .capacity-matrix table th:nth-child(4),
 #matrix-tab .capacity-matrix table th:nth-child(5),
@@ -150,13 +173,14 @@ table tr:hover {
 #matrix-tab .capacity-matrix table td:nth-child(14),
 #matrix-tab .capacity-matrix table td:nth-child(15) {
     text-align: center !important;
-    min-width: 60px !important;
-    max-width: 60px !important;
-    width: 60px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+    width: 80px !important;
     box-sizing: border-box !important;
     padding: 0.5rem 0.25rem !important;
     font-size: 0.8rem !important;
-    position: relative;
+    white-space: nowrap !important;
+    overflow: hidden !important;
 }
 
 /* General fallback for any th/td in capacity-matrix not covered above */
@@ -174,10 +198,9 @@ table tr:hover {
 
 /* Capacity Cells */
 .capacity-cell {
-    display: inline-block;
+    /* DO NOT set display property - let td use default table-cell */
     min-width: 40px;
     padding: var(--spacing-xs);
-    border-radius: var(--radius-sm);
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-normal);

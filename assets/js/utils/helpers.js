@@ -52,6 +52,12 @@ export function ftesToHours(ftes) {
  */
 export function getPriorityClass(priority) {
     const priorityMap = {
+        'Muy Alta': 'muy-alta',
+        'Alta': 'alta',
+        'Media': 'media',
+        'Baja': 'baja',
+        'Muy Baja': 'muy-baja',
+        // Legacy support
         'muy-alta': 'muy-alta',
         'alta': 'alta',
         'media': 'media',
@@ -65,39 +71,91 @@ export function getPriorityClass(priority) {
  * Get priority display text
  */
 export function getPriorityText(priority) {
+    // Handle null/undefined
+    if (!priority) return 'Media';
+    
+    // Already in correct format from API
+    if (priority === 'Muy Alta' || priority === 'Alta' || priority === 'Media' || 
+        priority === 'Baja' || priority === 'Muy Baja') {
+        return priority;
+    }
+    
+    // Convert to lowercase for comparison
+    const lowerPriority = priority.toLowerCase();
+    
+    // Legacy format conversion (with or without hyphens)
     const priorityMap = {
         'muy-alta': 'Muy Alta',
+        'muy alta': 'Muy Alta',
         'alta': 'Alta',
         'media': 'Media',
         'baja': 'Baja',
-        'muy-baja': 'Muy Baja'
+        'muy-baja': 'Muy Baja',
+        'muy baja': 'Muy Baja'
     };
-    return priorityMap[priority] || 'Media';
+    
+    return priorityMap[lowerPriority] || 'Media';
 }
 
 /**
  * Get status class name
+ * Accepts both numeric IDs and string keys
  */
 export function getStatusClass(status) {
-    const statusMap = {
+    // Numeric mapping (from database)
+    const numericStatusMap = {
+        1: 'idea',
+        2: 'concepto',
+        3: 'viabilidad',
+        4: 'diseno-detallado',
+        5: 'desarrollo',
+        6: 'implantado',
+        7: 'finalizado',
+        8: 'on-hold',
+        9: 'cancelado'
+    };
+    
+    // String mapping (legacy)
+    const stringStatusMap = {
         'idea': 'idea',
         'conceptualizacion': 'conceptualizacion',
-        'concepto': 'conceptualizacion',
+        'concepto': 'concepto',
         'diseno-detallado': 'diseno-detallado',
         'viabilidad': 'viabilidad',
         'desarrollo': 'desarrollo',
         'implantado': 'implantado',
         'finalizado': 'finalizado',
+        'on-hold': 'on-hold',
         'cancelado': 'cancelado'
     };
-    return statusMap[status] || 'desarrollo';
+    
+    // Try numeric first, then string
+    if (typeof status === 'number') {
+        return numericStatusMap[status] || 'desarrollo';
+    }
+    return stringStatusMap[status] || 'desarrollo';
 }
 
 /**
  * Get status display text
+ * Accepts both numeric IDs and string keys
  */
 export function getStatusText(status) {
-    const statusMap = {
+    // Numeric mapping (from database - matches validators.ts)
+    const numericStatusMap = {
+        1: 'Idea',
+        2: 'Concepto',
+        3: 'Viabilidad (TEC-ECO)',
+        4: 'Diseño Detallado',
+        5: 'Desarrollo',
+        6: 'Implantado',
+        7: 'Finalizado',
+        8: 'On Hold',
+        9: 'Cancelado'
+    };
+    
+    // String mapping (legacy)
+    const stringStatusMap = {
         'idea': 'Idea',
         'conceptualizacion': 'Conceptualización',
         'concepto': 'Concepto',
@@ -106,16 +164,40 @@ export function getStatusText(status) {
         'desarrollo': 'Desarrollo',
         'implantado': 'Implantado',
         'finalizado': 'Finalizado',
+        'on-hold': 'On Hold',
         'cancelado': 'Cancelado'
     };
-    return statusMap[status] || 'Desarrollo';
+    
+    // Try numeric first, then string
+    if (typeof status === 'number') {
+        return numericStatusMap[status] || 'Desarrollo';
+    }
+    return stringStatusMap[status] || 'Desarrollo';
 }
 
 /**
  * Get domain display text
+ * Accepts both numeric IDs and string keys
  */
 export function getDomainText(domain) {
-    const domainMap = {
+    // Numeric mapping (from database - matches validators.ts)
+    const numericDomainMap = {
+        1: 'Atención',
+        2: 'Datos',
+        3: 'Facturación y Cobros',
+        4: 'Ciclo de Vida y Producto',
+        5: 'Operación de Sistemas y Ciberseguridad',
+        6: 'Ventas | Contratación y SW',
+        7: 'Portabilidad',
+        8: 'Integración',
+        9: 'Industrial',
+        10: 'Gen. Distribuida',
+        11: 'IA Gen',
+        12: 'Ninguno'
+    };
+    
+    // String mapping (legacy)
+    const stringDomainMap = {
         'atencion': 'Atención',
         'facturacion': 'Facturación y Cobros',
         'contratacion': 'Contratación',
@@ -125,7 +207,12 @@ export function getDomainText(domain) {
         'finanzas': 'Finanzas',
         'operaciones': 'Operaciones'
     };
-    return domainMap[domain] || domain;
+    
+    // Try numeric first, then string, then return as-is
+    if (typeof domain === 'number') {
+        return numericDomainMap[domain] || 'Ninguno';
+    }
+    return stringDomainMap[domain] || domain;
 }
 
 /**

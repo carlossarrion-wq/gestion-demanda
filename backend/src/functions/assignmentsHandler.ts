@@ -1,16 +1,17 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { prisma } from '../lib/prisma';
-import { successResponse, errorResponse, createdResponse, noContentResponse } from '../lib/response';
+import { successResponse, errorResponse, createdResponse, noContentResponse, optionsResponse } from '../lib/response';
 import { handleError, NotFoundError, ValidationError, BusinessRuleError } from '../lib/errors';
-import { validateAssignmentData, validateUUID } from '../lib/validators';
+import { validateUUID } from '../lib/validators';
 
 /**
- * Lambda Handler para operaciones CRUD de Asignaciones
- * Maneja: GET (list/single), POST (create), DELETE
+ * Lambda Handler para operaciones CRUD de Asignaciones/Tareas
+ * Maneja: GET (list/single), POST (create), PUT (update), DELETE
  * 
  * Reglas de negocio importantes:
- * - Un recurso solo puede ser asignado a un skill que posee
- * - Las horas asignadas no pueden exceder la capacidad disponible del recurso
+ * - Un recurso solo puede ser asignado a un skill que posee (si se especifica skillName)
+ * - Las horas asignadas no pueden exceder la capacidad disponible del recurso (si se especifica resourceId)
+ * - Las tareas pueden existir sin recurso asignado (resourceId nullable)
  */
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -20,6 +21,11 @@ export const handler = async (
   const assignmentId = pathParameters.id;
 
   try {
+    // Handle OPTIONS request for CORS preflight
+    if (method === 'OPTIONS') {
+      return optionsResponse();
+    }
+
     switch (method) {
       case 'GET':
         if (assignmentId) {
@@ -52,10 +58,10 @@ export const handler = async (
 };
 
 /**
- * GET /assignments - Listar asignaciones con filtros opcionales
+ * GET /assignments - Listar asignaciones/tareas con filtros opcionales
  */
 async function listAssignments(queryParams: Record<string, string | undefined>): Promise<APIGatewayProxyResult> {
-  const { projectId, resourceId, month, year } = queryParams;
+  const { projectId, resourceId, month, year, skillName } = queryParams;
 
   const assignments = await prisma.assignment.findMany({
     where: {
@@ -63,6 +69,7 @@ async function listAssignments(queryParams: Record<string, string | undefined>):
       ...(resourceId && { resourceId }),
       ...(month && { month: parseInt(month, 10) }),
       ...(year && { year: parseInt(year, 10) }),
+      ...(skillName && { skillName }),
     },
     include: {
       project: {
@@ -72,12 +79,7 @@ async function listAssignments(queryParams: Record<string, string | undefined>):
           title: true,
           type: true,
           priority: true,
-          status: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          status: true,
         },
       },
       resource: {
@@ -87,12 +89,6 @@ async function listAssignments(queryParams: Record<string, string | undefined>):
           name: true,
           email: true,
           active: true,
-        },
-      },
-      skill: {
-        select: {
-          id: true,
-          name: true,
         },
       },
     },
@@ -109,7 +105,7 @@ async function listAssignments(queryParams: Record<string, string | undefined>):
 }
 
 /**
- * GET /assignments/{id} - Obtener asignación por ID
+ * GET /assignments/{id} - Obtener asignación/tarea por ID
  */
 async function getAssignmentById(assignmentId: string): Promise<APIGatewayProxyResult> {
   // Validar UUID
@@ -125,22 +121,12 @@ async function getAssignmentById(assignmentId: string): Promise<APIGatewayProxyR
   const assignment = await prisma.assignment.findUnique({
     where: { id: assignmentId },
     include: {
-      project: {
-        include: {
-          status: true,
-          domain: true,
-        },
-      },
+      project: true,
       resource: {
         include: {
-          resourceSkills: {
-            include: {
-              skill: true,
-            },
-          },
+          resourceSkills: true,
         },
       },
-      skill: true,
     },
   });
 
@@ -152,11 +138,12 @@ async function getAssignmentById(assignmentId: string): Promise<APIGatewayProxyR
 }
 
 /**
- * POST /assignments - Crear nueva asignación
+ * POST /assignments - Crear nueva asignación/tarea
  * 
  * Valida reglas de negocio:
- * 1. El recurso debe tener el skill requerido
- * 2. Las horas asignadas no deben exceder la capacidad disponible
+ * 1. Si se especifica resourceId y skillName, el recurso debe tener ese skill
+ * 2. Si se especifica resourceId, las horas asignadas no deben exceder la capacidad disponible
+ * 3. El título es obligatorio
  */
 async function createAssignment(body: string | null): Promise<APIGatewayProxyResult> {
   if (!body) {
@@ -165,14 +152,18 @@ async function createAssignment(body: string | null): Promise<APIGatewayProxyRes
 
   const data = JSON.parse(body);
 
-  // Validar datos de la asignación
-  try {
-    validateAssignmentData(data);
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      return errorResponse(error.message, 400, { errors: error.validationErrors });
-    }
-    throw error;
+  // Validar datos básicos
+  if (!data.projectId) {
+    return errorResponse('projectId is required', 400);
+  }
+  if (!data.title) {
+    return errorResponse('title is required', 400);
+  }
+  if (!data.month || !data.year) {
+    return errorResponse('month and year are required', 400);
+  }
+  if (!data.hours || data.hours <= 0) {
+    return errorResponse('hours must be greater than 0', 400);
   }
 
   // Verificar que el proyecto exista
@@ -184,83 +175,83 @@ async function createAssignment(body: string | null): Promise<APIGatewayProxyRes
     return errorResponse(`Project with ID '${data.projectId}' not found`, 404);
   }
 
-  // Verificar que el recurso exista y esté activo
-  const resource = await prisma.resource.findUnique({
-    where: { id: data.resourceId },
-    include: {
-      resourceSkills: {
-        where: { skillId: data.skillId },
+  // Si se especifica resourceId, verificar que el recurso exista y esté activo
+  let resource = null;
+  if (data.resourceId) {
+    resource = await prisma.resource.findUnique({
+      where: { id: data.resourceId },
+      include: {
+        resourceSkills: true,
       },
-    },
-  });
+    });
 
-  if (!resource) {
-    return errorResponse(`Resource with ID '${data.resourceId}' not found`, 404);
-  }
+    if (!resource) {
+      return errorResponse(`Resource with ID '${data.resourceId}' not found`, 404);
+    }
 
-  if (!resource.active) {
-    return errorResponse('Cannot assign inactive resource to project', 400);
-  }
+    if (!resource.active) {
+      return errorResponse('Cannot assign inactive resource to project', 400);
+    }
 
-  // REGLA DE NEGOCIO: Verificar que el recurso tenga el skill requerido
-  if (resource.resourceSkills.length === 0) {
-    throw new BusinessRuleError(
-      `Resource '${resource.name}' does not have the required skill for this assignment`,
-      'RESOURCE_SKILL_MISMATCH'
-    );
-  }
+    // REGLA DE NEGOCIO: Si se especifica skillName, verificar que el recurso tenga ese skill
+    if (data.skillName) {
+      const hasSkill = resource.resourceSkills.some(
+        (rs: any) => rs.skillName === data.skillName
+      );
 
-  // Verificar que el skill exista
-  const skill = await prisma.skill.findUnique({
-    where: { id: data.skillId },
-  });
+      if (!hasSkill) {
+        throw new BusinessRuleError(
+          `Resource '${resource.name}' does not have the skill '${data.skillName}'`,
+          'RESOURCE_SKILL_MISMATCH'
+        );
+      }
+    }
 
-  if (!skill) {
-    return errorResponse(`Skill with ID '${data.skillId}' not found`, 404);
-  }
+    // Verificar capacidad disponible del recurso para ese mes/año
+    const capacity = await prisma.capacity.findUnique({
+      where: {
+        resourceId_month_year: {
+          resourceId: data.resourceId,
+          month: data.month,
+          year: data.year,
+        },
+      },
+    });
 
-  // Verificar capacidad disponible del recurso para ese mes/año
-  const capacity = await prisma.capacity.findUnique({
-    where: {
-      resourceId_month_year: {
+    // Si no existe capacidad definida, usar la capacidad por defecto del recurso
+    const totalCapacity = capacity ? Number(capacity.totalHours) : resource.defaultCapacity;
+
+    // Calcular horas ya asignadas en ese mes/año
+    const existingAssignments = await prisma.assignment.findMany({
+      where: {
         resourceId: data.resourceId,
         month: data.month,
         year: data.year,
       },
-    },
-  });
+    });
 
-  // Si no existe capacidad definida, usar la capacidad por defecto del recurso
-  const totalCapacity = capacity ? Number(capacity.totalHours) : resource.defaultCapacity;
-
-  // Calcular horas ya asignadas en ese mes/año
-  const existingAssignments = await prisma.assignment.findMany({
-    where: {
-      resourceId: data.resourceId,
-      month: data.month,
-      year: data.year,
-    },
-  });
-
-  const assignedHours = existingAssignments.reduce(
-    (sum: number, assignment: any) => sum + Number(assignment.hours),
-    0
-  );
-
-  // REGLA DE NEGOCIO: Verificar que no se exceda la capacidad
-  if (assignedHours + data.hours > totalCapacity) {
-    throw new BusinessRuleError(
-      `Assignment would exceed resource capacity. Available: ${totalCapacity - assignedHours} hours, Requested: ${data.hours} hours`,
-      'CAPACITY_EXCEEDED'
+    const assignedHours = existingAssignments.reduce(
+      (sum: number, assignment: any) => sum + Number(assignment.hours),
+      0
     );
+
+    // REGLA DE NEGOCIO: Verificar que no se exceda la capacidad
+    if (assignedHours + data.hours > totalCapacity) {
+      throw new BusinessRuleError(
+        `Assignment would exceed resource capacity. Available: ${totalCapacity - assignedHours} hours, Requested: ${data.hours} hours`,
+        'CAPACITY_EXCEEDED'
+      );
+    }
   }
 
-  // Crear asignación
+  // Crear asignación/tarea
   const assignment = await prisma.assignment.create({
     data: {
       projectId: data.projectId,
-      resourceId: data.resourceId,
-      skillId: data.skillId,
+      resourceId: data.resourceId || null,
+      title: data.title,
+      description: data.description || null,
+      skillName: data.skillName || null,
       month: data.month,
       year: data.year,
       hours: data.hours,
@@ -277,12 +268,6 @@ async function createAssignment(body: string | null): Promise<APIGatewayProxyRes
         select: {
           id: true,
           code: true,
-          name: true,
-        },
-      },
-      skill: {
-        select: {
-          id: true,
           name: true,
         },
       },

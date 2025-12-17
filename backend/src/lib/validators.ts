@@ -16,22 +16,33 @@ export type ProjectType = typeof PROJECT_TYPES[number];
 /**
  * Prioridades de proyecto válidas según DEFINICIONES.md
  */
-export const PROJECT_PRIORITIES = ['muy-alta', 'alta', 'media', 'baja', 'muy-baja'] as const;
+export const PROJECT_PRIORITIES = ['Muy Alta', 'Alta', 'Media', 'Baja', 'Muy Baja'] as const;
 export type ProjectPriority = typeof PROJECT_PRIORITIES[number];
 
 /**
- * Estados del ciclo de vida del proyecto según DEFINICIONES.md
+ * Equipos válidos según requisitos del usuario
  */
-export const PROJECT_STATUSES = [
-  'Idea',
-  'Conceptualización',
-  'Diseño Detallado',
-  'Viabilidad Técnico-Económica',
-  'Construcción y Pruebas / Desarrollo',
-  'Implantación',
-  'Finalizado'
-] as const;
-export type ProjectStatus = typeof PROJECT_STATUSES[number];
+export const VALID_TEAMS = ['darwin', 'mulesoft', 'sap', 'saplcorp'] as const;
+export type TeamName = typeof VALID_TEAMS[number];
+
+/**
+ * Estados del ciclo de vida del proyecto según requisitos del usuario
+ * Mapeo numérico para evitar problemas con caracteres especiales
+ */
+export const STATUS_MAP: Record<number, string> = {
+  1: 'Idea',
+  2: 'Concepto',
+  3: 'Viabilidad (TEC-ECO)',
+  4: 'Diseño Detallado',
+  5: 'Desarrollo',
+  6: 'Implantado',
+  7: 'Finalizado',
+  8: 'On Hold',
+  9: 'Cancelado'
+};
+
+export const VALID_STATUS_IDS = Object.keys(STATUS_MAP).map(Number);
+export type StatusId = keyof typeof STATUS_MAP;
 
 /**
  * Skills disponibles según DEFINICIONES.md
@@ -49,17 +60,26 @@ export const SKILLS = [
 export type SkillName = typeof SKILLS[number];
 
 /**
- * Dominios funcionales según DEFINICIONES.md
+ * Dominios funcionales según requisitos del usuario
+ * Mapeo numérico para evitar problemas con caracteres especiales
  */
-export const DOMAINS = [
-  'Atención',
-  'Facturación y Cobros',
-  'Integración',
-  'Datos',
-  'Ventas | Contratación y SW',
-  'Operación de Sistemas y Ciberseguridad'
-] as const;
-export type DomainName = typeof DOMAINS[number];
+export const DOMAIN_MAP: Record<number, string> = {
+  1: 'Atención',
+  2: 'Datos',
+  3: 'Facturación y Cobros',
+  4: 'Ciclo de Vida y Producto',
+  5: 'Operación de Sistemas y Ciberseguridad',
+  6: 'Ventas | Contratación y SW',
+  7: 'Portabilidad',
+  8: 'Integración',
+  9: 'Industrial',
+  10: 'Gen. Distribuida',
+  11: 'IA Gen',
+  12: 'Ninguno'
+};
+
+export const VALID_DOMAIN_IDS = Object.keys(DOMAIN_MAP).map(Number);
+export type DomainId = keyof typeof DOMAIN_MAP;
 
 /**
  * Niveles de proficiencia para skills
@@ -79,12 +99,13 @@ export interface ProjectData {
   code: string;
   title: string;
   description?: string;
-  type: string;
+  type?: string | null;
   priority: string;
-  startDate?: Date | string;
-  endDate?: Date | string;
-  statusId?: string;
-  domainId?: string;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  status: number;
+  domain: number;
+  team: string;
 }
 
 /**
@@ -94,6 +115,7 @@ export interface ResourceData {
   code: string;
   name: string;
   email?: string;
+  team: string;
   defaultCapacity?: number;
   active?: boolean;
 }
@@ -142,19 +164,54 @@ export const validateProjectData = (data: Partial<ProjectData>): void => {
     errors.push({ field: 'title', message: 'Project title must be 255 characters or less' });
   }
 
-  // Validar tipo de proyecto
-  if (data.type && !PROJECT_TYPES.includes(data.type as ProjectType)) {
-    errors.push({
-      field: 'type',
-      message: `Project type must be one of: ${PROJECT_TYPES.join(', ')}`
-    });
+  // Validar tipo de proyecto (OPCIONAL)
+  if (data.type !== null && data.type !== undefined && typeof data.type === 'string') {
+    const trimmedType = data.type.trim();
+    if (trimmedType !== '' && !PROJECT_TYPES.includes(trimmedType as ProjectType)) {
+      errors.push({
+        field: 'type',
+        message: `Project type must be one of: ${PROJECT_TYPES.join(', ')}`
+      });
+    }
   }
 
-  // Validar prioridad
-  if (data.priority && !PROJECT_PRIORITIES.includes(data.priority as ProjectPriority)) {
+  // Validar prioridad (OBLIGATORIO)
+  if (!data.priority) {
+    errors.push({ field: 'priority', message: 'Project priority is required' });
+  } else if (!PROJECT_PRIORITIES.includes(data.priority as ProjectPriority)) {
     errors.push({
       field: 'priority',
       message: `Project priority must be one of: ${PROJECT_PRIORITIES.join(', ')}`
+    });
+  }
+
+  // Validar domain (OBLIGATORIO) - ahora es número
+  if (data.domain === undefined || data.domain === null) {
+    errors.push({ field: 'domain', message: 'Domain is required' });
+  } else if (!VALID_DOMAIN_IDS.includes(data.domain)) {
+    errors.push({
+      field: 'domain',
+      message: `Domain must be a valid ID between 1 and ${VALID_DOMAIN_IDS.length}`
+    });
+  }
+
+  // Validar status (OBLIGATORIO) - ahora es número
+  if (data.status === undefined || data.status === null) {
+    errors.push({ field: 'status', message: 'Status is required' });
+  } else if (!VALID_STATUS_IDS.includes(data.status)) {
+    errors.push({
+      field: 'status',
+      message: `Status must be a valid ID between 1 and ${VALID_STATUS_IDS.length}`
+    });
+  }
+
+  // Validar team (OBLIGATORIO)
+  if (!data.team) {
+    errors.push({ field: 'team', message: 'Team is required' });
+  } else if (!VALID_TEAMS.includes(data.team as TeamName)) {
+    errors.push({
+      field: 'team',
+      message: `Team must be one of: ${VALID_TEAMS.join(', ')}`
     });
   }
 
@@ -203,6 +260,16 @@ export const validateResourceData = (data: Partial<ResourceData>): void => {
     errors.push({ field: 'name', message: 'Resource name must be 255 characters or less' });
   }
 
+  // Validar team (OBLIGATORIO)
+  if (!data.team) {
+    errors.push({ field: 'team', message: 'Team is required' });
+  } else if (!VALID_TEAMS.includes(data.team as TeamName)) {
+    errors.push({
+      field: 'team',
+      message: `Team must be one of: ${VALID_TEAMS.join(', ')}`
+    });
+  }
+
   // Validar email si se proporciona
   if (data.email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -219,7 +286,7 @@ export const validateResourceData = (data: Partial<ResourceData>): void => {
     if (data.defaultCapacity < 0) {
       errors.push({ field: 'defaultCapacity', message: 'Default capacity must be non-negative' });
     }
-    if (data.defaultCapacity > 744) { // Máximo horas en un mes (31 días * 24 horas)
+    if (data.defaultCapacity > 744) {
       errors.push({ field: 'defaultCapacity', message: 'Default capacity exceeds maximum hours in a month' });
     }
   }
@@ -270,7 +337,7 @@ export const validateAssignmentData = (data: Partial<AssignmentData>): void => {
     errors.push({ field: 'hours', message: 'Hours is required' });
   } else if (data.hours < 0) {
     errors.push({ field: 'hours', message: 'Hours must be non-negative' });
-  } else if (data.hours > 744) { // Máximo horas en un mes
+  } else if (data.hours > 744) {
     errors.push({ field: 'hours', message: 'Hours exceeds maximum hours in a month' });
   }
 
@@ -312,7 +379,7 @@ export const validateCapacityData = (data: Partial<CapacityData>): void => {
     errors.push({ field: 'totalHours', message: 'Total hours is required' });
   } else if (data.totalHours < 0) {
     errors.push({ field: 'totalHours', message: 'Total hours must be non-negative' });
-  } else if (data.totalHours > 744) { // Máximo horas en un mes
+  } else if (data.totalHours > 744) {
     errors.push({ field: 'totalHours', message: 'Total hours exceeds maximum hours in a month' });
   }
 

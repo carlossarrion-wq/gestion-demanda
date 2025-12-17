@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { prisma } from '../lib/prisma';
-import { successResponse, errorResponse, createdResponse } from '../lib/response';
+import { successResponse, errorResponse, createdResponse, optionsResponse } from '../lib/response';
 import { handleError, NotFoundError, ValidationError } from '../lib/errors';
 import { validateResourceData, validateUUID } from '../lib/validators';
 
@@ -16,6 +16,11 @@ export const handler = async (
   const method = event.httpMethod;
   const pathParameters = event.pathParameters || {};
   const resourceId = pathParameters.id;
+
+  // Handle OPTIONS preflight request for CORS
+  if (method === 'OPTIONS') {
+    return optionsResponse();
+  }
 
   try {
     switch (method) {
@@ -53,30 +58,25 @@ export const handler = async (
  * GET /resources - Listar recursos con filtros opcionales
  */
 async function listResources(queryParams: Record<string, string | undefined>): Promise<APIGatewayProxyResult> {
-  const { active, skill } = queryParams;
+  const { active, skill, team } = queryParams;
 
   const resources = await prisma.resource.findMany({
     where: {
       ...(active !== undefined && { active: active === 'true' }),
+      ...(team && { team }),
       ...(skill && {
         resourceSkills: {
           some: {
-            skill: {
-              name: skill,
-            },
+            skillName: skill,
           },
         },
       }),
     },
     include: {
       resourceSkills: {
-        include: {
-          skill: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+        select: {
+          skillName: true,
+          proficiency: true,
         },
       },
       assignments: {
@@ -141,8 +141,9 @@ async function getResourceById(resourceId: string): Promise<APIGatewayProxyResul
     where: { id: resourceId },
     include: {
       resourceSkills: {
-        include: {
-          skill: true,
+        select: {
+          skillName: true,
+          proficiency: true,
         },
       },
       assignments: {
@@ -154,12 +155,6 @@ async function getResourceById(resourceId: string): Promise<APIGatewayProxyResul
               title: true,
               type: true,
               priority: true,
-            },
-          },
-          skill: {
-            select: {
-              id: true,
-              name: true,
             },
           },
         },
@@ -233,6 +228,7 @@ async function createResource(body: string | null): Promise<APIGatewayProxyResul
       code: data.code,
       name: data.name,
       email: data.email || null,
+      team: data.team,
       defaultCapacity: data.defaultCapacity || 160, // Default según DEFINICIONES.md
       active: data.active !== undefined ? data.active : true,
     },
@@ -298,13 +294,15 @@ async function updateResource(resourceId: string, body: string | null): Promise<
       ...(data.code && { code: data.code }),
       ...(data.name && { name: data.name }),
       ...(data.email !== undefined && { email: data.email }),
+      ...(data.team && { team: data.team }),
       ...(data.defaultCapacity !== undefined && { defaultCapacity: data.defaultCapacity }),
       ...(data.active !== undefined && { active: data.active }),
     },
     include: {
       resourceSkills: {
-        include: {
-          skill: true,
+        select: {
+          skillName: true,
+          proficiency: true,
         },
       },
     },

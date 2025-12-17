@@ -1,10 +1,11 @@
 /**
  * Lambda Handler: Capacity Management
  * 
- * Gestiona la capacidad de recursos (horas disponibles por mes/año).
+ * Gestiona la capacidad de recursos con vista agregada por semanas.
  * 
  * Endpoints:
  * - GET /capacity - Lista registros de capacidad con filtros
+ * - GET /capacity/overview - Vista general de capacidad por equipo (para dashboard)
  * - GET /capacity/{id} - Obtiene un registro de capacidad por ID
  * - PUT /capacity - Actualiza o crea capacidad para un recurso/mes/año
  * 
@@ -44,10 +45,22 @@ export const handler = async (
   try {
     const method = event.httpMethod;
     const pathParameters = event.pathParameters || {};
+    const path = event.path || '';
     const id = pathParameters.id;
+
+    // Extraer team del header
+    const userTeam = event.headers['x-user-team'] || event.headers['X-User-Team'];
 
     switch (method) {
       case 'GET':
+        // GET /capacity/overview - Vista general para dashboard
+        if (path.includes('/overview')) {
+          if (!userTeam) {
+            return errorResponse('x-user-team header is required', 400);
+          }
+          return await getCapacityOverview(userTeam, event.queryStringParameters || {});
+        }
+        
         if (id) {
           return await getCapacityById(id);
         }
@@ -67,6 +80,246 @@ export const handler = async (
       errorResult.details
     );
   }
+};
+
+/**
+ * GET /capacity/overview
+ * Vista general de capacidad por equipo con datos agregados por semanas
+ * 
+ * Query Parameters:
+ * - year: Año a consultar (default: año actual)
+ * 
+ * Retorna:
+ * - KPIs: recursos registrados, con/sin asignación, ratio de ocupación
+ * - Gráficos: horas comprometidas vs disponibles, horas por perfil
+ * - Matriz: recursos con capacidad semanal y asignaciones
+ */
+const getCapacityOverview = async (
+  userTeam: string,
+  queryParams: Record<string, string | undefined>
+): Promise<APIGatewayProxyResult> => {
+  const year = queryParams.year ? parseInt(queryParams.year) : new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  // 1. Obtener todos los recursos del equipo con sus skills
+  const resources = await prisma.resource.findMany({
+    where: {
+      team: userTeam,
+      active: true
+    },
+    include: {
+      resourceSkills: {
+        select: {
+          skillName: true,
+          proficiency: true
+        }
+      },
+      capacities: {
+        where: {
+          year
+        },
+        orderBy: {
+          month: 'asc'
+        }
+      },
+      assignments: {
+        where: {
+          year
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              code: true,
+              title: true,
+              type: true
+            }
+          }
+        },
+        orderBy: [
+          { month: 'asc' }
+        ]
+      }
+    },
+    orderBy: {
+      name: 'asc'
+    }
+  });
+
+  // 2. Calcular métricas por recurso y por mes
+  const resourcesWithMetrics = resources.map((resource: any) => {
+    // Crear mapa de capacidad por mes
+    const capacityByMonth = resource.capacities.reduce((acc: Record<number, number>, cap: any) => {
+      acc[cap.month] = Number(cap.totalHours);
+      return acc;
+    }, {} as Record<number, number>);
+
+    // Crear mapa de asignaciones por mes
+    const assignmentsByMonth = resource.assignments.reduce((acc: Record<number, any[]>, assignment: any) => {
+      if (!acc[assignment.month]) {
+        acc[assignment.month] = [];
+      }
+      acc[assignment.month]!.push({
+        projectId: assignment.project.id,
+        projectCode: assignment.project.code,
+        projectTitle: assignment.project.title,
+        projectType: assignment.project.type,
+        skillName: assignment.skillName,
+        hours: Number(assignment.hours)
+      });
+      return acc;
+    }, {} as Record<number, any[]>);
+
+    // Calcular horas comprometidas y disponibles por mes
+    const monthlyData = [];
+    for (let month = 1; month <= 12; month++) {
+      const totalHours = capacityByMonth[month] || resource.defaultCapacity;
+      const assignments = assignmentsByMonth[month] || [];
+      const committedHours = assignments.reduce((sum: number, a: any) => sum + a.hours, 0);
+      const availableHours = totalHours - committedHours;
+      const utilizationRate = totalHours > 0 ? (committedHours / totalHours) * 100 : 0;
+
+      monthlyData.push({
+        month,
+        totalHours,
+        committedHours,
+        availableHours,
+        utilizationRate: Math.round(utilizationRate),
+        assignments
+      });
+    }
+
+    // Calcular ratio de ocupación promedio (mes actual y futuros)
+    const futureMonths = monthlyData.filter(m => m.month >= currentMonth);
+    const avgUtilization = futureMonths.length > 0
+      ? Math.round(futureMonths.reduce((sum, m) => sum + m.utilizationRate, 0) / futureMonths.length)
+      : 0;
+
+    // Determinar si tiene asignación a futuro
+    const hasFutureAssignment = futureMonths.some(m => m.committedHours > 0);
+
+    return {
+      id: resource.id,
+      code: resource.code,
+      name: resource.name,
+      email: resource.email,
+      defaultCapacity: resource.defaultCapacity,
+      skills: resource.resourceSkills.map((rs: any) => ({
+        name: rs.skillName,
+        proficiency: rs.proficiency
+      })),
+      monthlyData,
+      avgUtilization,
+      hasFutureAssignment
+    };
+  });
+
+  // 3. Calcular KPIs
+  const totalResources = resourcesWithMetrics.length;
+  const resourcesWithAssignment = resourcesWithMetrics.filter(r => r.hasFutureAssignment).length;
+  const resourcesWithoutAssignment = totalResources - resourcesWithAssignment;
+
+  // Ratio de ocupación medio (mes actual y futuros)
+  const currentMonthUtilization = resourcesWithMetrics.length > 0
+    ? Math.round(resourcesWithMetrics.reduce((sum, r) => {
+        const currentMonthData = r.monthlyData.find(m => m.month === currentMonth);
+        return sum + (currentMonthData?.utilizationRate || 0);
+      }, 0) / resourcesWithMetrics.length)
+    : 0;
+
+  const futureUtilization = resourcesWithMetrics.length > 0
+    ? Math.round(resourcesWithMetrics.reduce((sum, r) => {
+        const futureMonths = r.monthlyData.filter(m => m.month > currentMonth);
+        const avgFuture = futureMonths.length > 0
+          ? futureMonths.reduce((s, m) => s + m.utilizationRate, 0) / futureMonths.length
+          : 0;
+        return sum + avgFuture;
+      }, 0) / resourcesWithMetrics.length)
+    : 0;
+
+  // 4. Datos para gráfico "Horas Comprometidas vs Disponibles"
+  const monthlyAggregated = [];
+  for (let month = 1; month <= 12; month++) {
+    const totalCommitted = resourcesWithMetrics.reduce((sum, r) => {
+      const monthData = r.monthlyData.find(m => m.month === month);
+      return sum + (monthData?.committedHours || 0);
+    }, 0);
+
+    const totalAvailable = resourcesWithMetrics.reduce((sum, r) => {
+      const monthData = r.monthlyData.find(m => m.month === month);
+      return sum + (monthData?.availableHours || 0);
+    }, 0);
+
+    monthlyAggregated.push({
+      month,
+      committedHours: totalCommitted,
+      availableHours: totalAvailable
+    });
+  }
+
+  // 5. Datos para gráfico "Horas potenciales disponibles por perfil"
+  const skillsAvailability: Record<string, { current: number; future: number }> = {};
+  
+  resourcesWithMetrics.forEach((resource: any) => {
+    const skillCount = resource.skills.length;
+    if (skillCount === 0) return;
+
+    resource.skills.forEach((skill: any) => {
+      if (!skillsAvailability[skill.name]) {
+        skillsAvailability[skill.name] = { current: 0, future: 0 };
+      }
+
+      // Mes actual
+      const currentMonthData = resource.monthlyData.find((m: any) => m.month === currentMonth);
+      if (currentMonthData) {
+        const skillData = skillsAvailability[skill.name];
+        if (skillData) {
+          skillData.current += currentMonthData.availableHours / skillCount;
+        }
+      }
+
+      // Meses futuros
+      const futureMonths = resource.monthlyData.filter((m: any) => m.month > currentMonth);
+      const futureAvailable = futureMonths.reduce((sum: number, m: any) => sum + m.availableHours, 0);
+      const skillData = skillsAvailability[skill.name];
+      if (skillData) {
+        skillData.future += futureAvailable / skillCount;
+      }
+    });
+  });
+
+  // Ordenar skills según especificación
+  const skillOrder = ['Project Management', 'Análisis', 'Diseño', 'Construcción', 'QA', 'General'];
+  const skillsData = skillOrder
+    .filter(skillName => skillsAvailability[skillName])
+    .map(skillName => {
+      const skillData = skillsAvailability[skillName]!;
+      return {
+        skill: skillName,
+        currentMonth: Math.round(skillData.current),
+        futureMonths: Math.round(skillData.future)
+      };
+    });
+
+  // 6. Retornar respuesta completa
+  return successResponse({
+    year,
+    currentMonth,
+    kpis: {
+      totalResources,
+      resourcesWithAssignment,
+      resourcesWithoutAssignment,
+      avgUtilization: {
+        current: currentMonthUtilization,
+        future: futureUtilization
+      }
+    },
+    charts: {
+      monthlyComparison: monthlyAggregated,
+      skillsAvailability: skillsData
+    },
+    resources: resourcesWithMetrics
+  });
 };
 
 /**
@@ -227,12 +480,6 @@ const getCapacityById = async (id: string): Promise<APIGatewayProxyResult> => {
           title: true,
         },
       },
-      skill: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
     },
   });
 
@@ -257,7 +504,7 @@ const getCapacityById = async (id: string): Promise<APIGatewayProxyResult> => {
     assignments: assignments.map((assignment: any) => ({
       id: assignment.id,
       project: assignment.project,
-      skill: assignment.skill,
+      skillName: assignment.skillName,
       hours: Number(assignment.hours),
     })),
   });

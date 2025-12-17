@@ -16,6 +16,11 @@
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    
+    <!-- Handsontable for Excel-like interface -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@14.1.0/dist/handsontable.full.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@14.1.0/dist/handsontable.full.min.js"></script>
+    
 </head>
 <body>
     <div class="header">
@@ -568,32 +573,32 @@
                 <div style="display: grid; grid-template-columns: 250px 250px 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="card">
                         <h3>Recursos Registrados</h3>
-                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">4</div>
+                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" data-kpi="total-resources">0</div>
                         <div style="color: #718096; margin-bottom: 0.75rem;">Total recursos</div>
                         <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
                             <div style="display: flex; justify-content: space-between;">
                                 <span>Con asignación a futuro:</span>
-                                <span style="font-weight: 600; color: #319795;">4</span>
+                                <span style="font-weight: 600; color: #319795;" data-kpi="with-assignment">0</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
                                 <span>Sin asignación a futuro:</span>
-                                <span style="font-weight: 600; color: #319795;">0</span>
+                                <span style="font-weight: 600; color: #319795;" data-kpi="without-assignment">0</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="card">
                         <h3>Ratio de Ocupación Medio</h3>
-                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="resources-avg-occupation-ratio">78%</div>
+                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="resources-avg-occupation-ratio">0%</div>
                         <div style="color: #718096; margin-bottom: 0.75rem;">Promedio del equipo</div>
                         <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
                             <div style="display: flex; justify-content: space-between;">
                                 <span>Mes Actual:</span>
-                                <span style="font-weight: 600; color: #319795;" id="resources-max-ratio">81%</span>
+                                <span style="font-weight: 600; color: #319795;" data-kpi="current-utilization">0%</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
                                 <span>A futuro:</span>
-                                <span style="font-weight: 600; color: #319795;" id="resources-min-ratio">75%</span>
+                                <span style="font-weight: 600; color: #319795;" data-kpi="future-utilization">0%</span>
                             </div>
                         </div>
                     </div>
@@ -601,14 +606,14 @@
                     <div class="card">
                         <h3>Horas Comprometidas vs Disponibles</h3>
                         <div class="chart-container" style="height: 200px;">
-                            <canvas id="resources-committed-hours-chart"></canvas>
+                            <canvas id="monthly-comparison-chart"></canvas>
                         </div>
                     </div>
                     
                     <div class="card">
                         <h3>Horas potenciales disponibles por perfil</h3>
                         <div class="chart-container" style="height: 200px;">
-                            <canvas id="resources-hours-by-skill-chart"></canvas>
+                            <canvas id="skills-availability-chart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -628,245 +633,26 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th class="project-name">Recurso</th>
-                                    <th>Ratio de Ocupación</th>
-                                    <th>Skills</th>
-                                    <th>Ene 2025</th>
-                                    <th>Feb 2025</th>
-                                    <th>Mar 2025</th>
-                                    <th>Abr 2025</th>
-                                    <th>May 2025</th>
-                                    <th>Jun 2025</th>
-                                    <th>Jul 2025</th>
-                                    <th>Ago 2025</th>
-                                    <th>Sep 2025</th>
-                                    <th>Oct 2025</th>
-                                    <th>Nov 2025</th>
-                                    <th>Dic 2025</th>
+                                    <th style="width: 40px; min-width: 40px;"></th>
+                                    <th class="project-name" style="min-width: 150px;">Recurso</th>
+                                    <th style="min-width: 100px;">Ratio de Ocupación</th>
+                                    <th style="min-width: 120px;">Skills</th>
+                                    <th style="min-width: 80px;">ENE 2025</th>
+                                    <th style="min-width: 80px;">FEB 2025</th>
+                                    <th style="min-width: 80px;">MAR 2025</th>
+                                    <th style="min-width: 80px;">ABR 2025</th>
+                                    <th style="min-width: 80px;">MAY 2025</th>
+                                    <th style="min-width: 80px;">JUN 2025</th>
+                                    <th style="min-width: 80px;">JUL 2025</th>
+                                    <th style="min-width: 80px;">AGO 2025</th>
+                                    <th style="min-width: 80px;">SEP 2025</th>
+                                    <th style="min-width: 80px;">OCT 2025</th>
+                                    <th style="min-width: 80px;">NOV 2025</th>
+                                    <th style="min-width: 80px;">DIC 2025</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr class="resource-row" data-resource="juan">
-                                    <td class="project-name">
-                                        <span class="expand-icon" data-resource="juan">+</span>
-                                        <strong>Juan Pérez</strong>
-                                    </td>
-                                    <td style="text-align: center; font-weight: 600; color: #319795;">81%</td>
-                                    <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge diseno">Dis</span>
-                                        <span class="skill-badge construccion">Cons</span>
-                                    </td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="ene" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="feb" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell overload" data-resource="juan" data-month="mar" title="Sobrecargado: 180h, Disponibles: 0h">180<span class="available-hours">(0)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="abr" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell low" data-resource="juan" data-month="may" title="Comprometidas: 80h, Disponibles: 80h">80<span class="available-hours">(80)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="jun" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="jul" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell low" data-resource="juan" data-month="ago" title="Comprometidas: 40h, Disponibles: 120h">40<span class="available-hours">(120)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="sep" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="oct" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="juan" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                </tr>
-                                <!-- Proyectos de Juan Pérez -->
-                                <tr class="skill-row" data-resource="juan" style="display: none;">
-                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
-                                        <strong>NC-249</strong> - Soporte Call Center
-                                    </td>
-                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">40h</td>
-                                    <td style="font-size: 0.85rem;">20h</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                </tr>
-                                <tr class="skill-row" data-resource="juan" style="display: none;">
-                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
-                                        <strong>NC-16</strong> - Pricing
-                                    </td>
-                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">80h</td>
-                                    <td style="font-size: 0.85rem;">100h</td>
-                                    <td style="font-size: 0.85rem;">40h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                </tr>
-                                <tr class="resource-row" data-resource="maria">
-                                    <td class="project-name">
-                                        <span class="expand-icon" data-resource="maria">+</span>
-                                        <strong>María García</strong>
-                                    </td>
-                                    <td style="text-align: center; font-weight: 600; color: #319795;">79%</td>
-                                    <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge diseno">Dis</span>
-                                        <span class="skill-badge construccion">Cons</span>
-                                    </td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="ene" title="Comprometidas: 140h, Disponibles: 20h">140<span class="available-hours">(20)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="feb" title="Comprometidas: 150h, Disponibles: 10h">150<span class="available-hours">(10)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="mar" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="abr" title="Comprometidas: 130h, Disponibles: 30h">130<span class="available-hours">(30)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="may" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="jun" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell low" data-resource="maria" data-month="jul" title="Comprometidas: 80h, Disponibles: 80h">80<span class="available-hours">(80)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="ago" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="sep" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="oct" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="maria" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                </tr>
-                                <!-- Proyectos de María García -->
-                                <tr class="skill-row" data-resource="maria" style="display: none;">
-                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
-                                        <strong>NC-15</strong> - Modelo datos
-                                    </td>
-                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">40h</td>
-                                    <td style="font-size: 0.85rem;">80h</td>
-                                    <td style="font-size: 0.85rem;">40h</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                </tr>
-                                <tr class="skill-row" data-resource="maria" style="display: none;">
-                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
-                                        <strong>NC-17</strong> - Direcciones
-                                    </td>
-                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Evolutivo</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">80h</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">80h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                </tr>
-                                <tr class="resource-row" data-resource="carlos">
-                                    <td class="project-name">
-                                        <span class="expand-icon" data-resource="carlos">+</span>
-                                        <strong>Carlos López</strong>
-                                    </td>
-                                    <td style="text-align: center; font-weight: 600; color: #319795;">77%</td>
-                                    <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge project-management">PM</span>
-                                    </td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="ene" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="feb" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="mar" title="Comprometidas: 140h, Disponibles: 20h">140<span class="available-hours">(20)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="abr" title="Comprometidas: 150h, Disponibles: 10h">150<span class="available-hours">(10)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="may" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="jun" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="jul" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="ago" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="sep" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="oct" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="carlos" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                </tr>
-                                <!-- Proyectos de Carlos López -->
-                                <tr class="skill-row" data-resource="carlos" style="display: none;">
-                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
-                                        <strong>NC-16</strong> - Pricing
-                                    </td>
-                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                </tr>
-                                <tr class="resource-row" data-resource="ana">
-                                    <td class="project-name">
-                                        <span class="expand-icon" data-resource="ana">+</span>
-                                        <strong>Ana Martín</strong>
-                                    </td>
-                                    <td style="text-align: center; font-weight: 600; color: #319795;">75%</td>
-                                    <td style="text-align: left; padding: 0.5rem;">
-                                        <span class="skill-badge analisis">Ana</span>
-                                        <span class="skill-badge qa">QA</span>
-                                    </td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="ene" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="feb" title="Comprometidas: 130h, Disponibles: 30h">130<span class="available-hours">(30)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="mar" title="Comprometidas: 140h, Disponibles: 20h">140<span class="available-hours">(20)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="abr" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="may" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="jun" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="jul" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="ago" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell low" data-resource="ana" data-month="sep" title="Comprometidas: 80h, Disponibles: 80h">80<span class="available-hours">(80)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="oct" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="nov" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                    <td><span class="capacity-cell high" data-resource="ana" data-month="dic" title="Comprometidas: 120h, Disponibles: 40h">120<span class="available-hours">(40)</span></span></td>
-                                </tr>
-                                <!-- Proyectos de Ana Martín -->
-                                <tr class="skill-row" data-resource="ana" style="display: none;">
-                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
-                                        <strong>NC-18</strong> - Ampliar licencias
-                                    </td>
-                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Evolutivo</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">40h</td>
-                                    <td style="font-size: 0.85rem;">80h</td>
-                                    <td style="font-size: 0.85rem;">80h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                </tr>
-                                <tr class="skill-row" data-resource="ana" style="display: none;">
-                                    <td class="project-name" style="padding-left: 2.5rem; font-size: 0.85rem; color: #718096;">
-                                        <strong>NC-19</strong> - Securización email
-                                    </td>
-                                    <td colspan="2" style="font-size: 0.85rem; color: #718096;">Proyecto</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">120h</td>
-                                    <td style="font-size: 0.85rem;">80h</td>
-                                    <td style="font-size: 0.85rem;">40h</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                    <td style="font-size: 0.85rem;">-</td>
-                                </tr>
+                            <tbody id="capacity-table-body">
+                                <!-- Populated dynamically by resourceCapacity.js -->
                             </tbody>
                         </table>
                     </div>
@@ -883,16 +669,16 @@
                 <div style="display: grid; grid-template-columns: 250px repeat(3, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="card">
                         <h3>Proyectos Registrados</h3>
-                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;">7</div>
+                        <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="projects-total-count">7</div>
                         <div style="color: #718096; margin-bottom: 0.75rem;">Total proyectos</div>
                         <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
                             <div style="display: flex; justify-content: space-between;">
                                 <span>Evolutivos:</span>
-                                <span style="font-weight: 600; color: #319795;">3</span>
+                                <span style="font-weight: 600; color: #319795;" id="projects-evolutivos-count">3</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
                                 <span>Proyectos:</span>
-                                <span style="font-weight: 600; color: #319795;">4</span>
+                                <span style="font-weight: 600; color: #319795;" id="projects-proyectos-count">4</span>
                             </div>
                         </div>
                     </div>
@@ -1121,6 +907,9 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Pagination Container -->
+                    <div id="pagination-container" class="pagination-container"></div>
                 </div>
             </div>
         </div>
@@ -1217,6 +1006,222 @@
             }
         });
     </script>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="modalTitle">Añadir Proyecto</h2>
+                <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="projectForm">
+                    <input type="hidden" id="projectId" name="id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectCode">ID Proyecto <span class="required">*</span></label>
+                            <input type="text" id="projectCode" name="code" class="form-control" placeholder="Ej: NC-249" required>
+                            <small class="form-help">Formato sugerido: NC-XXX (ej: NC-249)</small>
+                            <div class="form-error" id="projectCodeError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="projectType">Tipo</label>
+                            <select id="projectType" name="type" class="form-control">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="Proyecto">Proyecto</option>
+                                <option value="Evolutivo">Evolutivo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="projectTitle">Título <span class="required">*</span></label>
+                        <input type="text" id="projectTitle" name="title" class="form-control" placeholder="Título del proyecto" required>
+                        <small class="form-help">Mínimo 5 caracteres</small>
+                        <div class="form-error" id="projectTitleError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="projectDescription">Descripción <span class="required">*</span></label>
+                        <textarea id="projectDescription" name="description" class="form-control" rows="3" placeholder="Descripción detallada del proyecto" required></textarea>
+                        <small class="form-help">Mínimo 10 caracteres</small>
+                        <div class="form-error" id="projectDescriptionError"></div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectDomain">Dominio Principal <span class="required">*</span></label>
+                            <select id="projectDomain" name="domain" class="form-control" required>
+                                <option value="">-- Seleccionar Dominio --</option>
+                                <option value="1">Atención</option>
+                                <option value="2">Datos</option>
+                                <option value="3">Facturación y Cobros</option>
+                                <option value="4">Ciclo de Vida y Producto</option>
+                                <option value="5">Operación de Sistemas y Ciberseguridad</option>
+                                <option value="6">Ventas | Contratación y SW</option>
+                                <option value="7">Portabilidad</option>
+                                <option value="8">Integración</option>
+                                <option value="9">Industrial</option>
+                                <option value="10">Gen. Distribuida</option>
+                                <option value="11">IA Gen</option>
+                                <option value="12">Ninguno</option>
+                            </select>
+                            <div class="form-error" id="projectDomainError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="projectPriority">Prioridad <span class="required">*</span></label>
+                        <select id="projectPriority" name="priority" class="form-control" required>
+                            <option value="">-- Seleccionar Prioridad --</option>
+                            <option value="Muy Alta">Muy Alta</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                            <option value="Muy Baja">Muy Baja</option>
+                        </select>
+                            <div class="form-error" id="projectPriorityError"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectStartDate">Fecha Inicio</label>
+                            <input type="date" id="projectStartDate" name="startDate" class="form-control">
+                            <div class="form-error" id="projectStartDateError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="projectEndDate">Fecha Fin</label>
+                            <input type="date" id="projectEndDate" name="endDate" class="form-control">
+                            <div class="form-error" id="projectEndDateError"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="projectStatus">Estado <span class="required">*</span></label>
+                            <select id="projectStatus" name="status" class="form-control" required>
+                                <option value="">-- Seleccionar Estado --</option>
+                                <option value="1">Idea</option>
+                                <option value="2">Concepto</option>
+                                <option value="3">Viabilidad (TEC-ECO)</option>
+                                <option value="4">Diseño Detallado</option>
+                                <option value="5">Desarrollo</option>
+                                <option value="6">Implantado</option>
+                                <option value="7">Finalizado</option>
+                                <option value="8">On Hold</option>
+                                <option value="9">Cancelado</option>
+                            </select>
+                        <div class="form-error" id="projectStatusError"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveProject()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-container delete-modal">
+            <div class="modal-header">
+                <h2>Confirmar Eliminación</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="delete-modal-message">¿Está seguro de que desea eliminar el proyecto?</p>
+                <span class="delete-modal-project-name" id="deleteProjectName"></span>
+                <div class="delete-modal-warning">
+                    <span class="delete-modal-warning-icon">⚠️</span>
+                    <div class="delete-modal-warning-text">
+                        <strong>Advertencia:</strong> Esta acción no se puede deshacer. Se eliminarán todos los datos asociados al proyecto.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Eliminar Proyecto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Modal -->
+    <div id="resourceModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="resourceModalTitle">Añadir Recurso</h2>
+                <button class="modal-close" onclick="closeResourceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="resourceForm">
+                    <input type="hidden" id="resourceId" name="id">
+                    
+                    <!-- Hidden field for team (auto-assigned from logged user) -->
+                    <input type="hidden" id="resourceTeam" name="team">
+                    
+                    <div class="form-group">
+                        <label for="resourceName">Nombre Completo <span class="required">*</span></label>
+                        <input type="text" id="resourceName" name="name" class="form-control" placeholder="Nombre del recurso" required>
+                        <small class="form-help">Mínimo 3 caracteres</small>
+                        <div class="form-error" id="resourceNameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resourceEmail">Email</label>
+                        <input type="email" id="resourceEmail" name="email" class="form-control" placeholder="email@ejemplo.com">
+                        <small class="form-help">Email del recurso (opcional)</small>
+                        <div class="form-error" id="resourceEmailError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resourceDefaultCapacity">Capacidad por Defecto (horas/mes) <span class="required">*</span></label>
+                        <input type="number" id="resourceDefaultCapacity" name="defaultCapacity" class="form-control" placeholder="160" value="160" required>
+                        <small class="form-help">Horas disponibles por mes (por defecto: 160)</small>
+                        <div class="form-error" id="resourceDefaultCapacityError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Skills / Perfiles</label>
+                        <div id="resourceSkillsContainer" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
+                            <!-- Skills checkboxes will be populated by JavaScript -->
+                        </div>
+                        <small class="form-help">Selecciona los skills del recurso</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeResourceModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveResource()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Resource Confirmation Modal -->
+    <div id="deleteResourceModal" class="modal-overlay">
+        <div class="modal-container delete-modal">
+            <div class="modal-header">
+                <h2>Confirmar Eliminación</h2>
+                <button class="modal-close" onclick="closeDeleteResourceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="delete-modal-message">¿Está seguro de que desea marcar como inactivo el recurso?</p>
+                <span class="delete-modal-project-name" id="deleteResourceName"></span>
+                <div class="delete-modal-warning">
+                    <span class="delete-modal-warning-icon">⚠️</span>
+                    <div class="delete-modal-warning-text">
+                        <strong>Advertencia:</strong> El recurso será marcado como inactivo y no aparecerá en las vistas de capacidad.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteResourceModal()">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteResource()">Marcar como Inactivo</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modular JavaScript (ES6 Modules) -->
     <script type="module" src="assets/js/main.js"></script>
