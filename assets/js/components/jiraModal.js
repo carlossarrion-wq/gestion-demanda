@@ -10,7 +10,7 @@ export class JiraModal {
         this.modal = null;
         this.jiraConfig = {
             url: 'https://naturgy-adn.atlassian.net',
-            apiToken: 'ATATT3xFfGF0LY-nh6cEDdIGhTzWxGNe5812qq7LAnMoKlwSJm3LC05mOYKd0hjtNKPKmh5QQNp65dk5TRICYDmIqsIm9dZ_on-sl1xAT4W_jKsVlcwCbRpayob3ZoTPK3_O6KhV3qqORG48VjOcK9dlfFTRmbsOV-AvyqJYIYoStl1nCz1NlNA=6FE13DB2',
+            apiToken: '', // Token debe ser ingresado por el usuario
             email: ''
         };
         this.selectedProjects = [];
@@ -49,15 +49,26 @@ export class JiraModal {
                             </div>
 
                             <div class="form-group">
+                                <label>API Token *</label>
+                                <input type="password" id="jira-token" class="form-input" 
+                                       placeholder="Tu API Token de Jira">
+                                <small style="color: #6b7280;">
+                                    <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" style="color: #2563eb;">
+                                        Genera tu token aquí
+                                    </a>
+                                </small>
+                            </div>
+
+                            <div class="form-group">
                                 <label>Consulta JQL (Opcional)</label>
                                 <textarea id="jira-jql" class="form-input" rows="3" 
-                                          placeholder="project = 'NC' AND status != 'Closed'"></textarea>
+                                          placeholder="project = 'TU_PROYECTO' AND status != 'Closed'"></textarea>
                                 <small style="color: #6b7280;">Ejemplo: project = 'NC' AND status != 'Closed'</small>
                             </div>
 
                             <div style="margin-top: 1.5rem; padding: 1rem; background-color: #dbeafe; border-left: 4px solid #2563eb; border-radius: 4px;">
                                 <p style="margin: 0; font-size: 0.9rem; color: #1e40af;">
-                                    <strong>💡 Nota:</strong> El API Token está preconfigurado. Solo necesitas tu email.
+                                    <strong>🔐 Seguridad:</strong> Tu API Token no se guarda y solo se usa para esta importación.
                                 </p>
                             </div>
 
@@ -148,10 +159,16 @@ export class JiraModal {
 
     async importProjects() {
         const email = document.getElementById('jira-email').value.trim();
+        const apiToken = document.getElementById('jira-token').value.trim();
         const jqlQuery = document.getElementById('jira-jql').value.trim();
 
         if (!email) {
             alert('Por favor ingresa tu email de Jira');
+            return;
+        }
+
+        if (!apiToken) {
+            alert('Por favor ingresa tu API Token de Jira');
             return;
         }
 
@@ -168,7 +185,7 @@ export class JiraModal {
         try {
             const requestBody = {
                 jiraUrl: this.jiraConfig.url,
-                apiToken: this.jiraConfig.apiToken,
+                apiToken: apiToken,
                 email: email,
                 team: userTeam,
                 jqlQuery: jqlQuery || undefined
