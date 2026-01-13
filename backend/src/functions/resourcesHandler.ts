@@ -203,6 +203,15 @@ async function createResource(body: string | null): Promise<APIGatewayProxyResul
 
   const data = JSON.parse(body);
 
+  // Auto-generar código si no se proporciona
+  if (!data.code) {
+    // Generar código a partir del nombre: primeras letras + número único
+    const nameParts = data.name.trim().split(' ');
+    const initials = nameParts.map((part: string) => part.charAt(0).toUpperCase()).join('');
+    const timestamp = Date.now().toString().slice(-4); // últimos 4 dígitos del timestamp
+    data.code = `${initials}${timestamp}`;
+  }
+
   // Validar datos del recurso
   try {
     validateResourceData(data);
@@ -214,24 +223,48 @@ async function createResource(body: string | null): Promise<APIGatewayProxyResul
   }
 
   // Verificar que el código no exista
-  const existingResource = await prisma.resource.findUnique({
-    where: { code: data.code },
+  let finalCode = data.code;
+  let existingResource = await prisma.resource.findUnique({
+    where: { code: finalCode },
   });
 
-  if (existingResource) {
-    return errorResponse(`Resource with code '${data.code}' already exists`, 409);
+  // Si existe, añadir sufijo numérico
+  let suffix = 1;
+  while (existingResource) {
+    finalCode = `${data.code}${suffix}`;
+    existingResource = await prisma.resource.findUnique({
+      where: { code: finalCode },
+    });
+    suffix++;
   }
 
-  // Crear recurso
+  // Crear recurso con skills si se proporcionan
   const resource = await prisma.resource.create({
     data: {
-      code: data.code,
+      code: finalCode,
       name: data.name,
       email: data.email || null,
       team: data.team,
       defaultCapacity: data.defaultCapacity || 160, // Default según DEFINICIONES.md
       active: data.active !== undefined ? data.active : true,
+      // Crear skills asociadas si se proporcionan
+      ...(data.skills && data.skills.length > 0 && {
+        resourceSkills: {
+          create: data.skills.map((skill: any) => ({
+            skillName: skill.name || skill.skillName,
+            proficiency: skill.proficiency || null
+          }))
+        }
+      })
     },
+    include: {
+      resourceSkills: {
+        select: {
+          skillName: true,
+          proficiency: true
+        }
+      }
+    }
   });
 
   return createdResponse(resource);

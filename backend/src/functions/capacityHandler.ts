@@ -123,9 +123,6 @@ const getCapacityOverview = async (
         }
       },
       assignments: {
-        where: {
-          year
-        },
         include: {
           project: {
             select: {
@@ -135,10 +132,7 @@ const getCapacityOverview = async (
               type: true
             }
           }
-        },
-        orderBy: [
-          { month: 'asc' }
-        ]
+        }
       }
     },
     orderBy: {
@@ -154,12 +148,34 @@ const getCapacityOverview = async (
       return acc;
     }, {} as Record<number, number>);
 
-    // Crear mapa de asignaciones por mes
+    // Crear mapa de asignaciones por mes (soporta tanto date como month/year)
     const assignmentsByMonth = resource.assignments.reduce((acc: Record<number, any[]>, assignment: any) => {
-      if (!acc[assignment.month]) {
-        acc[assignment.month] = [];
+      let month: number;
+      let assignmentYear: number;
+      
+      if (assignment.date) {
+        // Asignación diaria - extraer mes y año del date
+        const assignmentDate = new Date(assignment.date);
+        month = assignmentDate.getMonth() + 1; // JavaScript months are 0-indexed
+        assignmentYear = assignmentDate.getFullYear();
+      } else if (assignment.month && assignment.year) {
+        // Asignación legacy - usar month/year directamente
+        month = assignment.month;
+        assignmentYear = assignment.year;
+      } else {
+        // Skip assignments without valid date info
+        return acc;
       }
-      acc[assignment.month]!.push({
+      
+      // Solo incluir asignaciones del año solicitado
+      if (assignmentYear !== year) {
+        return acc;
+      }
+      
+      if (!acc[month]) {
+        acc[month] = [];
+      }
+      acc[month]!.push({
         projectId: assignment.project.id,
         projectCode: assignment.project.code,
         projectTitle: assignment.project.title,
