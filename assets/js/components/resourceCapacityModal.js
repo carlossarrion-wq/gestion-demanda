@@ -62,9 +62,11 @@ export class ResourceCapacityModal {
                                     <label>Equipo:</label>
                                     <input type="text" id="resource-team" class="form-input" readonly />
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label>Skills:</label>
-                                    <input type="text" id="resource-skills" class="form-input" />
+                                    <div id="resource-skills-container" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px;">
+                                        <!-- Skills checkboxes will be populated here -->
+                                    </div>
                                 </div>
                             </div>
                             <button class="btn-icon btn-save" id="save-resource-info" style="margin-top: 12px;">
@@ -142,12 +144,17 @@ export class ResourceCapacityModal {
      */
     async loadResourceData(resourceId) {
         try {
+            console.log('Loading resource data for ID:', resourceId);
+            
             const awsAccessKey = sessionStorage.getItem('aws_access_key');
             const userTeam = sessionStorage.getItem('user_team');
             
             if (!awsAccessKey || !userTeam) {
+                console.error('No authentication tokens found');
                 throw new Error('No authentication tokens found');
             }
+            
+            console.log('Fetching resource from:', `${API_CONFIG.BASE_URL}/resources/${resourceId}`);
             
             const response = await fetch(`${API_CONFIG.BASE_URL}/resources/${resourceId}`, {
                 headers: {
@@ -156,12 +163,20 @@ export class ResourceCapacityModal {
                 }
             });
             
+            console.log('Response status:', response.status);
+            
             if (!response.ok) {
+                console.error('Response not OK:', response.status, response.statusText);
                 throw new Error('Error loading resource data');
             }
             
             const data = await response.json();
-            return data.data?.resource || data.resource || null;
+            console.log('Raw API response:', data);
+            
+            const resource = data.data || data;
+            console.log('Extracted resource:', resource);
+            
+            return resource;
             
         } catch (error) {
             console.error('Error loading resource data:', error);
@@ -282,13 +297,67 @@ export class ResourceCapacityModal {
      * Populate resource information fields
      */
     populateResourceInfo() {
-        if (!this.resourceData) return;
+        if (!this.resourceData) {
+            console.warn('No resource data available to populate');
+            return;
+        }
 
-        document.getElementById('resource-name').value = this.resourceData.name || '';
-        document.getElementById('resource-email').value = this.resourceData.email || '';
-        document.getElementById('resource-team').value = this.resourceData.team || '';
-        document.getElementById('resource-skills').value = 
-            this.resourceData.skills?.join(', ') || '';
+        console.log('Populating resource info with data:', this.resourceData);
+
+        // Populate basic fields
+        const nameField = document.getElementById('resource-name');
+        const emailField = document.getElementById('resource-email');
+        const teamField = document.getElementById('resource-team');
+        
+        if (nameField) nameField.value = this.resourceData.name || '';
+        if (emailField) emailField.value = this.resourceData.email || '';
+        if (teamField) teamField.value = this.resourceData.team || '';
+        
+        // Populate skills checkboxes
+        const resourceSkills = this.resourceData.resourceSkills || [];
+        const resourceSkillNames = resourceSkills.map(s => s.skillName);
+        this.populateSkillsCheckboxes(resourceSkillNames);
+        
+        console.log('Resource info populated:', {
+            name: nameField?.value,
+            email: emailField?.value,
+            team: teamField?.value,
+            skills: resourceSkillNames
+        });
+    }
+
+    /**
+     * Populate skills checkboxes
+     */
+    populateSkillsCheckboxes(selectedSkills = []) {
+        const AVAILABLE_SKILLS = [
+            'Project Management',
+            'Análisis',
+            'Diseño',
+            'Construcción',
+            'QA',
+            'General'
+        ];
+
+        const container = document.getElementById('resource-skills-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        AVAILABLE_SKILLS.forEach(skill => {
+            const isChecked = selectedSkills.includes(skill);
+            
+            const checkboxDiv = document.createElement('div');
+            checkboxDiv.className = 'skill-checkbox-item';
+            checkboxDiv.innerHTML = `
+                <label class="skill-checkbox-label" style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" name="resource-skills" value="${skill}" ${isChecked ? 'checked' : ''}>
+                    <span>${skill}</span>
+                </label>
+            `;
+            
+            container.appendChild(checkboxDiv);
+        });
     }
 
     /**
@@ -528,9 +597,16 @@ export class ResourceCapacityModal {
     async saveResourceInfo() {
         const name = document.getElementById('resource-name').value;
         const email = document.getElementById('resource-email').value;
-        const skills = document.getElementById('resource-skills').value;
+        
+        // Get selected skills from checkboxes
+        const selectedSkills = Array.from(
+            document.querySelectorAll('input[name="resource-skills"]:checked')
+        ).map(checkbox => ({
+            name: checkbox.value,
+            proficiency: null
+        }));
 
-        console.log('Saving resource info:', { name, email, skills });
+        console.log('Saving resource info:', { name, email, skills: selectedSkills });
 
         // TODO: Implement API call to update resource
         alert('Información del recurso guardada (simulado)');

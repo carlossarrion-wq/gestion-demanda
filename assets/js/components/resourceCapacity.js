@@ -325,12 +325,16 @@ function updateCapacityMatrix(resources, currentMonth) {
         // Create skills cell
         const skillsTd = document.createElement('td');
         skillsTd.style.textAlign = 'left';
-        if (resource.skills && resource.skills.length > 0) {
-            resource.skills.forEach(skill => {
-                const abbr = getSkillAbbreviation(skill.name);
+        // Backend returns resourceSkills, not skills
+        const skills = resource.resourceSkills || resource.skills || [];
+        if (skills.length > 0) {
+            skills.forEach(skill => {
+                // skill.skillName is the field name in resourceSkills, skill.name for legacy
+                const skillName = skill.skillName || skill.name;
+                const abbr = getSkillAbbreviation(skillName);
                 const badge = document.createElement('span');
                 badge.className = 'skill-badge';
-                badge.title = skill.name;
+                badge.title = skillName;
                 badge.textContent = abbr;
                 skillsTd.appendChild(badge);
                 skillsTd.appendChild(document.createTextNode(' '));

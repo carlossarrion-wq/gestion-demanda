@@ -580,22 +580,29 @@ function updateProjectsTable(projects) {
         return;
     }
     
-    // Store all projects for pagination
-    allProjects = projects || [];
+    // Store all projects (including ABSENCES)
+    const allProjectsRaw = projects || [];
     
-    // Make allProjects globally available
+    // Filter out ABSENCES project for regular table
+    allProjects = allProjectsRaw.filter(p => p.code !== 'ABSENCES');
+    
+    // Make allProjects globally available (without ABSENCES)
     window.allProjects = allProjects;
     
-    // Update KPIs immediately after loading projects
+    // Update absences table separately
+    const absencesProject = allProjectsRaw.find(p => p.code === 'ABSENCES');
+    updateAbsencesTable(absencesProject);
+    
+    // Update KPIs immediately after loading projects (without ABSENCES)
     updateMatrixKPIs();
     
-    // Update charts with real data
+    // Update charts with real data (without ABSENCES)
     initializeAllCharts();
     
     // Clear existing rows
     tableBody.innerHTML = '';
     
-    // Check if there are no projects
+    // Check if there are no projects (excluding ABSENCES)
     if (!allProjects || allProjects.length === 0) {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -853,6 +860,64 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
     initializeApp();
+}
+
+/**
+ * Update absences table with ABSENCES project
+ */
+function updateAbsencesTable(absencesProject) {
+    const tableBody = document.getElementById('absences-table-body');
+    if (!tableBody) {
+        console.warn('Absences table body not found');
+        return;
+    }
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    // If no absences project, show message
+    if (!absencesProject) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="9" style="text-align: center; padding: 1rem; color: #6b7280; font-style: italic;">
+                No hay proyecto de ausencias/vacaciones configurado
+            </td>
+        `;
+        tableBody.appendChild(row);
+        return;
+    }
+    
+    // Create single row for ABSENCES project
+    const row = document.createElement('tr');
+    
+    const priorityClass = getPriorityClass(absencesProject.priority);
+    const priorityText = getPriorityText(absencesProject.priority);
+    const statusClass = getStatusClass(absencesProject.status);
+    const statusText = getStatusText(absencesProject.status);
+    const domainText = getDomainText(absencesProject.domain);
+    
+    const startDate = absencesProject.startDate ? new Date(absencesProject.startDate).toLocaleDateString('es-ES') : '-';
+    const endDate = absencesProject.endDate ? new Date(absencesProject.endDate).toLocaleDateString('es-ES') : '-';
+    
+    row.innerHTML = `
+        <td style="text-align: left;"><strong>${absencesProject.code}</strong></td>
+        <td style="text-align: left;">${absencesProject.title}</td>
+        <td style="text-align: left;">${truncateText(absencesProject.description || '', 50)}</td>
+        <td style="text-align: left;">${domainText}</td>
+        <td style="text-align: center;">
+            <span class="priority-badge ${priorityClass}">${priorityText}</span>
+        </td>
+        <td style="text-align: center;">${startDate}</td>
+        <td style="text-align: center;">${endDate}</td>
+        <td style="text-align: center;">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+        </td>
+        <td style="text-align: center;">${absencesProject.type || '-'}</td>
+    `;
+    
+    tableBody.appendChild(row);
+    
+    console.log('Absences table updated with ABSENCES project');
 }
 
 // Export for external use if needed
