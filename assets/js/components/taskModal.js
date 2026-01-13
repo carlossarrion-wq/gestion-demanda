@@ -1,760 +1,975 @@
 /**
- * Task Modal Component
- * Manages task creation and editing with Excel-like interface using Handsontable
+ * Task Modal Component with AG Grid
+ * Provides Excel-like interface for managing project tasks
  */
 
 import { API_CONFIG } from '../config/data.js';
-import { showNotification } from '../utils/helpers.js';
 
-// In-memory storage for project tasks
-const projectTasks = {};
-
-// Handsontable instance
-let hotInstance = null;
-
-// Current project being edited
-let currentProjectCode = null;
-let currentProjectId = null;
-
-// Track if data is loading
-let isLoading = false;
-
-// Available skills from resources
-let availableSkills = [];
-
-/**
- * Initialize task data for a project if it doesn't exist
- */
-function initializeProjectTasks(projectCode) {
-    if (!projectTasks[projectCode]) {
-        projectTasks[projectCode] = [];
+export class TaskModal {
+    constructor() {
+        this.gridApi = null;
+        this.projectId = null;
+        this.projectName = null;
+        this.modalElement = null;
+        this.isInitialized = false;
+        this.resourcesList = [];
+        this.tasksList = [];
     }
-}
 
-/**
- * Generate next task ID for a project
- */
-function generateTaskId(projectCode) {
-    initializeProjectTasks(projectCode);
-    const tasks = projectTasks[projectCode];
-    const maxNumber = tasks.reduce((max, task) => {
-        const match = task.taskId.match(/-T(\d+)$/);
-        if (match) {
-            const num = parseInt(match[1], 10);
-            return num > max ? num : max;
-        }
-        return max;
-    }, 0);
-    
-    const nextNumber = maxNumber + 1;
-    return `${projectCode}-T${String(nextNumber).padStart(3, '0')}`;
-}
+    /**
+     * Initialize the modal
+     */
+    init() {
+        if (this.isInitialized) return;
+        
+        this.createModalHTML();
+        this.attachEventListeners();
+        this.isInitialized = true;
+    }
 
-/**
- * Open task modal for a project
- */
-export async function openTaskModal(projectId, projectCode) {
-    currentProjectId = projectId;
-    currentProjectCode = projectCode;
-    
-    // Initialize tasks for this project
-    initializeProjectTasks(projectCode);
-    
-    // Load available skills from resources
-    await loadAvailableSkills();
-    
-    // Load existing tasks from database
-    await loadTasksFromDatabase(projectId);
-    
-    // Create modal HTML
-    const modalHtml = `
-        <div id="taskModal" class="modal-overlay" style="display: flex;">
-            <div class="modal-container" style="max-width: 1400px; width: 95%;">
-                <div class="modal-header">
-                    <h2>📝 Gestión de Tareas - ${projectCode}</h2>
-                    <button class="modal-close" onclick="window.closeTaskModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div style="margin-bottom: 1rem; padding: 1rem; background: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px;">
-                        <p style="margin: 0; color: #1565c0;">
-                            <strong>ℹ️ Información:</strong> Las tareas se guardan automáticamente al completar todos los campos obligatorios: 
-                            <strong>Título, Descripción, Skill Requerida y Horas</strong>. El mes y año se asignan automáticamente.
-                        </p>
-                    </div>
-                    <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
-                        <button class="btn btn-primary" id="add-task-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    /**
+     * Create modal HTML structure
+     */
+    createModalHTML() {
+        const modalHTML = `
+            <div id="task-modal" class="modal-overlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h2>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 24px; height: 24px; display: inline-block; margin-right: 8px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
                             </svg>
-                            Añadir Tarea
-                        </button>
-                        <button class="btn btn-danger" id="delete-selected-tasks-btn" disabled>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            <span id="modal-project-title">Detalle de Tareas del Proyecto</span>
+                        </h2>
+                        <button class="modal-close" id="close-task-modal" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                            Eliminar Seleccionadas
                         </button>
-                        <span id="task-count" style="margin-left: auto; color: #718096; font-weight: 500;">
-                            Total: ${projectTasks[projectCode].length} tareas
-                        </span>
                     </div>
-                    <div id="task-table-container" style="height: 500px; overflow: auto;"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="window.closeTaskModal()">Cerrar</button>
+                    <div class="modal-body">
+                        <div id="task-grid" class="ag-grid-container ag-theme-alpine"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="modal-footer-left">
+                            <button class="btn-icon btn-add" id="add-task-row">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                                Añadir Fila
+                            </button>
+                            <button class="btn-icon btn-delete" id="delete-task-row">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                </svg>
+                                Eliminar Seleccionadas
+                            </button>
+                            <div class="info-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                </svg>
+                                Doble clic para editar | Tab/Enter para navegar
+                            </div>
+                        </div>
+                        <div class="modal-footer-right">
+                            <button class="btn-icon btn-cancel" id="cancel-task-modal">Cancelar</button>
+                            <button class="btn-icon btn-save" id="save-task-modal">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
-    
-    // Remove existing modal if any
-    const existingModal = document.getElementById('taskModal');
-    if (existingModal) {
-        existingModal.remove();
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        this.modalElement = document.getElementById('task-modal');
     }
-    
-    // Add modal to body
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // Add active class to make modal visible
-    const modal = document.getElementById('taskModal');
-    modal.classList.add('active');
-    
-    // Prevent body scroll
-    document.body.style.overflow = 'hidden';
-    
-    // Initialize Handsontable
-    initializeHandsontable();
-    
-    // Add event listeners
-    document.getElementById('add-task-btn').addEventListener('click', addNewTask);
-    document.getElementById('delete-selected-tasks-btn').addEventListener('click', deleteSelectedTasks);
-}
 
-/**
- * Initialize Handsontable with configuration
- */
-function initializeHandsontable() {
-    const container = document.getElementById('task-table-container');
-    
-    // Month names for display
-    const monthNames = {
-        1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
-        5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
-        9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
-    };
-    
-    // Prepare data for Handsontable
-    const data = projectTasks[currentProjectCode].map(task => ({
-        selected: task.selected || false,
-        taskId: task.taskId,
-        title: task.title,
-        description: task.description,
-        month: monthNames[task.month] || task.month,
-        year: task.year,
-        hours: task.hours,
-        skillName: task.skillName || '',
-        dbId: task.id // Hidden field for database ID
-    }));
-    
-    hotInstance = new Handsontable(container, {
-        data: data,
-        colHeaders: ['Sel.', 'ID Tarea', 'Título', 'Descripción', 'Skill Requerida', 'Horas'],
-        columns: [
-            {
-                data: 'selected',
-                type: 'checkbox',
-                width: 50,
-                className: 'htCenter'
-            },
-            {
-                data: 'taskId',
-                type: 'text',
-                readOnly: true,
-                width: 150,
-                className: 'htCenter'
-            },
-            {
-                data: 'title',
-                type: 'text',
-                width: 250
-            },
-            {
-                data: 'description',
-                type: 'text',
-                width: 350
-            },
-            {
-                data: 'skillName',
-                type: 'dropdown',
-                source: availableSkills,
-                width: 200,
-                strict: false,
-                allowInvalid: true
-            },
-            {
-                data: 'hours',
-                type: 'numeric',
-                numericFormat: {
-                    pattern: '0.00'
-                },
-                width: 100,
-                className: 'htRight'
+    /**
+     * Attach event listeners
+     */
+    attachEventListeners() {
+        // Close modal
+        document.getElementById('close-task-modal').addEventListener('click', () => this.close());
+        document.getElementById('cancel-task-modal').addEventListener('click', () => this.close());
+        
+        // Close on overlay click
+        this.modalElement.addEventListener('click', (e) => {
+            if (e.target === this.modalElement) {
+                this.close();
             }
-        ],
-        rowHeaders: true,
-        width: '100%',
-        height: 450,
-        licenseKey: 'non-commercial-and-evaluation',
-        stretchH: 'all',
-        autoWrapRow: true,
-        autoWrapCol: true,
-        manualRowResize: true,
-        manualColumnResize: true,
-        contextMenu: true,
-        filters: true,
-        dropdownMenu: true,
-        afterChange: function(changes, source) {
-            if (source === 'edit' || source === 'CopyPaste.paste' || source === 'Autofill.fill') {
-                handleCellChanges(changes);
-                updateDeleteButtonState();
-            }
-        }
-    });
-}
+        });
 
-/**
- * Handle cell changes and save to database
- */
-async function handleCellChanges(changes) {
-    if (!changes || isLoading) return;
-    
-    // Month name to number mapping
-    const monthNameToNumber = {
-        'Enero': 1, 'Febrero': 2, 'Marzo': 3, 'Abril': 4,
-        'Mayo': 5, 'Junio': 6, 'Julio': 7, 'Agosto': 8,
-        'Septiembre': 9, 'Octubre': 10, 'Noviembre': 11, 'Diciembre': 12
-    };
-    
-    for (const change of changes) {
-        const [row, prop, oldValue, newValue] = change;
-        
-        if (oldValue === newValue) continue;
-        
-        const rowData = hotInstance.getDataAtRow(row);
-        const taskIndex = row;
-        const task = projectTasks[currentProjectCode][taskIndex];
-        
-        if (!task) continue;
-        
-        // Update task in memory
-        switch (prop) {
-            case 'title':
-                task.title = newValue;
-                break;
-            case 'description':
-                task.description = newValue;
-                break;
-            case 'month':
-                task.month = monthNameToNumber[newValue] || task.month;
-                break;
-            case 'year':
-                task.year = parseInt(newValue) || task.year;
-                break;
-            case 'hours':
-                task.hours = parseFloat(newValue) || 0;
-                break;
-            case 'skillName':
-                task.skillName = newValue;
-                break;
-            case 'selected':
-                task.selected = newValue;
-                break;
-        }
-        
-        // Save to database if task has all required fields and is not just a checkbox change
-        if (prop !== 'selected') {
-            // Check if all required fields are filled
-            const hasAllRequiredFields = 
-                task.title && task.title.trim() !== '' &&
-                task.description && task.description.trim() !== '' &&
-                task.skillName && task.skillName.trim() !== '' &&
-                task.hours > 0;
+        // Add row
+        document.getElementById('add-task-row').addEventListener('click', () => this.addRow());
+
+        // Delete selected rows
+        document.getElementById('delete-task-row').addEventListener('click', () => this.deleteSelectedRows());
+
+        // Save changes
+        document.getElementById('save-task-modal').addEventListener('click', () => this.save());
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.modalElement.classList.contains('active')) {
+                this.close();
+            }
+        });
+    }
+
+    /**
+     * Load existing assignments for this project and transform to grid format
+     */
+    async loadProjectAssignments() {
+        try {
+            const awsAccessKey = sessionStorage.getItem('aws_access_key');
+            const userTeam = sessionStorage.getItem('user_team');
             
-            if (hasAllRequiredFields) {
-                if (task.id) {
-                    // Update existing task
-                    await updateTaskInDatabase(task);
-                } else {
-                    // Create new task
-                    await saveTaskToDatabase(task);
-                }
-            }
-        }
-    }
-    
-    updateTaskCount();
-}
-
-/**
- * Add a new task row
- */
-function addNewTask() {
-    const newTaskId = generateTaskId(currentProjectCode);
-    const currentDate = new Date();
-    
-    const newTask = {
-        selected: false,
-        taskId: newTaskId,
-        title: '',
-        description: '',
-        skillName: '',
-        hours: 0,
-        month: currentDate.getMonth() + 1,
-        year: currentDate.getFullYear(),
-        id: null // Will be set after saving to database
-    };
-    
-    // Add to memory
-    projectTasks[currentProjectCode].push(newTask);
-    
-    // Reload Handsontable
-    if (hotInstance) {
-        initializeHandsontable();
-    }
-    
-    // Update count
-    updateTaskCount();
-}
-
-/**
- * Delete selected tasks
- */
-function deleteSelectedTasks() {
-    if (!hotInstance) return;
-    
-    const data = hotInstance.getData();
-    const selectedIndices = [];
-    
-    // Find selected rows
-    data.forEach((row, index) => {
-        if (row[0] === true) { // checkbox column
-            selectedIndices.push(index);
-        }
-    });
-    
-    if (selectedIndices.length === 0) {
-        showNotification('Por favor, seleccione al menos una tarea para eliminar.', 'warning');
-        return;
-    }
-    
-    // Show confirmation dialog
-    const taskWord = selectedIndices.length === 1 ? 'tarea' : 'tareas';
-    showConfirmDialog(
-        `¿Está seguro de que desea eliminar ${selectedIndices.length} ${taskWord}?`,
-        async () => {
-            // Delete from database first (reverse order to maintain indices)
-            for (let i = selectedIndices.length - 1; i >= 0; i--) {
-                const index = selectedIndices[i];
-                const task = projectTasks[currentProjectCode][index];
-                if (task && task.id) {
-                    await deleteTaskFromDatabase(task.id);
-                }
+            if (!awsAccessKey || !userTeam) {
+                console.warn('No authentication tokens found');
+                return [];
             }
             
-            // Remove from memory (reverse order to maintain indices)
-            selectedIndices.reverse().forEach(index => {
-                projectTasks[currentProjectCode].splice(index, 1);
+            const response = await fetch(`${API_CONFIG.BASE_URL}/assignments?projectId=${this.projectId}`, {
+                headers: {
+                    'Authorization': awsAccessKey,
+                    'x-user-team': userTeam
+                }
             });
             
-            // Reload Handsontable
-            initializeHandsontable();
-            
-            // Update count and button state
-            updateTaskCount();
-            updateDeleteButtonState();
-            
-            showNotification(`${selectedIndices.length} ${taskWord} eliminada(s) correctamente`, 'success');
-        }
-    );
-}
-
-/**
- * Update task count display
- */
-function updateTaskCount() {
-    const countElement = document.getElementById('task-count');
-    if (countElement) {
-        const totalHours = projectTasks[currentProjectCode].reduce((sum, task) => sum + (parseFloat(task.hours) || 0), 0);
-        countElement.textContent = `Total: ${projectTasks[currentProjectCode].length} tareas (${totalHours}h)`;
-    }
-}
-
-/**
- * Update delete button state based on selected tasks
- */
-function updateDeleteButtonState() {
-    const deleteBtn = document.getElementById('delete-selected-tasks-btn');
-    if (!deleteBtn || !hotInstance) return;
-    
-    const data = hotInstance.getData();
-    const hasSelected = data.some(row => row[0] === true);
-    
-    deleteBtn.disabled = !hasSelected;
-}
-
-/**
- * Show custom confirmation dialog
- */
-function showConfirmDialog(message, onConfirm) {
-    const confirmHtml = `
-        <div id="taskConfirmDialog" class="modal-overlay active" style="display: flex; z-index: 10001;">
-            <div class="modal-container" style="max-width: 500px;">
-                <div class="modal-header">
-                    <h3>Confirmar acción</h3>
-                </div>
-                <div class="modal-body">
-                    <p style="margin: 1rem 0;">${message}</p>
-                </div>
-                <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" id="confirm-cancel-btn">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="confirm-ok-btn">Eliminar</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', confirmHtml);
-    
-    const dialog = document.getElementById('taskConfirmDialog');
-    const cancelBtn = document.getElementById('confirm-cancel-btn');
-    const okBtn = document.getElementById('confirm-ok-btn');
-    
-    const closeDialog = () => {
-        dialog.remove();
-    };
-    
-    cancelBtn.addEventListener('click', closeDialog);
-    okBtn.addEventListener('click', () => {
-        closeDialog();
-        onConfirm();
-    });
-}
-
-/**
- * Close task modal
- */
-export function closeTaskModal() {
-    const modal = document.getElementById('taskModal');
-    if (modal) {
-        // Destroy Handsontable instance
-        if (hotInstance) {
-            hotInstance.destroy();
-            hotInstance = null;
-        }
-        
-        modal.remove();
-    }
-    
-    // Restore body scroll
-    document.body.style.overflow = '';
-    
-    currentProjectCode = null;
-    currentProjectId = null;
-}
-
-/**
- * Get tasks for a specific project
- */
-export function getProjectTasks(projectCode) {
-    return projectTasks[projectCode] || [];
-}
-
-/**
- * Get all tasks (for debugging)
- */
-export function getAllTasks() {
-    return projectTasks;
-}
-
-/**
- * Load available skills from resources
- */
-async function loadAvailableSkills() {
-    try {
-        const awsAccessKey = sessionStorage.getItem('aws_access_key');
-        const userTeam = sessionStorage.getItem('user_team');
-        
-        if (!awsAccessKey || !userTeam) {
-            console.warn('No credentials found for loading skills');
-            availableSkills = [];
-            return;
-        }
-        
-        const response = await fetch(`${API_CONFIG.BASE_URL}/resources?active=true`, {
-            method: 'GET',
-            headers: {
-                'Authorization': awsAccessKey,
-                'x-user-team': userTeam
+            if (!response.ok) {
+                throw new Error('Error loading assignments');
             }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            const assignments = data.data?.assignments || data.assignments || [];
+            
+            console.log('Raw assignments loaded:', assignments.length);
+            
+            // Transform assignments to grid row format
+            // Group by resource + task + team
+            const rowsMap = new Map();
+            
+            assignments.forEach(assignment => {
+                // Find resource name
+                const resource = this.resourcesList.find(r => r.id === assignment.resourceId);
+                const resourceName = resource?.name || 'Unknown';
+                
+                // Create unique key for grouping
+                const key = `${resourceName}|${assignment.title}|${assignment.team || ''}`;
+                
+                if (!rowsMap.has(key)) {
+                    rowsMap.set(key, {
+                        recurso: resourceName,
+                        tarea: assignment.title,
+                        detalleTarea: assignment.description || '',
+                        equipo: assignment.team || ''
+                    });
+                }
+                
+                const row = rowsMap.get(key);
+                
+                // Add hours to the appropriate date
+                if (assignment.date) {
+                    // Daily assignment
+                    const dateStr = new Date(assignment.date).toISOString().split('T')[0];
+                    row[dateStr] = (row[dateStr] || 0) + parseFloat(assignment.hours || 0);
+                } else if (assignment.month && assignment.year) {
+                    // Legacy monthly assignment - put on first day of month
+                    const date = new Date(assignment.year, assignment.month - 1, 1);
+                    const dateStr = date.toISOString().split('T')[0];
+                    row[dateStr] = (row[dateStr] || 0) + parseFloat(assignment.hours || 0);
+                }
+            });
+            
+            const rows = Array.from(rowsMap.values());
+            console.log('Transformed to grid rows:', rows.length);
+            
+            return rows;
+            
+        } catch (error) {
+            console.error('Error loading project assignments:', error);
+            return [];
         }
+    }
+
+    /**
+     * Load tasks from API for this project
+     */
+    async loadTasks() {
+        try {
+            const awsAccessKey = sessionStorage.getItem('aws_access_key');
+            const userTeam = sessionStorage.getItem('user_team');
+            
+            if (!awsAccessKey || !userTeam) {
+                console.warn('No authentication tokens found');
+                return [];
+            }
+            
+            const response = await fetch(`${API_CONFIG.BASE_URL}/assignments?projectId=${this.projectId}`, {
+                headers: {
+                    'Authorization': awsAccessKey,
+                    'x-user-team': userTeam
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Error loading tasks');
+            }
+            
+            const data = await response.json();
+            console.log('API Response for tasks:', data);
+            const tasks = data.data?.assignments || data.assignments || [];
+            console.log('Raw tasks:', tasks);
+            console.log('Project ID used:', this.projectId);
+            
+            // Extract unique task titles
+            const taskTitles = tasks.map(t => t.title);
+            console.log('Task titles:', taskTitles);
+            const uniqueTasks = [...new Set(taskTitles.filter(t => t && t.trim() !== ''))];
+            
+            console.log('Tasks loaded for project:', uniqueTasks.length);
+            console.log('Unique tasks:', uniqueTasks);
+            return uniqueTasks;
+            
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Load resources from API
+     */
+    async loadResources() {
+        try {
+            const awsAccessKey = sessionStorage.getItem('aws_access_key');
+            const userTeam = sessionStorage.getItem('user_team');
+            
+            if (!awsAccessKey || !userTeam) {
+                console.warn('No authentication tokens found');
+                return [];
+            }
+            
+            const response = await fetch(`${API_CONFIG.BASE_URL}/resources`, {
+                headers: {
+                    'Authorization': awsAccessKey,
+                    'x-user-team': userTeam
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Error loading resources');
+            }
+            
+            const data = await response.json();
+            let resources = data.data?.resources || data.resources || [];
+            
+            // Filter resources by user's team
+            resources = resources.filter(r => {
+                // Normalize team values for comparison
+                const resourceTeam = (r.team || '').toLowerCase().trim();
+                const normalizedUserTeam = userTeam.toLowerCase().trim();
+                
+                return resourceTeam === normalizedUserTeam;
+            });
+            
+            console.log('Resources loaded:', resources.length, `(filtered by team: ${userTeam})`);
+            return resources;
+            
+        } catch (error) {
+            console.error('Error loading resources:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Open modal for a specific project
+     */
+    async open(projectCode, projectName, existingTasks = [], startDate = null, endDate = null) {
+        // Find the numeric project ID from the project code
+        const project = window.allProjects?.find(p => p.code === projectCode);
         
-        const data = await response.json();
-        const resources = data.data?.resources || data.resources || [];
+        this.projectId = project?.id || projectCode; // Use numeric ID if available, fallback to code
+        this.projectCode = projectCode;
+        this.projectName = projectName;
+        this.startDate = startDate;
+        this.endDate = endDate;
+
+        console.log('Opening modal for project:', { code: projectCode, id: this.projectId, name: projectName });
+
+        // Update modal title
+        const dateRange = startDate && endDate ? ` (${startDate} - ${endDate})` : '';
+        document.getElementById('modal-project-title').textContent = 
+            `Detalle de Tareas - ${projectName}${dateRange}`;
+
+        // Load resources and tasks before initializing grid
+        this.resourcesList = await this.loadResources();
+        this.tasksList = await this.loadTasks();
+
+        // Load existing assignments for this project
+        const loadedAssignments = await this.loadProjectAssignments();
+        console.log('Loaded assignments for project:', loadedAssignments.length);
+
+        // Initialize AG Grid with loaded data
+        this.initializeGrid(loadedAssignments, startDate, endDate);
+
+        // Show modal
+        this.modalElement.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    /**
+     * Close modal
+     */
+    close() {
+        this.modalElement.classList.remove('active');
+        document.body.style.overflow = '';
         
-        // Extract unique skills from all resources
-        const skillsSet = new Set();
-        resources.forEach(resource => {
-            if (resource.resourceSkills && Array.isArray(resource.resourceSkills)) {
-                resource.resourceSkills.forEach(rs => {
-                    if (rs.skillName) {
-                        skillsSet.add(rs.skillName);
+        // Destroy grid
+        if (this.gridApi) {
+            this.gridApi.destroy();
+            this.gridApi = null;
+        }
+    }
+
+    /**
+     * Generate date columns: -30 days to +120 days from today
+     */
+    generateDateColumns() {
+        const dateColumns = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Start 30 days before today
+        const start = new Date(today);
+        start.setDate(start.getDate() - 30);
+        
+        // End 120 days after today
+        const end = new Date(today);
+        end.setDate(end.getDate() + 120);
+        
+        let currentDate = new Date(start);
+        
+        while (currentDate <= end) {
+            const dateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+            const day = currentDate.getDate();
+            const month = currentDate.getMonth() + 1;
+            const dateHeader = `${day}/${month}`;
+            
+            // Determine if it's weekend or today
+            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+            const isToday = currentDate.toDateString() === today.toDateString();
+            
+            dateColumns.push({
+                headerName: dateHeader,
+                field: dateStr,
+                editable: true,
+                width: 70,
+                minWidth: 70,
+                filter: false,
+                sortable: false,
+                suppressMenu: true,
+                cellEditor: 'agNumberCellEditor',
+                cellEditorParams: {
+                    min: 0,
+                    max: 24,
+                    precision: 1
+                },
+                valueFormatter: params => params.value ? `${params.value}h` : '',
+                cellStyle: params => {
+                    const style = { 
+                        textAlign: 'center',
+                        fontWeight: params.value ? '600' : 'normal',
+                        fontSize: '0.85em'
+                    };
+                    
+                    // Highlight today's column
+                    if (isToday) {
+                        style.backgroundColor = '#fef3c7';
+                        style.borderLeft = '2px solid #f59e0b';
+                        style.borderRight = '2px solid #f59e0b';
                     }
+                    // Highlight weekends
+                    else if (isWeekend) {
+                        style.background = 'rgba(200, 200, 200, 0.1)';
+                    }
+                    // Highlight cells with values
+                    else if (params.value) {
+                        style.background = 'rgba(49, 151, 149, 0.1)';
+                        style.color = '#00695c';
+                    }
+                    
+                    return style;
+                },
+                headerClass: isToday ? 'today-header' : (isWeekend ? 'weekend-header' : '')
+            });
+            
+            // Move to next day
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        console.log('Generated date columns:', dateColumns.length);
+        console.log('First 5 columns:', dateColumns.slice(0, 5).map(c => c.headerName));
+        console.log('Last 5 columns:', dateColumns.slice(-5).map(c => c.headerName));
+        
+        return dateColumns;
+    }
+
+    /**
+     * Initialize AG Grid
+     */
+    initializeGrid(tasks, startDate = null, endDate = null) {
+        const gridDiv = document.getElementById('task-grid');
+
+        console.log('Initializing grid with resources:', this.resourcesList.length);
+        console.log('Resources:', this.resourcesList);
+        console.log('Tasks:', this.tasksList.length);
+
+        // Prepare resource names for dropdown
+        const resourceNames = this.resourcesList.length > 0 
+            ? this.resourcesList.map(r => r.name)
+            : ['Recurso 1', 'Recurso 2', 'Recurso 3']; // Fallback values
+        
+        // Prepare task names for dropdown - always include "Proyecto" as first option
+        const taskNames = ['Proyecto', ...this.tasksList];
+        
+        console.log('Resource names for dropdown:', resourceNames);
+        console.log('Task names for dropdown:', taskNames);
+
+        // Base column definitions
+        const columnDefs = [
+            {
+                headerName: '',
+                checkboxSelection: true,
+                headerCheckboxSelection: true,
+                width: 50,
+                pinned: 'left',
+                lockPosition: true,
+                suppressMenu: true
+            },
+            {
+                headerName: 'Recurso',
+                field: 'recurso',
+                editable: true,
+                width: 140,
+                minWidth: 120,
+                pinned: 'left',
+                cellEditor: 'agSelectCellEditor',
+                cellEditorParams: {
+                    values: resourceNames
+                },
+                cellStyle: { 
+                    fontWeight: '600',
+                    background: 'rgba(49, 151, 149, 0.05)'
+                }
+            },
+            {
+                headerName: 'Tarea',
+                field: 'tarea',
+                editable: true,
+                width: 150,
+                minWidth: 120,
+                pinned: 'left',
+                cellEditor: 'agSelectCellEditor',
+                cellEditorParams: {
+                    values: taskNames
+                }
+            },
+            {
+                headerName: 'Comentarios',
+                field: 'detalleTarea',
+                editable: true,
+                width: 200,
+                minWidth: 150,
+                pinned: 'left',
+                cellEditor: 'agLargeTextCellEditor',
+                cellEditorPopup: true,
+                cellEditorParams: {
+                    maxLength: 500,
+                    rows: 5,
+                    cols: 50
+                },
+                wrapText: true,
+                autoHeight: true
+            },
+            {
+                headerName: 'Equipo',
+                field: 'equipo',
+                editable: true,
+                width: 120,
+                minWidth: 100,
+                pinned: 'left',
+                cellEditor: 'agSelectCellEditor',
+                cellEditorParams: {
+                    values: ['PHP', 'Front', 'Mule', 'Backend', 'QA', 'DevOps', 'Análisis', 'Diseño']
+                },
+                cellStyle: params => {
+                    const colors = {
+                        'PHP': { background: 'rgba(77, 182, 172, 0.1)', color: '#00695c' },
+                        'Front': { background: 'rgba(100, 181, 246, 0.1)', color: '#1565c0' },
+                        'Mule': { background: 'rgba(255, 183, 77, 0.1)', color: '#e65100' },
+                        'Backend': { background: 'rgba(129, 199, 132, 0.1)', color: '#2e7d32' },
+                        'QA': { background: 'rgba(186, 104, 200, 0.1)', color: '#6a1b9a' },
+                        'DevOps': { background: 'rgba(144, 164, 174, 0.1)', color: '#455a64' },
+                        'Análisis': { background: 'rgba(66, 153, 225, 0.1)', color: '#3182ce' },
+                        'Diseño': { background: 'rgba(236, 64, 122, 0.1)', color: '#d53f8c' }
+                    };
+                    return colors[params.value] || {};
+                }
+            },
+            // Add Total column after Equipo (before date columns)
+            {
+                headerName: 'Total',
+                field: 'total',
+                width: 120,
+                minWidth: 70,
+                pinned: 'left',
+                editable: false,
+                filter: false,
+                sortable: false,
+                suppressMenu: true,
+                resizable: true,
+                cellStyle: {
+                    backgroundColor: '#e5e7eb', 
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    borderLeft: '2px solid #6b7280',
+                    fontSize: '0.9em'
+                },
+                valueGetter: (params) => {
+                    // Sum all day columns
+                    let total = 0;
+                    Object.keys(params.data).forEach(key => {
+                        if (key.match(/^\d{4}-\d{2}-\d{2}$/) && params.data[key]) {
+                            total += parseFloat(params.data[key]) || 0;
+                        }
+                    });
+                    return total > 0 ? `${total.toFixed(1)}h` : '';
+                }
+            }
+        ];
+
+        // Always add date columns
+        // If no dates provided, generate 120 days from today
+        let dateStart = startDate;
+        let dateEnd = endDate;
+        
+        if (!dateStart || !dateEnd) {
+            const today = new Date();
+            dateStart = today.toISOString().split('T')[0];
+            const futureDate = new Date(today);
+            futureDate.setDate(futureDate.getDate() + 120);
+            dateEnd = futureDate.toISOString().split('T')[0];
+        }
+        
+        const dateColumns = this.generateDateColumns();
+        columnDefs.push(...dateColumns);
+
+        // Grid options
+        const gridOptions = {
+            columnDefs: columnDefs,
+            rowData: tasks.length > 0 ? tasks : this.getDefaultRows(),
+            defaultColDef: {
+                sortable: true,
+                filter: true,
+                resizable: true,
+                suppressMenu: false
+            },
+            rowSelection: 'multiple',
+            animateRows: true,
+            enableCellTextSelection: true,
+            ensureDomOrder: true,
+            suppressRowClickSelection: true,
+            stopEditingWhenCellsLoseFocus: true,
+            singleClickEdit: false,
+            enterNavigatesVertically: true,
+            enterNavigatesVerticallyAfterEdit: true,
+            undoRedoCellEditing: true,
+            undoRedoCellEditingLimit: 20,
+            enableRangeSelection: true,
+            enableFillHandle: true,
+            fillHandleDirection: 'y',
+            onCellValueChanged: (event) => {
+                console.log('Cell value changed:', event);
+            },
+            onGridReady: (params) => {
+                this.gridApi = params.api;
+                params.api.sizeColumnsToFit();
+                
+                // Scroll to today's column
+                setTimeout(() => {
+                    const todayDateStr = new Date().toISOString().split('T')[0];
+                    params.api.ensureColumnVisible(todayDateStr);
+                    console.log('Scrolled to today:', todayDateStr);
+                }, 200);
+            }
+        };
+
+        // Create grid
+        this.gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    }
+
+    /**
+     * Get default empty rows
+     */
+    getDefaultRows() {
+        const defaultRow = { recurso: '', tarea: '', detalleTarea: '', equipo: '' };
+        
+        // Always initialize date fields
+        let dateStart = this.startDate;
+        let dateEnd = this.endDate;
+        
+        if (!dateStart || !dateEnd) {
+            const today = new Date();
+            dateStart = today.toISOString().split('T')[0];
+            const futureDate = new Date(today);
+            futureDate.setDate(futureDate.getDate() + 120);
+            dateEnd = futureDate.toISOString().split('T')[0];
+        }
+        
+        const start = new Date(dateStart);
+        const end = new Date(dateEnd);
+        let currentDate = new Date(start);
+        
+        while (currentDate <= end) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            defaultRow[dateStr] = null;
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        return [
+            { ...defaultRow },
+            { ...defaultRow },
+            { ...defaultRow }
+        ];
+    }
+
+    /**
+     * Add new row
+     */
+    addRow() {
+        if (!this.gridApi) return;
+
+        const newRow = { recurso: '', tarea: '', detalleTarea: '', equipo: '' };
+        
+        // Always initialize date fields
+        let dateStart = this.startDate;
+        let dateEnd = this.endDate;
+        
+        if (!dateStart || !dateEnd) {
+            const today = new Date();
+            dateStart = today.toISOString().split('T')[0];
+            const futureDate = new Date(today);
+            futureDate.setDate(futureDate.getDate() + 120);
+            dateEnd = futureDate.toISOString().split('T')[0];
+        }
+        
+        const start = new Date(dateStart);
+        const end = new Date(dateEnd);
+        let currentDate = new Date(start);
+        
+        while (currentDate <= end) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            newRow[dateStr] = null;
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        this.gridApi.applyTransaction({ add: [newRow] });
+
+        // Focus on the new row
+        const rowCount = this.gridApi.getDisplayedRowCount();
+        this.gridApi.ensureIndexVisible(rowCount - 1);
+    }
+
+    /**
+     * Delete selected rows
+     */
+    deleteSelectedRows() {
+        if (!this.gridApi) return;
+
+        const selectedRows = this.gridApi.getSelectedRows();
+        
+        if (selectedRows.length === 0) {
+            alert('Por favor, selecciona las filas que deseas eliminar.');
+            return;
+        }
+
+        if (confirm(`¿Estás seguro de eliminar ${selectedRows.length} fila(s)?`)) {
+            this.gridApi.applyTransaction({ remove: selectedRows });
+        }
+    }
+
+    /**
+     * Save changes
+     */
+    async save() {
+        if (!this.gridApi) return;
+
+        const allRows = [];
+        this.gridApi.forEachNode(node => allRows.push(node.data));
+
+        // Filter out empty rows (rows with at least some data)
+        const validRows = allRows.filter(row => {
+            // Check if row has recurso, tarea, descripcion, or equipo
+            if (row.recurso || row.tarea || row.detalleTarea || row.equipo) {
+                return true;
+            }
+            // Or check if it has any date values
+            return Object.keys(row).some(key => key.match(/^\d{4}-\d{2}-\d{2}$/) && row[key]);
+        });
+
+        // Validate data
+        const errors = this.validateData(validRows);
+        if (errors.length > 0) {
+            alert('Errores de validación:\n\n' + errors.join('\n'));
+            return;
+        }
+
+        // Calculate totals from date columns
+        let totalHoras = 0;
+        validRows.forEach(row => {
+            Object.keys(row).forEach(key => {
+                if (key.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    totalHoras += parseFloat(row[key]) || 0;
+                }
+            });
+        });
+
+        console.log('Saving tasks for project:', this.projectId);
+        console.log('Tasks:', validRows);
+        console.log('Total horas:', totalHoras.toFixed(1));
+
+        // Save to database
+        try {
+            await this.saveToDatabase(validRows);
+            
+            // Also save to localStorage as backup
+            this.saveToStorage(validRows);
+
+            // Show success message
+            alert(`✓ Guardado exitoso\n\nProyecto: ${this.projectName}\nTareas: ${validRows.length}\nTotal horas: ${totalHoras.toFixed(1)}h`);
+
+            this.close();
+        } catch (error) {
+            console.error('Error saving to database:', error);
+            
+            // Mostrar error detallado al usuario
+            const errorMessage = error.message || 'Error desconocido al guardar';
+            
+            // Si es error de capacidad, mostrar mensaje especial
+            if (errorMessage.includes('capacidad') || errorMessage.includes('capacity')) {
+                alert(errorMessage);
+            } else {
+                alert(`❌ Error al guardar los cambios\n\n${errorMessage}\n\nPor favor, revisa los datos e intenta de nuevo.`);
+            }
+        }
+    }
+
+    /**
+     * Save to database with daily assignments
+     * Strategy: Delete all existing assignments for this project, then create new ones
+     */
+    async saveToDatabase(rows) {
+        const awsAccessKey = sessionStorage.getItem('aws_access_key');
+        const userTeam = sessionStorage.getItem('user_team');
+        
+        if (!awsAccessKey || !userTeam) {
+            throw new Error('No authentication tokens found');
+        }
+
+        // STEP 1: Delete all existing assignments for this project
+        console.log('Step 1: Deleting existing assignments for project:', this.projectId);
+        try {
+            const deleteResponse = await fetch(`${API_CONFIG.BASE_URL}/assignments?projectId=${this.projectId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': awsAccessKey,
+                    'x-user-team': userTeam
+                }
+            });
+            
+            if (deleteResponse.ok) {
+                const deleteResult = await deleteResponse.json();
+                console.log('Deleted assignments:', deleteResult);
+            } else {
+                console.warn('Could not delete existing assignments:', deleteResponse.status);
+            }
+        } catch (error) {
+            console.warn('Error deleting existing assignments:', error);
+            // Continue anyway - maybe there were no existing assignments
+        }
+
+        // STEP 2: Transform rows to daily assignments
+        const assignments = [];
+        
+        rows.forEach(row => {
+            // For each day with hours, create a daily assignment
+            Object.keys(row).forEach(key => {
+                if (key.match(/^\d{4}-\d{2}-\d{2}$/) && row[key] && parseFloat(row[key]) > 0) {
+                    // Find resource ID from name
+                    const resource = this.resourcesList.find(r => r.name === row.recurso);
+                    
+                    if (!resource) {
+                        console.warn(`Resource not found for: ${row.recurso}`);
+                        return;
+                    }
+                    
+                    assignments.push({
+                        projectId: this.projectId,
+                        resourceId: resource.id,
+                        title: row.tarea || 'Sin título',
+                        description: row.detalleTarea || '',
+                        team: row.equipo || null,
+                        date: key, // YYYY-MM-DD format
+                        hours: parseFloat(row[key])
+                    });
+                }
+            });
+        });
+
+        console.log('Step 2: Creating new assignments:', assignments.length);
+        console.log('Sample assignments:', assignments.slice(0, 3));
+
+        // STEP 3: Save each assignment to the API
+        const results = {
+            success: 0,
+            failed: 0,
+            errors: []
+        };
+
+        for (const assignment of assignments) {
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/assignments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': awsAccessKey,
+                        'x-user-team': userTeam
+                    },
+                    body: JSON.stringify(assignment)
                 });
-            }
-        });
-        
-        availableSkills = Array.from(skillsSet).sort();
-        console.log('Available skills loaded:', availableSkills);
-    } catch (error) {
-        console.error('Error loading available skills:', error);
-        availableSkills = [];
-    }
-}
 
-/**
- * Load tasks from database for a project
- */
-async function loadTasksFromDatabase(projectId) {
-    isLoading = true;
-    
-    try {
-        const awsAccessKey = sessionStorage.getItem('aws_access_key');
-        const userTeam = sessionStorage.getItem('user_team');
-        
-        if (!awsAccessKey || !userTeam) {
-            showNotification('No se encontraron credenciales de autenticación', 'error');
-            isLoading = false;
-            return;
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    
+                    // Get error message (can be string or object)
+                    const errorMessage = typeof errorData.error === 'string' 
+                        ? errorData.error 
+                        : (errorData.message || JSON.stringify(errorData));
+                    
+                    // Check if it's a capacity exceeded error
+                    if (errorMessage.toLowerCase().includes('capacity')) {
+                        results.errors.push({
+                            assignment,
+                            error: errorMessage,
+                            type: 'CAPACITY_EXCEEDED'
+                        });
+                    } else {
+                        results.errors.push({
+                            assignment,
+                            error: errorMessage
+                        });
+                    }
+                    results.failed++;
+                } else {
+                    results.success++;
+                }
+            } catch (error) {
+                console.error('Error saving assignment:', error);
+                results.errors.push({
+                    assignment,
+                    error: error.message
+                });
+                results.failed++;
+            }
         }
-        
-        const response = await fetch(`${API_CONFIG.BASE_URL}/assignments?projectId=${projectId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': awsAccessKey,
-                'x-user-team': userTeam
+
+        console.log('Save results:', results);
+
+        // If there were capacity errors, show detailed message
+        if (results.errors.some(e => e.type === 'CAPACITY_EXCEEDED')) {
+            const capacityErrors = results.errors.filter(e => e.type === 'CAPACITY_EXCEEDED');
+            const errorMessages = capacityErrors.map(e => {
+                const { assignment, error } = e;
+                const resource = this.resourcesList.find(r => r.id === assignment.resourceId);
+                return `• ${resource?.name} - ${assignment.date}: ${error}`;
+            });
+            
+            throw new Error(
+                `⚠️ Se superó la capacidad disponible:\n\n${errorMessages.join('\n')}\n\n` +
+                `Guardadas: ${results.success} | Fallidas: ${results.failed}\n\n` +
+                `Por favor, revisa las horas asignadas en el modal de Gestión de Capacidad.`
+            );
+        }
+
+        // If there were other errors
+        if (results.failed > 0) {
+            throw new Error(
+                `Se guardaron ${results.success} asignaciones, pero ${results.failed} fallaron.\n\n` +
+                `Errores: ${results.errors.map(e => e.error).join(', ')}`
+            );
+        }
+
+        return results;
+    }
+
+    /**
+     * Validate task data
+     */
+    validateData(rows) {
+        const errors = [];
+
+        rows.forEach((row, index) => {
+            const rowNum = index + 1;
+
+            // Check if row has at least one filled field
+            const hasRecurso = row.recurso && row.recurso.trim() !== '';
+            const hasTarea = row.tarea && row.tarea.trim() !== '';
+            const hasEquipo = row.equipo && row.equipo.trim() !== '';
+            
+            // Check if row has at least some hours in date columns
+            let hasHours = false;
+            Object.keys(row).forEach(key => {
+                if (key.match(/^\d{4}-\d{2}-\d{2}$/) && row[key] > 0) {
+                    hasHours = true;
+                }
+            });
+
+            // If row has any data, validate required fields
+            if (hasRecurso || hasTarea || hasEquipo || hasHours) {
+                if (!hasTarea) {
+                    errors.push(`Fila ${rowNum}: El campo "Tarea" es obligatorio`);
+                }
             }
         });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        const assignments = data.data?.assignments || data.assignments || [];
-        
-        // Transform assignments to task format
-        projectTasks[currentProjectCode] = assignments.map((assignment, index) => ({
-            id: assignment.id,
-            taskId: `${currentProjectCode}-T${String(index + 1).padStart(3, '0')}`,
-            title: assignment.title,
-            description: assignment.description || '',
-            skillName: assignment.skillName || '',
-            hours: parseFloat(assignment.hours) || 0,
-            month: assignment.month,
-            year: assignment.year,
-            selected: false
+
+        return errors;
+    }
+
+    /**
+     * Save to localStorage
+     */
+    saveToStorage(tasks) {
+        const storageKey = `project_tasks_${this.projectId}`;
+        localStorage.setItem(storageKey, JSON.stringify({
+            projectId: this.projectId,
+            projectName: this.projectName,
+            tasks: tasks,
+            lastUpdated: new Date().toISOString()
         }));
-        
-        console.log('Tasks loaded from database:', projectTasks[currentProjectCode].length);
-    } catch (error) {
-        console.error('Error loading tasks from database:', error);
-        showNotification('Error al cargar las tareas desde la base de datos', 'error');
-    } finally {
-        isLoading = false;
+    }
+
+    /**
+     * Load from localStorage
+     */
+    static loadFromStorage(projectId) {
+        const storageKey = `project_tasks_${projectId}`;
+        const data = localStorage.getItem(storageKey);
+        return data ? JSON.parse(data).tasks : [];
     }
 }
-
-/**
- * Save a new task to database
- */
-async function saveTaskToDatabase(task) {
-    try {
-        const awsAccessKey = sessionStorage.getItem('aws_access_key');
-        const userTeam = sessionStorage.getItem('user_team');
-        
-        if (!awsAccessKey || !userTeam) {
-            showNotification('No se encontraron credenciales de autenticación', 'error');
-            return;
-        }
-        
-        // Ensure month and year are valid integers
-        const month = parseInt(task.month, 10);
-        const year = parseInt(task.year, 10);
-        
-        if (isNaN(month) || month < 1 || month > 12) {
-            showNotification('Mes inválido. Debe estar entre 1 y 12.', 'error');
-            return;
-        }
-        
-        if (isNaN(year) || year < 2000 || year > 2100) {
-            showNotification('Año inválido. Debe estar entre 2000 y 2100.', 'error');
-            return;
-        }
-        
-        const hours = parseFloat(task.hours);
-        if (isNaN(hours) || hours <= 0) {
-            showNotification('Las horas deben ser mayores que 0.', 'error');
-            return;
-        }
-        
-        const payload = {
-            projectId: currentProjectId,
-            title: task.title.trim(),
-            description: task.description ? task.description.trim() : null,
-            skillName: task.skillName ? task.skillName.trim() : null,
-            resourceId: null, // Tasks start unassigned
-            month: month,
-            year: year,
-            hours: hours
-        };
-        
-        console.log('Saving task with payload:', JSON.stringify(payload, null, 2));
-        
-        const response = await fetch(`${API_CONFIG.BASE_URL}/assignments`, {
-            method: 'POST',
-            headers: {
-                'Authorization': awsAccessKey,
-                'x-user-team': userTeam,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok) {
-            const errorMsg = result.message || result.error || 'Error desconocido';
-            console.error('Backend error response:', result);
-            throw new Error(errorMsg);
-        }
-        
-        const savedAssignment = result.data?.assignment || result.assignment || result.data || result;
-        
-        // Update task with database ID
-        task.id = savedAssignment.id;
-        
-        console.log('Task saved to database:', savedAssignment);
-    } catch (error) {
-        console.error('Error saving task to database:', error);
-        showNotification(`Error al guardar la tarea: ${error.message}`, 'error');
-    }
-}
-
-/**
- * Update an existing task in database
- */
-async function updateTaskInDatabase(task) {
-    if (!task.id) return;
-    
-    try {
-        const awsAccessKey = sessionStorage.getItem('aws_access_key');
-        const userTeam = sessionStorage.getItem('user_team');
-        
-        if (!awsAccessKey || !userTeam) {
-            showNotification('No se encontraron credenciales de autenticación', 'error');
-            return;
-        }
-        
-        // Ensure month and year are valid integers
-        const month = parseInt(task.month, 10);
-        const year = parseInt(task.year, 10);
-        const hours = parseFloat(task.hours);
-        
-        if (isNaN(month) || month < 1 || month > 12) {
-            showNotification('Mes inválido. Debe estar entre 1 y 12.', 'error');
-            return;
-        }
-        
-        if (isNaN(year) || year < 2000 || year > 2100) {
-            showNotification('Año inválido. Debe estar entre 2000 y 2100.', 'error');
-            return;
-        }
-        
-        if (isNaN(hours) || hours <= 0) {
-            showNotification('Las horas deben ser mayores que 0.', 'error');
-            return;
-        }
-        
-        const payload = {
-            title: task.title.trim(),
-            description: task.description ? task.description.trim() : null,
-            skillName: task.skillName ? task.skillName.trim() : null,
-            month: month,
-            year: year,
-            hours: hours
-        };
-        
-        const response = await fetch(`${API_CONFIG.BASE_URL}/assignments/${task.id}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': awsAccessKey,
-                'x-user-team': userTeam,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-        }
-        
-        console.log('Task updated in database:', task.id);
-    } catch (error) {
-        console.error('Error updating task in database:', error);
-        showNotification(`Error al actualizar la tarea: ${error.message}`, 'error');
-    }
-}
-
-/**
- * Delete a task from database
- */
-async function deleteTaskFromDatabase(taskId) {
-    if (!taskId) return;
-    
-    try {
-        const awsAccessKey = sessionStorage.getItem('aws_access_key');
-        const userTeam = sessionStorage.getItem('user_team');
-        
-        if (!awsAccessKey || !userTeam) {
-            showNotification('No se encontraron credenciales de autenticación', 'error');
-            return;
-        }
-        
-        const response = await fetch(`${API_CONFIG.BASE_URL}/assignments/${taskId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': awsAccessKey,
-                'x-user-team': userTeam
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        console.log('Task deleted from database:', taskId);
-    } catch (error) {
-        console.error('Error deleting task from database:', error);
-        showNotification(`Error al eliminar la tarea: ${error.message}`, 'error');
-    }
-}
-
-// Make functions available globally for onclick handlers
-window.closeTaskModal = closeTaskModal;
-window.openTaskModal = openTaskModal;

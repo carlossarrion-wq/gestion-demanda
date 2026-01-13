@@ -6,6 +6,10 @@
 
 import { API_CONFIG } from '../config/data.js';
 import { showNotification } from '../utils/helpers.js';
+import { CreateTaskModal } from './createTaskModal.js';
+
+// Create task modal instance
+let createTaskModalInstance = null;
 
 // Handsontable instances
 let hotAssignedInstance = null;
@@ -21,6 +25,35 @@ let allAssignments = [];
 // Resources and domains for dropdowns
 let resourcesList = [];
 let domainsList = [];
+
+/**
+ * Generate date range: -30 days to +120 days from today
+ */
+function generateDateRange() {
+    const dates = [];
+    const today = new Date();
+    
+    // Start 30 days before today
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 30);
+    
+    // End 120 days after today
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 120);
+    
+    let currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+        dates.push({
+            date: new Date(currentDate),
+            key: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`,
+            display: `${currentDate.getDate()}/${currentDate.getMonth() + 1}`
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return dates;
+}
 
 /**
  * Open the assignment view for a project
@@ -145,9 +178,17 @@ function createAssignmentModal(projectCode, assignments) {
     const modalHTML = `
         <div id="assignmentModal" class="modal-overlay" style="display: flex;">
             <div class="modal-container" style="max-width: 1400px; width: 95%; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h2>📋 Asignación de Recursos - ${projectCode}</h2>
-                    <button class="modal-close" onclick="window.closeAssignmentView()">&times;</button>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button type="button" id="create-task-btn" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Crear Tarea
+                        </button>
+                        <button class="modal-close" onclick="window.closeAssignmentView()">&times;</button>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <!-- Statistics Bar -->
@@ -222,6 +263,37 @@ function createAssignmentModal(projectCode, assignments) {
     // Initialize both Handsontable instances
     initializePendingTable(pendingTasks);
     initializeAssignedTable(assignedTasks);
+    
+    // Attach event listener to "Crear Tarea" button
+    const createTaskBtn = document.getElementById('create-task-btn');
+    if (createTaskBtn) {
+        createTaskBtn.addEventListener('click', () => openTaskModalFromAssignment());
+    }
+}
+
+/**
+ * Open Create Task Modal from assignment view
+ */
+function openTaskModalFromAssignment() {
+    // Initialize create task modal if not already done
+    if (!createTaskModalInstance) {
+        createTaskModalInstance = new CreateTaskModal();
+        createTaskModalInstance.init();
+        
+        // Set callback to refresh view when task is created
+        createTaskModalInstance.setOnTaskCreatedCallback(() => {
+            console.log('Task created, refreshing assignment view...');
+            // Save current project info before closing
+            const projectId = currentProjectId;
+            const projectCode = currentProjectCode;
+            // Reload the assignment view to show the new task
+            closeAssignmentView();
+            openAssignmentView(projectId, projectCode);
+        });
+    }
+    
+    // Open create task modal with current project
+    createTaskModalInstance.open(currentProjectId, currentProjectCode);
 }
 
 /**

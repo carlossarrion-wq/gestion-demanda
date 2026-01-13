@@ -40,12 +40,23 @@ export const handler = async (
         // POST /assignments - Crear nueva asignación
         return await createAssignment(event.body);
 
-      case 'DELETE':
-        // DELETE /assignments/{id} - Eliminar asignación
+      case 'PUT':
+        // PUT /assignments/{id} - Actualizar asignación
         if (!assignmentId) {
-          return errorResponse('Assignment ID is required for delete', 400);
+          return errorResponse('Assignment ID is required for update', 400);
         }
-        return await deleteAssignment(assignmentId);
+        return await updateAssignment(assignmentId, event.body);
+
+      case 'DELETE':
+        // DELETE /assignments/{id} - Eliminar asignación individual
+        // DELETE /assignments?projectId=X - Eliminar todas las asignaciones de un proyecto
+        if (assignmentId) {
+          return await deleteAssignment(assignmentId);
+        } else if (event.queryStringParameters?.projectId) {
+          return await deleteProjectAssignments(event.queryStringParameters.projectId);
+        } else {
+          return errorResponse('Assignment ID or projectId query parameter is required for delete', 400);
+        }
 
       default:
         return errorResponse(`Method ${method} not allowed`, 405);
@@ -140,10 +151,15 @@ async function getAssignmentById(assignmentId: string): Promise<APIGatewayProxyR
 /**
  * POST /assignments - Crear nueva asignación/tarea
  * 
+ * Soporta dos modos:
+ * - Asignación diaria (date): Para tracking diario de horas por tarea
+ * - Asignación mensual (month/year): Sistema legacy para estimaciones mensuales
+ * 
  * Valida reglas de negocio:
  * 1. Si se especifica resourceId y skillName, el recurso debe tener ese skill
  * 2. Si se especifica resourceId, las horas asignadas no deben exceder la capacidad disponible
  * 3. El título es obligatorio
+ * 4. Debe especificar date O (month + year)
  */
 async function createAssignment(body: string | null): Promise<APIGatewayProxyResult> {
   if (!body) {
@@ -159,9 +175,15 @@ async function createAssignment(body: string | null): Promise<APIGatewayProxyRes
   if (!data.title) {
     return errorResponse('title is required', 400);
   }
-  if (!data.month || !data.year) {
-    return errorResponse('month and year are required', 400);
+  
+  // Verificar que tenga date O (month + year)
+  const hasDate = !!data.date;
+  const hasMonthYear = data.month && data.year;
+  
+  if (!hasDate && !hasMonthYear) {
+    return errorResponse('Either date or (month and year) is required', 400);
   }
+  
   if (!data.hours || data.hours <= 0) {
     return errorResponse('hours must be greater than 0', 400);
   }
@@ -207,40 +229,70 @@ async function createAssignment(body: string | null): Promise<APIGatewayProxyRes
       }
     }
 
-    // Verificar capacidad disponible del recurso para ese mes/año
-    const capacity = await prisma.capacity.findUnique({
-      where: {
-        resourceId_month_year: {
+    // VALIDACIÓN DE CAPACIDAD
+    if (hasDate) {
+      // Para asignaciones diarias, validar capacidad por día
+      const assignmentDate = new Date(data.date);
+      
+      // Calcular horas ya asignadas ese día específico
+      const existingDailyAssignments = await prisma.assignment.findMany({
+        where: {
+          resourceId: data.resourceId,
+          date: assignmentDate,
+        },
+      });
+
+      const assignedHoursToday = existingDailyAssignments.reduce(
+        (sum: number, assignment: any) => sum + Number(assignment.hours),
+        0
+      );
+
+      // Capacidad por defecto diaria: 8 horas (puede ser configurable)
+      const dailyCapacity = 8; // TODO: Obtener de configuración o tabla de capacidad diaria
+      
+      // REGLA DE NEGOCIO: Verificar que no se exceda la capacidad diaria
+      if (assignedHoursToday + data.hours > dailyCapacity) {
+        throw new BusinessRuleError(
+          `Assignment would exceed daily resource capacity for ${assignmentDate.toISOString().split('T')[0]}. Available: ${dailyCapacity - assignedHoursToday} hours, Requested: ${data.hours} hours, Assigned: ${assignedHoursToday} hours`,
+          'DAILY_CAPACITY_EXCEEDED'
+        );
+      }
+    } else if (hasMonthYear) {
+      // Para asignaciones mensuales (legacy), validar capacidad mensual
+      const capacity = await prisma.capacity.findUnique({
+        where: {
+          resourceId_month_year: {
+            resourceId: data.resourceId,
+            month: data.month,
+            year: data.year,
+          },
+        },
+      });
+
+      // Si no existe capacidad definida, usar la capacidad por defecto del recurso
+      const totalCapacity = capacity ? Number(capacity.totalHours) : resource.defaultCapacity;
+
+      // Calcular horas ya asignadas en ese mes/año
+      const existingAssignments = await prisma.assignment.findMany({
+        where: {
           resourceId: data.resourceId,
           month: data.month,
           year: data.year,
         },
-      },
-    });
+      });
 
-    // Si no existe capacidad definida, usar la capacidad por defecto del recurso
-    const totalCapacity = capacity ? Number(capacity.totalHours) : resource.defaultCapacity;
-
-    // Calcular horas ya asignadas en ese mes/año
-    const existingAssignments = await prisma.assignment.findMany({
-      where: {
-        resourceId: data.resourceId,
-        month: data.month,
-        year: data.year,
-      },
-    });
-
-    const assignedHours = existingAssignments.reduce(
-      (sum: number, assignment: any) => sum + Number(assignment.hours),
-      0
-    );
-
-    // REGLA DE NEGOCIO: Verificar que no se exceda la capacidad
-    if (assignedHours + data.hours > totalCapacity) {
-      throw new BusinessRuleError(
-        `Assignment would exceed resource capacity. Available: ${totalCapacity - assignedHours} hours, Requested: ${data.hours} hours`,
-        'CAPACITY_EXCEEDED'
+      const assignedHours = existingAssignments.reduce(
+        (sum: number, assignment: any) => sum + Number(assignment.hours),
+        0
       );
+
+      // REGLA DE NEGOCIO: Verificar que no se exceda la capacidad mensual
+      if (assignedHours + data.hours > totalCapacity) {
+        throw new BusinessRuleError(
+          `Assignment would exceed monthly resource capacity. Available: ${totalCapacity - assignedHours} hours, Requested: ${data.hours} hours`,
+          'CAPACITY_EXCEEDED'
+        );
+      }
     }
   }
 
@@ -252,8 +304,9 @@ async function createAssignment(body: string | null): Promise<APIGatewayProxyRes
       title: data.title,
       description: data.description || null,
       skillName: data.skillName || null,
-      month: data.month,
-      year: data.year,
+      team: data.team || null,
+      ...(hasDate && { date: new Date(data.date) }),
+      ...(hasMonthYear && { month: data.month, year: data.year }),
       hours: data.hours,
     },
     include: {
@@ -278,7 +331,128 @@ async function createAssignment(body: string | null): Promise<APIGatewayProxyRes
 }
 
 /**
- * DELETE /assignments/{id} - Eliminar asignación
+ * PUT /assignments/{id} - Actualizar asignación/tarea
+ */
+async function updateAssignment(assignmentId: string, body: string | null): Promise<APIGatewayProxyResult> {
+  // Validar UUID
+  try {
+    validateUUID(assignmentId, 'assignmentId');
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return errorResponse(error.message, 400);
+    }
+    throw error;
+  }
+
+  if (!body) {
+    return errorResponse('Request body is required', 400);
+  }
+
+  const data = JSON.parse(body);
+
+  // Verificar que la asignación exista
+  const existingAssignment = await prisma.assignment.findUnique({
+    where: { id: assignmentId },
+  });
+
+  if (!existingAssignment) {
+    throw new NotFoundError('Assignment', assignmentId);
+  }
+
+  // Si se especifica resourceId, verificar que el recurso exista y esté activo
+  if (data.resourceId) {
+    const resource = await prisma.resource.findUnique({
+      where: { id: data.resourceId },
+      include: {
+        resourceSkills: true,
+      },
+    });
+
+    if (!resource) {
+      return errorResponse(`Resource with ID '${data.resourceId}' not found`, 404);
+    }
+
+    if (!resource.active) {
+      return errorResponse('Cannot assign inactive resource to project', 400);
+    }
+
+    // REGLA DE NEGOCIO: Si se especifica skillName, verificar que el recurso tenga ese skill
+    if (data.skillName) {
+      const hasSkill = resource.resourceSkills.some(
+        (rs: any) => rs.skillName === data.skillName
+      );
+
+      if (!hasSkill) {
+        throw new BusinessRuleError(
+          `Resource '${resource.name}' does not have the skill '${data.skillName}'`,
+          'RESOURCE_SKILL_MISMATCH'
+        );
+      }
+    }
+  }
+
+  // Actualizar asignación
+  const updatedAssignment = await prisma.assignment.update({
+    where: { id: assignmentId },
+    data: {
+      ...(data.title && { title: data.title }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.skillName !== undefined && { skillName: data.skillName }),
+      ...(data.month && { month: data.month }),
+      ...(data.year && { year: data.year }),
+      ...(data.hours && { hours: data.hours }),
+      ...(data.resourceId !== undefined && { resourceId: data.resourceId }),
+    },
+    include: {
+      project: {
+        select: {
+          id: true,
+          code: true,
+          title: true,
+        },
+      },
+      resource: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  return successResponse(updatedAssignment);
+}
+
+/**
+ * DELETE /assignments?projectId=X - Eliminar todas las asignaciones de un proyecto
+ * Útil para operación "replace all" del modal de tareas
+ */
+async function deleteProjectAssignments(projectId: string): Promise<APIGatewayProxyResult> {
+  console.log('Deleting all assignments for project:', projectId);
+  
+  // Contar cuántas asignaciones tiene el proyecto
+  const count = await prisma.assignment.count({
+    where: { projectId },
+  });
+  
+  console.log('Found', count, 'assignments to delete');
+  
+  // Eliminar todas las asignaciones del proyecto
+  const result = await prisma.assignment.deleteMany({
+    where: { projectId },
+  });
+  
+  console.log('Deleted', result.count, 'assignments');
+  
+  return successResponse({
+    message: `Deleted ${result.count} assignments from project`,
+    deletedCount: result.count,
+  });
+}
+
+/**
+ * DELETE /assignments/{id} - Eliminar asignación individual
  */
 async function deleteAssignment(assignmentId: string): Promise<APIGatewayProxyResult> {
   // Validar UUID

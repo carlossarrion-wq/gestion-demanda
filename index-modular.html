@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="assets/css/layout.css">
     <link rel="stylesheet" href="assets/css/tabs.css">
     <link rel="stylesheet" href="assets/css/tables.css">
+    <link rel="stylesheet" href="assets/css/modal.css">
     <link rel="stylesheet" href="assets/css/responsive.css">
     
     <!-- External Libraries -->
@@ -20,6 +21,11 @@
     <!-- Handsontable for Excel-like interface -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@14.1.0/dist/handsontable.full.min.css">
     <script src="https://cdn.jsdelivr.net/npm/handsontable@14.1.0/dist/handsontable.full.min.js"></script>
+    
+    <!-- AG Grid for task management -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/styles/ag-theme-alpine.css">
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/dist/ag-grid-community.min.js"></script>
     
 </head>
 <body>
@@ -64,12 +70,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l-1-3m1 3l-1-3m-16.5 0h16.5" />
                     </svg>
                     Vista General
-                </button>
-                <button class="tab-button" data-tab="matrix-tab">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M20.625 4.5H3.375a1.125 1.125 0 00-1.125 1.125v13.5" />
-                    </svg>
-                    Matriz de Utilización
                 </button>
                 <button class="tab-button" data-tab="projects-tab">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
@@ -238,78 +238,8 @@
                     </div>
                 </div>
 
-                <!-- Insights and Recommendations -->
-                <div class="insights-recommendations-section">
-                    <div class="insights-card">
-                        <div class="insights-header">
-                            <h3>Insights de Capacidad</h3>
-                            <div class="ai-badge">🧠 IA</div>
-                        </div>
-                        
-                        <div class="insight-item">
-                            <div class="insight-icon">📈</div>
-                            <div class="insight-content">
-                                <div class="insight-title">Tendencia Positiva</div>
-                                <div class="insight-text">La eficiencia del equipo ha mejorado 12% este trimestre.</div>
-                            </div>
-                        </div>
-                        
-                        <div class="insight-item">
-                            <div class="insight-icon">🔍</div>
-                            <div class="insight-content">
-                                <div class="insight-title">Cuello de Botella</div>
-                                <div class="insight-text">Los recursos de QA están al 95% de utilización.</div>
-                            </div>
-                        </div>
-                        
-                        <div class="insight-item">
-                            <div class="insight-icon">💡</div>
-                            <div class="insight-content">
-                                <div class="insight-title">Oportunidad</div>
-                                <div class="insight-text">3 recursos con skills de Análisis están subutilizados.</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="recommendations-card">
-                        <div class="recommendations-header">
-                            <h3>Recomendaciones Estratégicas</h3>
-                            <div class="score-badge">Score: 8.2/10</div>
-                        </div>
-                        
-                        <div class="recommendation-item high-priority">
-                            <span class="priority-badge alta">Alta</span>
-                            <div class="recommendation-content">
-                                <div class="recommendation-title">Contratar QA Specialist</div>
-                                <div class="recommendation-text">Incorporar 1 FTE de QA antes de Q3.</div>
-                                <div class="recommendation-impact">Impacto: +15% velocidad entrega</div>
-                            </div>
-                        </div>
-                        
-                        <div class="recommendation-item medium-priority">
-                            <span class="priority-badge media">Media</span>
-                            <div class="recommendation-content">
-                                <div class="recommendation-title">Cross-training en Análisis</div>
-                                <div class="recommendation-text">Formar 2 desarrolladores en skills de análisis.</div>
-                                <div class="recommendation-impact">Impacto: +20% flexibilidad</div>
-                            </div>
-                        </div>
-                        
-                        <div class="recommendation-item low-priority">
-                            <span class="priority-badge baja">Baja</span>
-                            <div class="recommendation-content">
-                                <div class="recommendation-title">Redistribuir Carga Q4</div>
-                                <div class="recommendation-text">Mover NC-19 a Q1 2026 para equilibrar carga.</div>
-                                <div class="recommendation-impact">Impacto: -12% riesgo sobrecarga</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Matrix Tab -->
-            <div id="matrix-tab" class="tab-content">
-                <div class="section-header">
+                <!-- Matriz de Utilización (movida desde pestaña separada) -->
+                <div class="section-header" style="margin-top: 3rem;">
                     <h2>Matriz de Utilización</h2>
                 </div>
                 
@@ -561,6 +491,74 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Insights and Recommendations (movida al final) -->
+                <div class="insights-recommendations-section" style="margin-top: 3rem;">
+                    <div class="insights-card">
+                        <div class="insights-header">
+                            <h3>Insights de Capacidad</h3>
+                            <div class="ai-badge">🧠 IA</div>
+                        </div>
+                        
+                        <div class="insight-item">
+                            <div class="insight-icon">📈</div>
+                            <div class="insight-content">
+                                <div class="insight-title">Tendencia Positiva</div>
+                                <div class="insight-text">La eficiencia del equipo ha mejorado 12% este trimestre.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="insight-item">
+                            <div class="insight-icon">🔍</div>
+                            <div class="insight-content">
+                                <div class="insight-title">Cuello de Botella</div>
+                                <div class="insight-text">Los recursos de QA están al 95% de utilización.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="insight-item">
+                            <div class="insight-icon">💡</div>
+                            <div class="insight-content">
+                                <div class="insight-title">Oportunidad</div>
+                                <div class="insight-text">3 recursos con skills de Análisis están subutilizados.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendations-card">
+                        <div class="recommendations-header">
+                            <h3>Recomendaciones Estratégicas</h3>
+                            <div class="score-badge">Score: 8.2/10</div>
+                        </div>
+                        
+                        <div class="recommendation-item high-priority">
+                            <span class="priority-badge alta">Alta</span>
+                            <div class="recommendation-content">
+                                <div class="recommendation-title">Contratar QA Specialist</div>
+                                <div class="recommendation-text">Incorporar 1 FTE de QA antes de Q3.</div>
+                                <div class="recommendation-impact">Impacto: +15% velocidad entrega</div>
+                            </div>
+                        </div>
+                        
+                        <div class="recommendation-item medium-priority">
+                            <span class="priority-badge media">Media</span>
+                            <div class="recommendation-content">
+                                <div class="recommendation-title">Cross-training en Análisis</div>
+                                <div class="recommendation-text">Formar 2 desarrolladores en skills de análisis.</div>
+                                <div class="recommendation-impact">Impacto: +20% flexibilidad</div>
+                            </div>
+                        </div>
+                        
+                        <div class="recommendation-item low-priority">
+                            <span class="priority-badge baja">Baja</span>
+                            <div class="recommendation-content">
+                                <div class="recommendation-title">Redistribuir Carga Q4</div>
+                                <div class="recommendation-text">Mover NC-19 a Q1 2026 para equilibrar carga.</div>
+                                <div class="recommendation-impact">Impacto: -12% riesgo sobrecarga</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Resources Tab -->
@@ -759,6 +757,16 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
                                         </span>
+                                        <span class="action-icon" data-action="tasks" data-project="NC-249" title="Gestión de Tareas">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                            </svg>
+                                        </span>
+                                        <span class="action-icon" data-action="resources" data-project="NC-249" title="Asignación de Recursos">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                            </svg>
+                                        </span>
                                         <span class="action-icon" data-action="delete" data-project="NC-249" title="Eliminar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -780,6 +788,16 @@
                                         <span class="action-icon" data-action="edit" data-project="NC-15" title="Editar">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg>
+                                        </span>
+                                        <span class="action-icon" data-action="tasks" data-project="NC-15" title="Gestión de Tareas">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                            </svg>
+                                        </span>
+                                        <span class="action-icon" data-action="resources" data-project="NC-15" title="Asignación de Recursos">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                                             </svg>
                                         </span>
                                         <span class="action-icon" data-action="delete" data-project="NC-15" title="Eliminar">
@@ -910,6 +928,39 @@
                     
                     <!-- Pagination Container -->
                     <div id="pagination-container" class="pagination-container"></div>
+                </div>
+                
+                <!-- Absences/Vacations Table -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h2 style="margin-bottom: 1.5rem; color: #f59e0b;">Proyecto de Ausencias y Vacaciones</h2>
+                    <p style="color: #6b7280; margin-bottom: 1rem; font-size: 0.9rem;">
+                        Este proyecto especial se utiliza para registrar ausencias y vacaciones del equipo. 
+                        No se incluye en gráficos ni KPIs de gestión.
+                    </p>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Título</th>
+                                    <th>Descripción</th>
+                                    <th>Dominio Principal</th>
+                                    <th>Prioridad Negocio</th>
+                                    <th>Fecha Inicio</th>
+                                    <th>Fecha Fin</th>
+                                    <th>Estado</th>
+                                    <th>Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="absences-table-body">
+                                <tr>
+                                    <td colspan="9" style="text-align: center; padding: 1rem; color: #6b7280; font-style: italic;">
+                                        Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1222,6 +1273,321 @@
             </div>
         </div>
     </div>
+
+    <!-- Task Details Modal with AG Grid -->
+    <div id="taskDetailsModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container" style="max-width: 95vw; width: 95vw; max-height: 90vh;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #319795 0%, #2c7a7b 100%); color: white; display: flex; align-items: center; gap: 0.75rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 24px; height: 24px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                </svg>
+                <h2 id="taskModalTitle" style="flex: 1; margin: 0; font-size: 1.1rem;">Detalle de Tareas</h2>
+                <button class="modal-close" onclick="closeTaskDetailsModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.5rem; line-height: 1; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1rem; overflow: hidden; display: flex; flex-direction: column; max-height: calc(90vh - 180px);">
+                <!-- AG Grid Container -->
+                <div id="taskGrid" class="ag-theme-alpine" style="width: 100%; flex: 1; min-height: 400px;"></div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid #e2e8f0;">
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-success" onclick="addTaskRow()" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Añadir Fila
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteSelectedTasks()" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
+                        Eliminar Seleccionadas
+                    </button>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #64748b; font-size: 0.875rem; padding: 0 0.75rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        </svg>
+                        Doble clic para editar | Tab/Enter para navegar
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeTaskDetailsModal()">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTaskChanges()" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); border: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px; display: inline-block; margin-right: 0.5rem;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AG Grid and Task Management Script -->
+    <script>
+        let taskGridApi;
+        let taskGridColumnApi;
+        let currentProject = null;
+
+        // Function to open task details modal (make it globally available)
+        window.openTaskDetailsModal = function(projectCode, projectTitle, startDate, endDate) {
+            console.log('===== openTaskDetailsModal called =====');
+            console.log('Params:', { projectCode, projectTitle, startDate, endDate });
+            
+            currentProject = { code: projectCode, title: projectTitle, startDate, endDate };
+            console.log('currentProject set:', currentProject);
+            
+            // Update modal title
+            const titleElement = document.getElementById('taskModalTitle');
+            console.log('Title element found:', titleElement);
+            if (titleElement) {
+                titleElement.textContent = `Detalle de Tareas - ${projectTitle} (${startDate || '---'} - ${endDate || '---'})`;
+                console.log('Title updated');
+            }
+            
+            // Show modal
+            const modal = document.getElementById('taskDetailsModal');
+            console.log('Modal element found:', modal);
+            if (modal) {
+                modal.style.setProperty('display', 'flex', 'important');
+                modal.style.setProperty('opacity', '1', 'important');
+                modal.style.setProperty('visibility', 'visible', 'important');
+                console.log('Modal display, opacity, and visibility set with !important');
+            }
+            
+            // Check if AG Grid is available
+            console.log('AG Grid available:', typeof agGrid);
+            
+            // Initialize AG Grid
+            console.log('Calling initializeTaskGrid...');
+            initializeTaskGrid(projectCode);
+            console.log('===== openTaskDetailsModal finished =====');
+        }
+
+        // Function to close task details modal
+        window.closeTaskDetailsModal = function() {
+            const modal = document.getElementById('taskDetailsModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            currentProject = null;
+        }
+
+        // Generate date columns: -30 days to +120 days from today
+        function generateDateColumns(startDate, endDate) {
+            const columns = [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Start 30 days before today
+            const start = new Date(today);
+            start.setDate(start.getDate() - 30);
+            
+            // End 120 days after today
+            const end = new Date(today);
+            end.setDate(end.getDate() + 120);
+            
+            let currentDate = new Date(start);
+            
+            while (currentDate <= end) {
+                const day = currentDate.getDate();
+                const month = currentDate.getMonth() + 1;
+                const year = currentDate.getFullYear();
+                const dateKey = `${day}/${month}`;
+                const isToday = currentDate.getTime() === today.getTime();
+                
+                columns.push({
+                    headerName: dateKey,
+                    field: `day_${year}_${month}_${day}`,
+                    width: 50,
+                    editable: true,
+                    headerClass: isToday ? 'ag-header-today' : '',
+                    cellStyle: params => {
+                        const style = { textAlign: 'center', fontSize: '0.85em' };
+                        
+                        // Highlight today's column
+                        if (isToday) {
+                            style.backgroundColor = '#fef3c7';
+                            style.borderLeft = '2px solid #f59e0b';
+                            style.borderRight = '2px solid #f59e0b';
+                        }
+                        // Color cells with values
+                        else if (params.value && params.value !== '') {
+                            style.backgroundColor = '#e6f7ff';
+                            style.fontWeight = '500';
+                        }
+                        
+                        return style;
+                    }
+                });
+                
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            return columns;
+        }
+
+        // Initialize AG Grid
+        function initializeTaskGrid(projectCode) {
+            // Always use the new date range: -30 to +120 days from today
+            const dateColumns = generateDateColumns();
+
+            const columnDefs = [
+                {
+                    headerName: '',
+                    field: 'selected',
+                    width: 50,
+                    checkboxSelection: true,
+                    headerCheckboxSelection: true,
+                    pinned: 'left'
+                },
+                {
+                    headerName: 'Tarea',
+                    field: 'task',
+                    width: 150,
+                    editable: true,
+                    pinned: 'left',
+                    cellStyle: { backgroundColor: '#f8fafc' }
+                },
+                {
+                    headerName: 'Descripción',
+                    field: 'description',
+                    width: 300,
+                    editable: true,
+                    pinned: 'left'
+                },
+                {
+                    headerName: 'Equipo',
+                    field: 'team',
+                    width: 100,
+                    editable: true,
+                    pinned: 'left'
+                },
+                ...dateColumns,
+                {
+                    headerName: 'Total',
+                    field: 'total',
+                    width: 80,
+                    pinned: 'right',
+                    editable: false,
+                    cellStyle: { 
+                        backgroundColor: '#e5e7eb', 
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        borderLeft: '2px solid #6b7280'
+                    },
+                    valueGetter: (params) => {
+                        // Sum all day columns
+                        let total = 0;
+                        for (let key in params.data) {
+                            if (key.startsWith('day_') && params.data[key]) {
+                                // Extract number from string like "7h" or "7"
+                                const value = params.data[key].toString().replace('h', '').trim();
+                                const num = parseFloat(value);
+                                if (!isNaN(num)) {
+                                    total += num;
+                                }
+                            }
+                        }
+                        return total > 0 ? `${total}h` : '';
+                    }
+                }
+            ];
+
+            // Log generated columns for debugging
+            console.log('Generated date columns:', dateColumns.length);
+            console.log('First 5 columns:', dateColumns.slice(0, 5));
+            console.log('Last 5 columns:', dateColumns.slice(-5));
+            
+            // Sample data - empty rows to be filled by user
+            const rowData = [
+                {
+                    task: 'Tarea 1',
+                    description: 'Descripción de tarea 1',
+                    team: 'Equipo A'
+                },
+                {
+                    task: 'Tarea 2',
+                    description: 'Descripción de tarea 2',
+                    team: 'Equipo B'
+                },
+                {
+                    task: 'Tarea 3',
+                    description: 'Descripción de tarea 3',
+                    team: 'Equipo C'
+                }
+            ];
+
+            const gridOptions = {
+                columnDefs: columnDefs,
+                rowData: rowData,
+                defaultColDef: {
+                    sortable: true,
+                    filter: true,
+                    resizable: true
+                },
+                rowSelection: 'multiple',
+                suppressRowClickSelection: true,
+                animateRows: true,
+                onGridReady: (params) => {
+                    taskGridApi = params.api;
+                    taskGridColumnApi = params.columnApi;
+                },
+                onCellValueChanged: (event) => {
+                    console.log('Cell value changed:', event);
+                }
+            };
+
+            // Initialize grid
+            const gridDiv = document.querySelector('#taskGrid');
+            new agGrid.Grid(gridDiv, gridOptions);
+        }
+
+        // Add new task row (make it globally available)
+        window.addTaskRow = function() {
+            if (taskGridApi) {
+                const newRow = {
+                    task: '',
+                    description: '',
+                    team: ''
+                };
+                taskGridApi.applyTransaction({ add: [newRow] });
+                console.log('New row added');
+            }
+        }
+
+        // Delete selected tasks (make it globally available)
+        window.deleteSelectedTasks = function() {
+            if (taskGridApi) {
+                const selectedRows = taskGridApi.getSelectedRows();
+                if (selectedRows.length === 0) {
+                    alert('Por favor, selecciona al menos una tarea para eliminar');
+                    return;
+                }
+                
+                if (confirm(`¿Está seguro de eliminar ${selectedRows.length} tarea(s) seleccionada(s)?`)) {
+                    taskGridApi.applyTransaction({ remove: selectedRows });
+                    console.log('Deleted rows:', selectedRows);
+                }
+            }
+        }
+
+        // Save task changes (make it globally available)
+        window.saveTaskChanges = function() {
+            if (taskGridApi) {
+                const allRows = [];
+                taskGridApi.forEachNode(node => allRows.push(node.data));
+                
+                console.log('Saving tasks for project:', currentProject);
+                console.log('Task data:', allRows);
+                
+                // Here you would typically send the data to your backend API
+                alert('Cambios guardados correctamente (funcionalidad en desarrollo)');
+                window.closeTaskDetailsModal();
+            }
+        }
+
+        // Event listener removed - handled by main.js instead
+    </script>
 
     <!-- Modular JavaScript (ES6 Modules) -->
     <script type="module" src="assets/js/main.js"></script>

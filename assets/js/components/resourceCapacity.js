@@ -325,12 +325,16 @@ function updateCapacityMatrix(resources, currentMonth) {
         // Create skills cell
         const skillsTd = document.createElement('td');
         skillsTd.style.textAlign = 'left';
-        if (resource.skills && resource.skills.length > 0) {
-            resource.skills.forEach(skill => {
-                const abbr = getSkillAbbreviation(skill.name);
+        // Backend returns resourceSkills, not skills
+        const skills = resource.resourceSkills || resource.skills || [];
+        if (skills.length > 0) {
+            skills.forEach(skill => {
+                // skill.skillName is the field name in resourceSkills, skill.name for legacy
+                const skillName = skill.skillName || skill.name;
+                const abbr = getSkillAbbreviation(skillName);
                 const badge = document.createElement('span');
                 badge.className = 'skill-badge';
-                badge.title = skill.name;
+                badge.title = skillName;
                 badge.textContent = abbr;
                 skillsTd.appendChild(badge);
                 skillsTd.appendChild(document.createTextNode(' '));
@@ -428,7 +432,41 @@ function updateCapacityMatrix(resources, currentMonth) {
     // Add event listeners for expand icons
     addExpandIconListeners();
     
+    // Add event listeners for resource rows
+    addResourceRowListeners();
+    
     console.log(`Capacity matrix updated with ${resources.length} resources`);
+}
+
+/**
+ * Add event listeners for resource rows to open capacity modal
+ */
+function addResourceRowListeners() {
+    const resourceRows = document.querySelectorAll('.resource-row[data-resource-id]');
+    
+    resourceRows.forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function(e) {
+            // Don't trigger if clicking on expand icon
+            if (e.target.closest('.expand-icon')) {
+                return;
+            }
+            
+            const resourceId = this.getAttribute('data-resource-id');
+            const resourceName = this.querySelector('strong').textContent;
+            
+            console.log('Resource row clicked:', resourceId, resourceName);
+            
+            // Open capacity modal if available
+            if (window.capacityModal) {
+                window.capacityModal.open(resourceId, resourceName);
+            } else {
+                console.error('Capacity modal not available');
+            }
+        });
+    });
+    
+    console.log('Resource row listeners added to', resourceRows.length, 'rows');
 }
 
 /**
@@ -507,6 +545,13 @@ function toggleResourceProjects(resourceId, expandIcon) {
     
     if (projectRows.length === 0) {
         console.log(`No project rows found for resource ${resourceId}`);
+        
+        // Get resource name from the row
+        const resourceRow = expandIcon.closest('tr');
+        const resourceName = resourceRow ? resourceRow.querySelector('strong')?.textContent : 'este recurso';
+        
+        // Show friendly message to user
+        alert(`ℹ️ Sin proyectos asignados\n\n${resourceName} no tiene proyectos asignados en este año.\n\nPuedes asignar proyectos desde la vista "Gestión de Proyectos".`);
         return;
     }
     

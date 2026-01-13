@@ -351,14 +351,18 @@ export async function saveResource() {
     // Get selected skills
     const selectedSkills = Array.from(
         document.querySelectorAll('input[name="skills"]:checked')
-    ).map(checkbox => checkbox.value);
+    ).map(checkbox => ({
+        name: checkbox.value,
+        proficiency: null  // Could be enhanced to allow proficiency selection
+    }));
     
     const formData = {
         name: document.getElementById('resourceName').value.trim(),
         email: emailValue === '' ? null : emailValue,
         team: document.getElementById('resourceTeam').value,
         defaultCapacity: parseInt(document.getElementById('resourceDefaultCapacity').value, 10),
-        active: true
+        active: true,
+        skills: selectedSkills  // Include skills in the request body
     };
 
     console.log('Form data to be sent:', formData);
