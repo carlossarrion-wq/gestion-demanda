@@ -1,0 +1,8 @@
+{
+  "name": "lambda-jira-handler",
+  "version": "1.0.0",
+  "main": "jiraHandler.js",
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  }
+}

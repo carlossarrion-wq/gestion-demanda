@@ -1,3 +1,19 @@
+/* Spinner Animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2563eb;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
 /* Modal Styles */
 .modal-overlay {
     display: none;
@@ -9,7 +25,14 @@
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
     z-index: 1000;
+    align-items: center;
+    justify-content: center;
     animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Jira Modal - Ensure high z-index */
+#jira-modal {
+    z-index: 1200 !important;
 }
 
 /* Task Modal - Higher z-index to appear above assignment modal */

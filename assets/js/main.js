@@ -17,6 +17,7 @@ import {
 } from './components/resourceModal.js';
 import { TaskModal } from './components/taskModal.js';
 import { ResourceCapacityModal } from './components/resourceCapacityModal.js';
+import { JiraModal } from './components/jiraModal.js';
 import { openAssignmentView } from './components/assignmentView.js';
 import { initializeResourceCapacity } from './components/resourceCapacity.js';
 import { projectMetadata, projectSkillBreakdown, monthKeys, API_CONFIG } from './config/data.js';
@@ -33,6 +34,7 @@ import {
 // Global modal instances
 let taskModal = null;
 let capacityModal = null;
+let jiraModal = null;
 
 /**
  * Initialize the application
@@ -55,9 +57,13 @@ function initializeApp() {
     capacityModal = new ResourceCapacityModal();
     capacityModal.init();
     
-    // Make capacity modal globally available immediately
+    jiraModal = new JiraModal();
+    jiraModal.init();
+    
+    // Make modals globally available
     window.capacityModal = capacityModal;
-    console.log('Capacity modal initialized and set to window:', window.capacityModal);
+    window.jiraModal = jiraModal;
+    console.log('Modals initialized:', { capacityModal: !!window.capacityModal, jiraModal: !!window.jiraModal });
     
     // Initialize tables
     populateTopProjectsTable();
@@ -509,14 +515,16 @@ function syncWithJira(projectId) {
  * Import from Jira
  */
 function importFromJira() {
-    const jiraUrl = prompt('Introduce la URL de tu instancia de Jira:', 'https://tu-empresa.atlassian.net');
+    console.log('=== importFromJira function called ===');
+    console.log('window.jiraModal:', window.jiraModal);
     
-    if (jiraUrl) {
-        const jqlQuery = prompt('Introduce la consulta JQL (opcional):', 'project = "NC" AND status != "Closed"');
-        
-        if (jqlQuery !== null) {
-            alert('Importando proyectos desde Jira... (funcionalidad en desarrollo)');
-        }
+    if (window.jiraModal) {
+        console.log('Opening jiraModal...');
+        window.jiraModal.open();
+    } else {
+        console.error('Jira modal not initialized');
+        console.error('Available window properties:', Object.keys(window).filter(k => k.includes('jira') || k.includes('Modal')));
+        alert('Error: Modal de Jira no está inicializado. Revisa la consola para más detalles.');
     }
 }
 
