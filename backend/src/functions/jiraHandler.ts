@@ -370,10 +370,13 @@ async function fetchJiraIssues(jiraUrl: string, auth: string, jql: string): Prom
   let startAt = 0;
   const maxResults = 100;
   const timeoutMs = 30000; // 30 segundos timeout
+  const MAX_PAGES = 50; // Límite máximo de páginas para evitar loop infinito
+  let pageCount = 0;
 
   console.log('[fetchJiraIssues] Iniciando fetch...');
 
-  while (true) {
+  while (pageCount < MAX_PAGES) {
+    pageCount++;
     const url = `${jiraUrl}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=summary,description,issuetype,status,priority,created,updated,duedate,customfield_10016`;
 
     console.log(`[fetchJiraIssues] Fetching página ${startAt / maxResults + 1}...`);
@@ -401,7 +404,8 @@ async function fetchJiraIssues(jiraUrl: string, auth: string, jql: string): Prom
 
       const data = await response.json() as any;
       const issuesReceived = data.issues?.length || 0;
-      console.log(`[fetchJiraIssues] Recibidos ${issuesReceived} issues. Total reportado: ${data.total || 0}`);
+      const totalReported = data.total || 0;
+      console.log(`[fetchJiraIssues] Recibidos ${issuesReceived} issues. Total reportado: ${totalReported}`);
       
       // Si no hay issues en esta página, salir del loop
       if (issuesReceived === 0) {
@@ -411,9 +415,15 @@ async function fetchJiraIssues(jiraUrl: string, auth: string, jql: string): Prom
       
       allIssues.push(...data.issues);
 
-      // Si llegamos al total, salir
-      if (data.startAt + data.maxResults >= data.total) {
-        console.log(`[fetchJiraIssues] Completado. Total: ${allIssues.length} issues`);
+      // Protección adicional: si ya tenemos tantos issues como el total reportado, salir
+      if (totalReported > 0 && allIssues.length >= totalReported) {
+        console.log(`[fetchJiraIssues] Alcanzado el total reportado (${totalReported}). Total: ${allIssues.length} issues`);
+        break;
+      }
+
+      // Si llegamos al total según la paginación, salir
+      if (data.startAt + data.maxResults >= totalReported && totalReported > 0) {
+        console.log(`[fetchJiraIssues] Completado según paginación. Total: ${allIssues.length} issues`);
         break;
       }
 

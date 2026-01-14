@@ -595,21 +595,119 @@ export class ResourceCapacityModal {
      * Save resource information
      */
     async saveResourceInfo() {
-        const name = document.getElementById('resource-name').value;
-        const email = document.getElementById('resource-email').value;
+        const name = document.getElementById('resource-name').value.trim();
+        const email = document.getElementById('resource-email').value.trim();
+        
+        // Validate required fields
+        if (!name) {
+            alert('El nombre es requerido');
+            return;
+        }
+        
+        if (!email) {
+            alert('El email es requerido');
+            return;
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert('Por favor ingresa un email válido');
+            return;
+        }
         
         // Get selected skills from checkboxes
         const selectedSkills = Array.from(
             document.querySelectorAll('input[name="resource-skills"]:checked')
-        ).map(checkbox => ({
-            name: checkbox.value,
-            proficiency: null
-        }));
+        ).map(checkbox => checkbox.value);
 
         console.log('Saving resource info:', { name, email, skills: selectedSkills });
 
-        // TODO: Implement API call to update resource
-        alert('Información del recurso guardada (simulado)');
+        try {
+            const awsAccessKey = sessionStorage.getItem('aws_access_key');
+            const userTeam = sessionStorage.getItem('user_team');
+            
+            if (!awsAccessKey || !userTeam) {
+                throw new Error('No authentication tokens found');
+            }
+
+            // Disable button while saving
+            const saveButton = document.getElementById('save-resource-info');
+            const originalText = saveButton.innerHTML;
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span> Guardando...';
+
+            // Call API to update resource
+            const response = await fetch(`${API_CONFIG.BASE_URL}/resources/${this.resourceId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': awsAccessKey,
+                    'x-user-team': userTeam
+                },
+                body: JSON.stringify({
+                    code: this.resourceData.code,  // Requerido por backend
+                    name: name,
+                    email: email,
+                    team: this.resourceData.team,  // Requerido por backend
+                    skills: selectedSkills
+                })
+            });
+
+            // Re-enable button first
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalText;
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('API Error:', errorData);
+                console.error('Full error object:', JSON.stringify(errorData, null, 2));
+                
+                // Extract detailed error message
+                let errorMessage = 'Error al guardar';
+                
+                // Check for errors array in different possible locations
+                let errorsArray = null;
+                if (errorData.error?.details?.errors) {
+                    errorsArray = errorData.error.details.errors;
+                } else if (errorData.error?.errors) {
+                    errorsArray = errorData.error.errors;
+                } else if (errorData.details?.errors) {
+                    errorsArray = errorData.details.errors;
+                }
+                
+                if (errorsArray && Array.isArray(errorsArray)) {
+                    console.error('Validation errors:', errorsArray);
+                    errorMessage = errorsArray.map(e => `• ${e.field}: ${e.message}`).join('\n');
+                } else if (errorData.error?.message) {
+                    errorMessage = errorData.error.message;
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (typeof errorData.error === 'string') {
+                    errorMessage = errorData.error;
+                }
+                
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+            console.log('Resource updated successfully:', result);
+
+            // Update local data
+            this.resourceData = result.data || result;
+
+            // Show success message
+            alert('✓ Información del recurso guardada correctamente');
+
+            // Optionally reload the resource capacity view to reflect changes
+            if (window.resourceCapacity && window.resourceCapacity.loadResources) {
+                window.resourceCapacity.loadResources();
+            }
+
+        } catch (error) {
+            console.error('Error saving resource info:', error);
+            alert(`❌ Error al guardar información del recurso\n\n${error.message}`);
+        }
     }
 
     /**

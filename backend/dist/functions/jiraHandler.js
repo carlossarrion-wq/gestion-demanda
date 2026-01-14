@@ -262,8 +262,11 @@ async function fetchJiraIssues(jiraUrl, auth, jql) {
     let startAt = 0;
     const maxResults = 100;
     const timeoutMs = 30000;
+    const MAX_PAGES = 50;
+    let pageCount = 0;
     console.log('[fetchJiraIssues] Iniciando fetch...');
-    while (true) {
+    while (pageCount < MAX_PAGES) {
+        pageCount++;
         const url = `${jiraUrl}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=summary,description,issuetype,status,priority,created,updated,duedate,customfield_10016`;
         console.log(`[fetchJiraIssues] Fetching página ${startAt / maxResults + 1}...`);
         const controller = new AbortController();
@@ -284,14 +287,19 @@ async function fetchJiraIssues(jiraUrl, auth, jql) {
             }
             const data = await response.json();
             const issuesReceived = data.issues?.length || 0;
-            console.log(`[fetchJiraIssues] Recibidos ${issuesReceived} issues. Total reportado: ${data.total || 0}`);
+            const totalReported = data.total || 0;
+            console.log(`[fetchJiraIssues] Recibidos ${issuesReceived} issues. Total reportado: ${totalReported}`);
             if (issuesReceived === 0) {
                 console.log(`[fetchJiraIssues] No hay más issues. Total final: ${allIssues.length} issues`);
                 break;
             }
             allIssues.push(...data.issues);
-            if (data.startAt + data.maxResults >= data.total) {
-                console.log(`[fetchJiraIssues] Completado. Total: ${allIssues.length} issues`);
+            if (totalReported > 0 && allIssues.length >= totalReported) {
+                console.log(`[fetchJiraIssues] Alcanzado el total reportado (${totalReported}). Total: ${allIssues.length} issues`);
+                break;
+            }
+            if (data.startAt + data.maxResults >= totalReported && totalReported > 0) {
+                console.log(`[fetchJiraIssues] Completado según paginación. Total: ${allIssues.length} issues`);
                 break;
             }
             startAt += maxResults;

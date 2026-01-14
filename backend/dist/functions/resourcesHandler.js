@@ -228,14 +228,43 @@ async function updateResource(resourceId, body) {
         return (0, response_1.errorResponse)('Request body is required', 400);
     }
     const data = JSON.parse(body);
-    try {
-        (0, validators_1.validateResourceData)(data);
-    }
-    catch (error) {
-        if (error instanceof errors_1.ValidationError) {
-            return (0, response_1.errorResponse)(error.message, 400, { errors: error.validationErrors });
+    const errors = [];
+    if (data.name !== undefined) {
+        if (!data.name || data.name.trim() === '') {
+            errors.push({ field: 'name', message: 'Resource name cannot be empty' });
         }
-        throw error;
+        else if (data.name.length > 255) {
+            errors.push({ field: 'name', message: 'Resource name must be 255 characters or less' });
+        }
+    }
+    if (data.email !== undefined && data.email !== null && data.email.trim() !== '') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.email)) {
+            errors.push({ field: 'email', message: 'Invalid email format' });
+        }
+        if (data.email.length > 255) {
+            errors.push({ field: 'email', message: 'Email must be 255 characters or less' });
+        }
+    }
+    if (data.team !== undefined) {
+        const VALID_TEAMS = ['darwin', 'mulesoft', 'sap', 'saplcorp'];
+        if (!VALID_TEAMS.includes(data.team)) {
+            errors.push({
+                field: 'team',
+                message: `Team must be one of: ${VALID_TEAMS.join(', ')}`
+            });
+        }
+    }
+    if (data.defaultCapacity !== undefined) {
+        if (data.defaultCapacity < 0) {
+            errors.push({ field: 'defaultCapacity', message: 'Default capacity must be non-negative' });
+        }
+        if (data.defaultCapacity > 744) {
+            errors.push({ field: 'defaultCapacity', message: 'Default capacity exceeds maximum hours in a month' });
+        }
+    }
+    if (errors.length > 0) {
+        return (0, response_1.errorResponse)('Validation failed', 400, { errors });
     }
     const existingResource = await prisma_1.prisma.resource.findUnique({
         where: { id: resourceId },
@@ -250,6 +279,31 @@ async function updateResource(resourceId, body) {
         if (resourceWithCode) {
             return (0, response_1.errorResponse)(`Resource with code '${data.code}' already exists`, 409);
         }
+    }
+    console.log('Skills in request:', data.skills, 'Type:', typeof data.skills, 'Is Array:', Array.isArray(data.skills));
+    if (data.skills !== undefined) {
+        console.log('Skills detected, updating...');
+        const deleteResult = await prisma_1.prisma.resourceSkill.deleteMany({
+            where: { resourceId: resourceId },
+        });
+        console.log('Deleted existing skills:', deleteResult.count);
+        if (Array.isArray(data.skills) && data.skills.length > 0) {
+            console.log('Creating new skills:', data.skills);
+            const createResult = await prisma_1.prisma.resourceSkill.createMany({
+                data: data.skills.map((skillName) => ({
+                    resourceId: resourceId,
+                    skillName: skillName,
+                    proficiency: null,
+                })),
+            });
+            console.log('Created skills:', createResult.count);
+        }
+        else {
+            console.log('No skills to create (empty array or not an array)');
+        }
+    }
+    else {
+        console.log('No skills in request data');
     }
     const updatedResource = await prisma_1.prisma.resource.update({
         where: { id: resourceId },
