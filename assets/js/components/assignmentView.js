@@ -181,7 +181,7 @@ function createAssignmentModal(projectCode, assignments) {
         <div id="assignmentModal" class="modal-overlay" style="display: flex;">
             <div class="modal-container" style="max-width: 1400px; width: 95%; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2>📋 Asignación de Recursos - ${projectCode}</h2>
+                    <h2>📋 Detalle de Tareas - ${projectCode}</h2>
                     <div style="display: flex; gap: 1rem; align-items: center;">
                         <button type="button" id="create-task-btn" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">

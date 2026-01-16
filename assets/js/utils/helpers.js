@@ -277,3 +277,65 @@ export function sortByProperty(array, property, ascending = true) {
         return 0;
     });
 }
+
+/**
+ * Get date range (month/year) based on period selector value
+ * @param {string} period - 'current', 'next', 'next3', 'next6', 'next12'
+ * @returns {Array} Array of {month, year} objects
+ */
+export function getPeriodDateRange(period) {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const currentYear = now.getFullYear();
+    const ranges = [];
+    
+    switch(period) {
+        case 'current':
+            // Mes en curso
+            ranges.push({ month: currentMonth, year: currentYear });
+            break;
+            
+        case 'next':
+            // Mes próximo (empezar desde el mes siguiente al actual)
+            const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+            const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+            ranges.push({ month: nextMonth, year: nextYear });
+            break;
+            
+        case 'next3':
+            // 3 próximos meses (empezar desde mes siguiente)
+            for (let i = 1; i <= 3; i++) {
+                const totalMonths = currentMonth + i - 1;
+                const m = (totalMonths % 12) + 1;
+                const y = currentYear + Math.floor(totalMonths / 12);
+                ranges.push({ month: m, year: y });
+            }
+            break;
+            
+        case 'next6':
+            // 6 próximos meses (empezar desde mes siguiente)
+            for (let i = 1; i <= 6; i++) {
+                const totalMonths = currentMonth + i - 1;
+                const m = (totalMonths % 12) + 1;
+                const y = currentYear + Math.floor(totalMonths / 12);
+                ranges.push({ month: m, year: y });
+            }
+            break;
+            
+        case 'next12':
+            // 12 próximos meses (empezar desde mes siguiente)
+            for (let i = 1; i <= 12; i++) {
+                const totalMonths = currentMonth + i - 1;
+                const m = (totalMonths % 12) + 1;
+                const y = currentYear + Math.floor(totalMonths / 12);
+                ranges.push({ month: m, year: y });
+            }
+            break;
+            
+        default:
+            // Por defecto, mes en curso
+            ranges.push({ month: currentMonth, year: currentYear });
+    }
+    
+    return ranges;
+}

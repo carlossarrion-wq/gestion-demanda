@@ -305,7 +305,7 @@ export class TaskModal {
         // Update modal title
         const dateRange = startDate && endDate ? ` (${startDate} - ${endDate})` : '';
         document.getElementById('modal-project-title').textContent = 
-            `Detalle de Tareas - ${projectName}${dateRange}`;
+            `Asignación de Recursos - ${projectName}${dateRange}`;
 
         // Load resources and tasks before initializing grid
         this.resourcesList = await this.loadResources();
