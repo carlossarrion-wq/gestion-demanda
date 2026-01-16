@@ -109,16 +109,16 @@
                                 <span class="kpi-label">PROYECTOS ACTIVOS</span>
                                 <span class="kpi-trend positive" id="proyectos-activos-trend">+17%</span>
                             </div>
-                            <div class="kpi-value">7</div>
+                            <div class="kpi-value" id="proyectos-activos">7</div>
                             <div class="kpi-subtitle">total proyectos</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Evolutivos:</span>
-                                    <span style="font-weight: 600; color: #509594;">3</span>
+                                    <span style="font-weight: 600; color: #509594;" id="evolutivos">3</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Proyectos:</span>
-                                    <span style="font-weight: 600; color: #509594;">4</span>
+                                    <span style="font-weight: 600; color: #509594;" id="proyectos">4</span>
                                 </div>
                             </div>
                         </div>
@@ -128,12 +128,12 @@
                                 <span class="kpi-label">RECURSOS ACTIVOS</span>
                                 <span class="kpi-trend positive" id="recursos-activos-trend">+20%</span>
                             </div>
-                            <div class="kpi-value">12</div>
+                            <div class="kpi-value" id="recursos-activos">12</div>
                             <div class="kpi-subtitle">total recursos</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Recursos Asignados >50%:</span>
-                                    <span style="font-weight: 600; color: #509594;" id="recursos-asignados-50">9</span>
+                                    <span style="font-weight: 600; color: #509594;" id="recursos-asignados">9</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Recursos Asignados >80%:</span>
@@ -147,12 +147,12 @@
                                 <span class="kpi-label">CAPACIDAD TOTAL</span>
                                 <span class="kpi-trend positive">+5%</span>
                             </div>
-                            <div class="kpi-value">1.920</div>
+                            <div class="kpi-value" id="capacidad-total">1.920</div>
                             <div class="kpi-subtitle">horas disponibles</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>FTEs Equivalentes:</span>
-                                    <span style="font-weight: 600; color: #509594;">12.0</span>
+                                    <span style="font-weight: 600; color: #509594;" id="capacidad-ftes-equivalentes">12.0</span>
                                 </div>
                             </div>
                         </div>
@@ -160,9 +160,9 @@
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span class="kpi-label">UTILIZACIÓN ACTUAL</span>
-                                <span class="kpi-trend warning">78%</span>
+                                <span class="kpi-trend warning" id="utilizacion-trend">78%</span>
                             </div>
-                            <div class="kpi-value">1.496</div>
+                            <div class="kpi-value" id="utilizacion-actual">1.496</div>
                             <div class="kpi-subtitle">horas comprometidas</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
@@ -177,7 +177,7 @@
                                 <span class="kpi-label">EFICIENCIA</span>
                                 <span class="kpi-trend positive">+12%</span>
                             </div>
-                            <div class="kpi-value">92%</div>
+                            <div class="kpi-value" id="eficiencia">92%</div>
                             <div class="kpi-subtitle">recursos optimizados</div>
                             <div class="kpi-details">
                                 <div style="display: flex; justify-content: space-between;">
@@ -243,25 +243,24 @@
                     <h2>Matriz de Utilización</h2>
                 </div>
                 
-                <!-- KPIs Row for Matrix -->
-                <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 2rem; overflow-x: auto;">
-                    <div class="card">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="card" style="min-width: 0;">
                         <h3>Proyectos Registrados</h3>
                         <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="matrix-total-projects">7</div>
                         <div style="color: #718096; margin-bottom: 0.75rem;">Total proyectos</div>
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #4a5568;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Evolutivos:</span>
-                                <span style="font-weight: 600; color: #319795;" id="matrix-evolutivos-count">3</span>
+                        <div style="display: flex; justify-content: space-around; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.25rem; font-weight: 600; color: #3182ce;" id="matrix-evolutivos-count">3</div>
+                                <div style="font-size: 0.75rem; color: #718096;">Evolutivos</div>
                             </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Proyectos:</span>
-                                <span style="font-weight: 600; color: #319795;" id="matrix-proyectos-count">4</span>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.25rem; font-weight: 600; color: #319795;" id="matrix-proyectos-count">4</div>
+                                <div style="font-size: 0.75rem; color: #718096;">Proyectos</div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="card">
+                    <div class="card" style="min-width: 0;">
                         <h3>Media Horas por Proyecto</h3>
                         <div style="font-size: 2.5rem; font-weight: 600; color: #319795; margin: 1rem 0;" id="matrix-avg-hours-project">914</div>
                         <div style="color: #718096; margin-bottom: 0.75rem;">horas promedio</div>
@@ -277,24 +276,10 @@
                         </div>
                     </div>
                     
-                    <div class="card">
-                        <h3>Horas Comprometidas vs Disponibles</h3>
-                        <div class="chart-container" style="height: 200px;">
-                            <canvas id="matrix-committed-hours-chart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="card">
+                    <div class="card" style="min-width: 0;">
                         <h3>Volumen de Horas por Tipo</h3>
                         <div class="chart-container" style="height: 200px;">
                             <canvas id="matrix-hours-by-type-chart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>Volumen de Horas por Dominio</h3>
-                        <div class="chart-container" style="height: 200px;">
-                            <canvas id="matrix-hours-by-domain-chart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -308,18 +293,18 @@
                                     <th class="project-name">Proyecto</th>
                                     <th>Tipo</th>
                                     <th>Dominio principal</th>
-                                    <th>Ene 2025</th>
-                                    <th>Feb 2025</th>
-                                    <th>Mar 2025</th>
-                                    <th>Abr 2025</th>
-                                    <th>May 2025</th>
-                                    <th>Jun 2025</th>
-                                    <th>Jul 2025</th>
-                                    <th>Ago 2025</th>
-                                    <th>Sep 2025</th>
-                                    <th>Oct 2025</th>
-                                    <th>Nov 2025</th>
-                                    <th>Dic 2025</th>
+                                    <th>Ene 2026</th>
+                                    <th>Feb 2026</th>
+                                    <th>Mar 2026</th>
+                                    <th>Abr 2026</th>
+                                    <th>May 2026</th>
+                                    <th>Jun 2026</th>
+                                    <th>Jul 2026</th>
+                                    <th>Ago 2026</th>
+                                    <th>Sep 2026</th>
+                                    <th>Oct 2026</th>
+                                    <th>Nov 2026</th>
+                                    <th>Dic 2026</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -635,18 +620,18 @@
                                     <th class="project-name" style="min-width: 150px;">Recurso</th>
                                     <th style="min-width: 100px;">Ratio de Ocupación</th>
                                     <th style="min-width: 120px;">Skills</th>
-                                    <th style="min-width: 80px;">ENE 2025</th>
-                                    <th style="min-width: 80px;">FEB 2025</th>
-                                    <th style="min-width: 80px;">MAR 2025</th>
-                                    <th style="min-width: 80px;">ABR 2025</th>
-                                    <th style="min-width: 80px;">MAY 2025</th>
-                                    <th style="min-width: 80px;">JUN 2025</th>
-                                    <th style="min-width: 80px;">JUL 2025</th>
-                                    <th style="min-width: 80px;">AGO 2025</th>
-                                    <th style="min-width: 80px;">SEP 2025</th>
-                                    <th style="min-width: 80px;">OCT 2025</th>
-                                    <th style="min-width: 80px;">NOV 2025</th>
-                                    <th style="min-width: 80px;">DIC 2025</th>
+                                    <th style="min-width: 80px;">ENE 2026</th>
+                                    <th style="min-width: 80px;">FEB 2026</th>
+                                    <th style="min-width: 80px;">MAR 2026</th>
+                                    <th style="min-width: 80px;">ABR 2026</th>
+                                    <th style="min-width: 80px;">MAY 2026</th>
+                                    <th style="min-width: 80px;">JUN 2026</th>
+                                    <th style="min-width: 80px;">JUL 2026</th>
+                                    <th style="min-width: 80px;">AGO 2026</th>
+                                    <th style="min-width: 80px;">SEP 2026</th>
+                                    <th style="min-width: 80px;">OCT 2026</th>
+                                    <th style="min-width: 80px;">NOV 2026</th>
+                                    <th style="min-width: 80px;">DIC 2026</th>
                                 </tr>
                             </thead>
                             <tbody id="capacity-table-body">
@@ -747,8 +732,8 @@
                                     <td>Integración de nuevo proveedor para...</td>
                                     <td>Operación de Sistemas y Ciberseguridad</td>
                                     <td><span class="priority-badge alta">Alta</span></td>
-                                    <td>2025-06-06</td>
-                                    <td>2025-07-01</td>
+                                    <td>2026-06-06</td>
+                                    <td>2026-07-01</td>
                                     <td><span class="status-badge finalizado">Finalizado</span></td>
                                     <td>Proyecto</td>
                                     <td>
@@ -780,8 +765,8 @@
                                     <td>Desarrollo del modelo de datos...</td>
                                     <td>Atención</td>
                                     <td><span class="priority-badge media">Media</span></td>
-                                    <td>2025-06-06</td>
-                                    <td>2025-08-15</td>
+                                    <td>2026-06-06</td>
+                                    <td>2026-08-15</td>
                                     <td><span class="status-badge finalizado">Finalizado</span></td>
                                     <td>Evolutivo</td>
                                     <td>
@@ -813,8 +798,8 @@
                                     <td>Implementación sistema pricing...</td>
                                     <td>Facturación y Cobros</td>
                                     <td><span class="priority-badge muy-alta">Muy Alta</span></td>
-                                    <td>2025-06-06</td>
-                                    <td>2025-09-30</td>
+                                    <td>2026-06-06</td>
+                                    <td>2026-09-30</td>
                                     <td><span class="status-badge desarrollo">Desarrollo</span></td>
                                     <td>Proyecto</td>
                                     <td>
@@ -836,8 +821,8 @@
                                     <td>Gestión de direcciones de...</td>
                                     <td>Atención</td>
                                     <td><span class="priority-badge media">Media</span></td>
-                                    <td>2025-06-06</td>
-                                    <td>2025-07-31</td>
+                                    <td>2026-06-06</td>
+                                    <td>2026-07-31</td>
                                     <td><span class="status-badge diseno-detallado">Diseño Detallado</span></td>
                                     <td>Evolutivo</td>
                                     <td>
@@ -859,8 +844,8 @@
                                     <td>Ampliación de licencias para...</td>
                                     <td>Integración</td>
                                     <td><span class="priority-badge baja">Baja</span></td>
-                                    <td>2025-06-06</td>
-                                    <td>2025-08-30</td>
+                                    <td>2026-06-06</td>
+                                    <td>2026-08-30</td>
                                     <td><span class="status-badge desarrollo">Desarrollo</span></td>
                                     <td>Evolutivo</td>
                                     <td>
@@ -882,8 +867,8 @@
                                     <td>Implementación de medidas de...</td>
                                     <td>Datos</td>
                                     <td><span class="priority-badge alta">Alta</span></td>
-                                    <td>2025-06-06</td>
-                                    <td>2025-10-15</td>
+                                    <td>2026-06-06</td>
+                                    <td>2026-10-15</td>
                                     <td><span class="status-badge diseno-detallado">Diseño Detallado</span></td>
                                     <td>Proyecto</td>
                                     <td>
@@ -905,8 +890,8 @@
                                     <td>Plan de aceleración para...</td>
                                     <td>Ventas | Contratación y SW</td>
                                     <td><span class="priority-badge muy-alta">Muy Alta</span></td>
-                                    <td>2025-06-06</td>
-                                    <td>2025-11-30</td>
+                                    <td>2026-06-06</td>
+                                    <td>2026-11-30</td>
                                     <td><span class="status-badge desarrollo">Desarrollo</span></td>
                                     <td>Proyecto</td>
                                     <td>
@@ -928,39 +913,6 @@
                     
                     <!-- Pagination Container -->
                     <div id="pagination-container" class="pagination-container"></div>
-                </div>
-                
-                <!-- Absences/Vacations Table -->
-                <div class="card" style="margin-top: 2rem;">
-                    <h2 style="margin-bottom: 1.5rem; color: #f59e0b;">Proyecto de Ausencias y Vacaciones</h2>
-                    <p style="color: #6b7280; margin-bottom: 1rem; font-size: 0.9rem;">
-                        Este proyecto especial se utiliza para registrar ausencias y vacaciones del equipo. 
-                        No se incluye en gráficos ni KPIs de gestión.
-                    </p>
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Título</th>
-                                    <th>Descripción</th>
-                                    <th>Dominio Principal</th>
-                                    <th>Prioridad Negocio</th>
-                                    <th>Fecha Inicio</th>
-                                    <th>Fecha Fin</th>
-                                    <th>Estado</th>
-                                    <th>Tipo</th>
-                                </tr>
-                            </thead>
-                            <tbody id="absences-table-body">
-                                <tr>
-                                    <td colspan="9" style="text-align: center; padding: 1rem; color: #6b7280; font-style: italic;">
-                                        Cargando...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         </div>

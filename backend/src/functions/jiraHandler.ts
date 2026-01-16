@@ -23,6 +23,8 @@ interface JiraIssue {
     updated: string;
     duedate?: string;
     customfield_10016?: number; // Story points
+    customfield_10694?: { value: string }; // Dominio principal
+    customfield_11346?: { value: string }; // Prioridad de negocio
   };
 }
 
@@ -44,6 +46,11 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const path = event.path;
 
   try {
+    // GET /jira/issues - Listar issues de Jira con filtros
+    if (method === 'GET' && path.includes('/issues')) {
+      return await listJiraIssues(event);
+    }
+
     // GET /jira/projects - Listar proyectos de Jira
     if (method === 'GET' && path.includes('/projects')) {
       return await listJiraProjects(event);
@@ -65,6 +72,51 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return errorResponse(error instanceof Error ? error.message : 'Error interno del servidor');
   }
 };
+
+/**
+ * Listar issues disponibles en Jira para seleccionar e importar
+ */
+async function listJiraIssues(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const jiraUrl = event.queryStringParameters?.jiraUrl;
+  const apiToken = event.queryStringParameters?.apiToken;
+  const email = event.queryStringParameters?.email;
+  const jqlQuery = event.queryStringParameters?.jqlQuery;
+
+  if (!jiraUrl || !apiToken || !email) {
+    return errorResponse('Se requiere jiraUrl, apiToken y email', 400);
+  }
+
+  if (!jqlQuery) {
+    return errorResponse('Se requiere jqlQuery', 400);
+  }
+
+  try {
+    const auth = Buffer.from(`${email}:${apiToken}`).toString('base64');
+    const issues = await fetchJiraIssues(jiraUrl, auth, jqlQuery);
+
+    return successResponse({
+      issues: issues.map(issue => ({
+        id: issue.id,
+        key: issue.key,
+        summary: issue.fields.summary,
+        description: extractPlainText(issue.fields.description),
+        issueType: issue.fields.issuetype.name,
+        status: issue.fields.status.name,
+        priority: issue.fields.priority?.name || 'Medium',
+        created: issue.fields.created,
+        updated: issue.fields.updated,
+        duedate: issue.fields.duedate,
+        dominioPrincipal: issue.fields.customfield_10694?.value || 'Sin dominio',
+        prioridadNegocio: issue.fields.customfield_11346?.value || 'Media',
+        esProyecto: issue.fields.issuetype.name === 'Proyecto' ? 'Si' : 'No'
+      })),
+      total: issues.length
+    });
+  } catch (error) {
+    console.error('Error listando issues de Jira:', error);
+    return errorResponse(error instanceof Error ? error.message : 'Error conectando con Jira');
+  }
+}
 
 /**
  * Listar proyectos disponibles en Jira
@@ -120,7 +172,7 @@ async function importFromJira(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 
   const body = JSON.parse(event.body);
-  const { jiraUrl, apiToken, email, projectKeys, jqlQuery, team } = body;
+  const { jiraUrl, apiToken, email, projectKeys, issueKeys, jqlQuery, team } = body;
 
   console.log('[1] Validando campos...');
 
@@ -138,111 +190,92 @@ async function importFromJira(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     console.log('[3] Iniciando fetch de issues desde Jira...');
     
-    // Opción 1: Importar por claves de proyecto específicas
-    if (projectKeys && projectKeys.length > 0) {
-      console.log(`[3a] Importando por projectKeys: ${projectKeys}`);
+    // Opción 1: Importar issues específicos por sus keys
+    if (issueKeys && issueKeys.length > 0) {
+      console.log(`[3a] Importando por issueKeys: ${issueKeys.length} issues`);
+      const jql = `key IN (${issueKeys.map((k: string) => `'${k}'`).join(',')})`;
+      issues = await fetchJiraIssues(jiraUrl, auth, jql);
+    }
+    // Opción 2: Importar por claves de proyecto
+    else if (projectKeys && projectKeys.length > 0) {
+      console.log(`[3b] Importando por projectKeys: ${projectKeys}`);
       for (const projectKey of projectKeys) {
         const projectIssues = await fetchJiraIssues(jiraUrl, auth, `project = ${projectKey}`);
         issues = issues.concat(projectIssues);
       }
     }
-    // Opción 2: Usar JQL personalizado
+    // Opción 3: Usar JQL personalizado
     else if (jqlQuery) {
-      console.log(`[3b] Importando con JQL: ${jqlQuery}`);
+      console.log(`[3c] Importando con JQL: ${jqlQuery}`);
       issues = await fetchJiraIssues(jiraUrl, auth, jqlQuery);
     }
     else {
-      return errorResponse('Se requiere projectKeys o jqlQuery', 400);
+      return errorResponse('Se requiere issueKeys, projectKeys o jqlQuery', 400);
     }
 
     console.log(`[4] Encontrados ${issues.length} issues en Jira`);
 
-    // Agrupar issues por proyecto
-    const projectsMap = new Map<string, JiraIssue[]>();
-    issues.forEach(issue => {
-      const parts = issue.key.split('-');
-      const projectKey = parts[0];
-      
-      if (!projectKey) {
-        console.warn(`Issue ${issue.key} has invalid key format`);
-        return;
-      }
-      
-      if (!projectsMap.has(projectKey)) {
-        projectsMap.set(projectKey, []);
-      }
-      projectsMap.get(projectKey)!.push(issue);
-    });
-
     const importedProjects = [];
 
-    // Crear proyectos en la base de datos
-    for (const [projectKey, projectIssues] of projectsMap) {
-      // Buscar si el proyecto ya existe
+    // Crear UN PROYECTO por cada issue
+    for (const issue of issues) {
+      // Buscar si el proyecto ya existe (por issue key completa)
       const existingProject = await prisma.project.findFirst({
-        where: { code: projectKey, team }
+        where: { code: issue.key, team }
       });
 
       if (existingProject) {
-        console.log(`Proyecto ${projectKey} ya existe, omitiendo...`);
+        console.log(`Proyecto ${issue.key} ya existe, omitiendo...`);
         continue;
       }
 
-      // Crear proyecto
-      const firstIssue = projectIssues[0];
-      if (!firstIssue) {
-        console.log(`No hay issues para proyecto ${projectKey}, omitiendo...`);
-        continue;
+      try {
+        // Crear proyecto usando el issue key completo como código
+        const estimatedHours = issue.fields.customfield_10016 ? issue.fields.customfield_10016 * 8 : 8;
+        const startDate = new Date(issue.fields.created);
+
+        const project = await prisma.project.create({
+          data: {
+            code: issue.key,
+            type: mapIssueTypeToProjectType(issue.fields.issuetype.name),
+            title: issue.fields.summary,
+            description: extractPlainText(issue.fields.description),
+            domain: mapJiraDomainToLocal(issue.fields.customfield_10694?.value),
+            priority: mapJiraPriorityToLocal(issue.fields.customfield_11346?.value),
+            status: mapJiraStatusToLocal(issue.fields.status.name),
+            startDate: startDate,
+            endDate: issue.fields.duedate ? new Date(issue.fields.duedate) : null,
+            team,
+            jiraProjectKey: issue.key.split('-')[0], // Solo el prefijo
+            jiraUrl: jiraUrl
+          }
+        });
+
+        // Crear UN assignment asociado a este proyecto con las horas estimadas
+        await prisma.assignment.create({
+          data: {
+            projectId: project.id,
+            title: issue.fields.summary,
+            description: extractPlainText(issue.fields.description),
+            hours: estimatedHours,
+            date: startDate,
+            month: startDate.getMonth() + 1,
+            year: startDate.getFullYear(),
+            team: team,
+            jiraIssueKey: issue.key,
+            jiraIssueId: issue.id
+          }
+        });
+
+        importedProjects.push({
+          project,
+          assignmentsCount: 1
+        });
+
+        console.log(`[5] Proyecto ${issue.key} creado exitosamente`);
+      } catch (error) {
+        console.error(`Error creando proyecto ${issue.key}:`, error);
       }
-
-      const project = await prisma.project.create({
-        data: {
-          code: projectKey,
-          type: mapIssueTypeToProjectType(firstIssue.fields.issuetype.name),
-          title: projectKey,
-          description: `Proyecto importado desde Jira - ${projectIssues.length} tareas`,
-          domain: 0, // Default
-          priority: mapJiraPriorityToLocal(firstIssue.fields.priority?.name),
-          status: mapJiraStatusToLocal(firstIssue.fields.status.name),
-          startDate: new Date(firstIssue.fields.created),
-          endDate: firstIssue.fields.duedate ? new Date(firstIssue.fields.duedate) : null,
-          team,
-          jiraProjectKey: projectKey,
-          jiraUrl: jiraUrl
-        }
-      });
-
-      // Crear assignments (tareas) para este proyecto
-      const assignments = [];
-      for (const issue of projectIssues) {
-        try {
-          const estimatedHours = issue.fields.customfield_10016 ? issue.fields.customfield_10016 * 8 : 8;
-          const startDate = new Date(issue.fields.created);
-          
-          const assignment = await prisma.assignment.create({
-            data: {
-              projectId: project.id,
-              title: issue.fields.summary,
-              description: extractPlainText(issue.fields.description),
-              hours: estimatedHours,
-              date: startDate,
-              month: startDate.getMonth() + 1,
-              year: startDate.getFullYear(),
-              team: team,
-              jiraIssueKey: issue.key,
-              jiraIssueId: issue.id
-            }
-          });
-          assignments.push(assignment);
-        } catch (error) {
-          console.error(`Error creando assignment ${issue.key}:`, error);
-        }
-      }
-
-      importedProjects.push({
-        project,
-        assignmentsCount: assignments.length
-      });
     }
 
     return successResponse({
@@ -363,30 +396,51 @@ async function syncProject(event: APIGatewayProxyEvent): Promise<APIGatewayProxy
 }
 
 /**
- * Obtener issues de Jira usando JQL
+ * Obtener issues de Jira usando JQL con paginación por key
  */
 async function fetchJiraIssues(jiraUrl: string, auth: string, jql: string): Promise<JiraIssue[]> {
   const allIssues: JiraIssue[] = [];
-  let startAt = 0;
-  const maxResults = 100;
+  const seenKeys = new Set<string>(); // Para detectar duplicados
+  let lastKey: string | null = null;
+  const maxResults = 100; // Usar 100 que es confiable
   const timeoutMs = 30000; // 30 segundos timeout
-  const MAX_PAGES = 50; // Límite máximo de páginas para evitar loop infinito
+  const MAX_PAGES = 20; // Hasta 20 páginas = 2000 issues máximo
   let pageCount = 0;
 
-  console.log('[fetchJiraIssues] Iniciando fetch...');
+  console.log('[fetchJiraIssues] Iniciando fetch con paginación por key...');
 
   while (pageCount < MAX_PAGES) {
     pageCount++;
-    const url = `${jiraUrl}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=summary,description,issuetype,status,priority,created,updated,duedate,customfield_10016`;
+    const url = `${jiraUrl}/rest/api/3/search/jql`;
 
-    console.log(`[fetchJiraIssues] Fetching página ${startAt / maxResults + 1}...`);
+    // Construir JQL con filtro por key si es necesario
+    let paginatedJql = `${jql} ORDER BY key DESC`;
+    if (lastKey) {
+      // Insertar filtro "key < lastKey" antes del ORDER BY
+      const baseJql = jql.replace(/\s+ORDER\s+BY\s+.*/i, '').trim();
+      paginatedJql = `${baseJql} AND key < '${lastKey}' ORDER BY key DESC`;
+    }
+
+    console.log(`[fetchJiraIssues] Página ${pageCount}, lastKey=${lastKey || 'ninguno'}`);
 
     // Crear AbortController para timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const response = await fetch(url, {
+      // Construir URL con parámetros
+      const params = new URLSearchParams({
+        jql: paginatedJql,
+        startAt: '0',
+        maxResults: maxResults.toString(),
+        fields: 'summary,description,issuetype,status,priority,created,updated,duedate,customfield_10016,customfield_10694,customfield_11346'
+      });
+      
+      const fullUrl = `${url}?${params.toString()}`;
+      console.log(`[fetchJiraIssues] JQL: ${paginatedJql.substring(0, 100)}...`);
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
         headers: {
           'Authorization': `Basic ${auth}`,
           'Accept': 'application/json'
@@ -404,30 +458,40 @@ async function fetchJiraIssues(jiraUrl: string, auth: string, jql: string): Prom
 
       const data = await response.json() as any;
       const issuesReceived = data.issues?.length || 0;
-      const totalReported = data.total || 0;
-      console.log(`[fetchJiraIssues] Recibidos ${issuesReceived} issues. Total reportado: ${totalReported}`);
+      console.log(`[fetchJiraIssues] Recibidos ${issuesReceived} issues`);
       
-      // Si no hay issues en esta página, salir del loop
+      // Si no hay issues en esta página, terminamos
       if (issuesReceived === 0) {
-        console.log(`[fetchJiraIssues] No hay más issues. Total final: ${allIssues.length} issues`);
+        console.log(`[fetchJiraIssues] No hay más issues. Total final: ${allIssues.length} issues únicos`);
         break;
       }
       
-      allIssues.push(...data.issues);
-
-      // Protección adicional: si ya tenemos tantos issues como el total reportado, salir
-      if (totalReported > 0 && allIssues.length >= totalReported) {
-        console.log(`[fetchJiraIssues] Alcanzado el total reportado (${totalReported}). Total: ${allIssues.length} issues`);
+      // Agregar issues únicos y actualizar lastKey
+      let newIssuesCount = 0;
+      for (const issue of data.issues) {
+        if (!seenKeys.has(issue.key)) {
+          seenKeys.add(issue.key);
+          allIssues.push(issue);
+          newIssuesCount++;
+        }
+      }
+      
+      // Actualizar lastKey con el último issue de esta página
+      lastKey = data.issues[data.issues.length - 1].key;
+      
+      console.log(`[fetchJiraIssues] ${newIssuesCount} nuevos, último key: ${lastKey}, total acumulado: ${allIssues.length}`);
+      
+      // Si todos los issues son duplicados (no debería pasar con paginación por key), terminar
+      if (newIssuesCount === 0) {
+        console.log(`[fetchJiraIssues] Todos duplicados. Total final: ${allIssues.length} issues únicos`);
         break;
       }
-
-      // Si llegamos al total según la paginación, salir
-      if (data.startAt + data.maxResults >= totalReported && totalReported > 0) {
-        console.log(`[fetchJiraIssues] Completado según paginación. Total: ${allIssues.length} issues`);
+      
+      // Si recibimos menos del máximo, es la última página
+      if (issuesReceived < maxResults) {
+        console.log(`[fetchJiraIssues] Última página (${issuesReceived} < ${maxResults}). Total final: ${allIssues.length} issues`);
         break;
       }
-
-      startAt += maxResults;
     } catch (error: any) {
       clearTimeout(timeoutId);
       if (error?.name === 'AbortError') {
@@ -437,32 +501,55 @@ async function fetchJiraIssues(jiraUrl: string, auth: string, jql: string): Prom
     }
   }
 
+  console.log(`[fetchJiraIssues] Completado. Total: ${allIssues.length} issues en ${pageCount} páginas`);
   return allIssues;
+}
+
+/**
+ * Mapear dominio de Jira a número local
+ */
+function mapJiraDomainToLocal(domain?: string): number {
+  if (!domain) return 0;
+  
+  const domainLower = domain.toLowerCase();
+  if (domainLower.includes('ventas') || domainLower.includes('contratación') || domainLower.includes('contratacion')) return 1;
+  if (domainLower.includes('ciclo de vida') || domainLower.includes('producto')) return 2;
+  if (domainLower.includes('facturación') || domainLower.includes('facturacion') || domainLower.includes('cobro')) return 3;
+  if (domainLower.includes('atención') || domainLower.includes('atencion')) return 4;
+  if (domainLower.includes('operación') || domainLower.includes('operacion') || domainLower.includes('sistemas') || domainLower.includes('ciberseguridad')) return 5;
+  if (domainLower.includes('datos')) return 6;
+  if (domainLower.includes('portabilidad')) return 7;
+  if (domainLower.includes('integración') || domainLower.includes('integracion')) return 8;
+  
+  return 0; // Ninguno por defecto
 }
 
 /**
  * Mapear tipo de issue de Jira a tipo de proyecto local
  */
-function mapIssueTypeToProjectType(jiraType: string): string {
-  const type = jiraType.toLowerCase();
-  if (type.includes('epic') || type.includes('project')) {
+function mapIssueTypeToProjectType(issueType: string): string {
+  if (!issueType) return 'Evolutivo';
+  
+  const type = issueType.toLowerCase();
+  if (type === 'proyecto') {
     return 'Proyecto';
   }
   return 'Evolutivo';
 }
 
 /**
- * Mapear prioridad de Jira a prioridad local
+ * Mapear prioridad de negocio de Jira a prioridad local
  */
-function mapJiraPriorityToLocal(jiraPriority?: string): string {
-  if (!jiraPriority) return 'Normal';
+function mapJiraPriorityToLocal(prioridadNegocio?: string): string {
+  if (!prioridadNegocio) return 'media';
 
-  const priority = jiraPriority.toLowerCase();
-  if (priority.includes('highest') || priority.includes('critical')) return 'Crítica';
-  if (priority.includes('high')) return 'Alta';
-  if (priority.includes('low')) return 'Baja';
-  if (priority.includes('lowest')) return 'Muy Baja';
-  return 'Normal';
+  const priority = prioridadNegocio.toLowerCase();
+  if (priority.includes('muy alta')) return 'muy-alta';
+  if (priority.includes('alta')) return 'alta';
+  if (priority.includes('media')) return 'media';
+  if (priority.includes('baja') && !priority.includes('muy')) return 'baja';
+  if (priority.includes('muy baja')) return 'muy-baja';
+  return 'media';
 }
 
 /**
@@ -470,10 +557,19 @@ function mapJiraPriorityToLocal(jiraPriority?: string): string {
  */
 function mapJiraStatusToLocal(jiraStatus: string): number {
   const status = jiraStatus.toLowerCase();
-  if (status.includes('done') || status.includes('closed') || status.includes('resolved')) return 3;
-  if (status.includes('progress') || status.includes('development')) return 1;
-  if (status.includes('blocked')) return 1;
-  return 0; // Planificado por defecto
+  
+  // Mapeo exacto de estados de Jira
+  if (status.includes('cancelado')) return 0;
+  if (status.includes('concepto')) return 1;
+  if (status.includes('desarrollo')) return 2;
+  if (status.includes('diseño') || status.includes('diseno')) return 3;
+  if (status.includes('finalizado')) return 4;
+  if (status.includes('idea')) return 5;
+  if (status.includes('implantado')) return 6;
+  if (status.includes('on hold')) return 7;
+  if (status.includes('viabilidad')) return 8;
+  
+  return 1; // Concepto por defecto
 }
 
 /**

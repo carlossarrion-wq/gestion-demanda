@@ -39,12 +39,12 @@ let jiraModal = null;
 /**
  * Initialize the application
  */
-function initializeApp() {
+async function initializeApp() {
     console.log('Initializing Capacity Planning Application...');
     
     // Initialize components
     initializeTabs();
-    initializeKPIs();
+    await initializeKPIs(); // Now async - uses API data
     initializeAllCharts();
     initProjectModal();
     initResourceModal();
@@ -65,14 +65,17 @@ function initializeApp() {
     window.jiraModal = jiraModal;
     console.log('Modals initialized:', { capacityModal: !!window.capacityModal, jiraModal: !!window.jiraModal });
     
-    // Initialize tables
-    populateTopProjectsTable();
+    // Load projects from API first
+    await loadProjectsFromAPI();
     
-    // Load projects from API
-    loadProjectsFromAPI();
+    // Then populate Top Projects table (needs projects loaded)
+    await populateTopProjectsTable();
     
     // Update Matrix KPIs
     updateMatrixKPIs();
+    
+    // Populate Matrix table with real data
+    await populateMatrixTable();
     
     // Initialize event listeners
     initializeEventListeners();
@@ -133,77 +136,130 @@ async function loadProjectsFromAPI() {
 }
 
 /**
- * Populate Top 5 Projects table
+ * Populate Top 5 Projects table with real data from API
  */
-function populateTopProjectsTable() {
+async function populateTopProjectsTable() {
     const tableBody = document.getElementById('top-projects-table-body');
     if (!tableBody) return;
     
-    const projectsWithHours = [];
-    
-    Object.keys(projectSkillBreakdown).forEach(projectId => {
-        const project = projectSkillBreakdown[projectId];
-        const metadata = projectMetadata[projectId];
+    try {
+        const awsAccessKey = sessionStorage.getItem('aws_access_key');
+        const userTeam = sessionStorage.getItem('user_team');
         
-        if (!metadata) return;
+        if (!awsAccessKey || !userTeam) {
+            console.warn('No authentication tokens for Top Projects table');
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 1rem; color: #6b7280;">Inicia sesión para ver proyectos</td></tr>';
+            return;
+        }
         
-        let totalHours = 0;
-        Object.keys(project.skills).forEach(skillName => {
-            monthKeys.forEach(month => {
-                totalHours += project.skills[skillName][month] || 0;
+        // Fetch assignments to calculate hours
+        const response = await fetch(`${API_CONFIG.BASE_URL}/assignments`, {
+            headers: {
+                'Authorization': awsAccessKey,
+                'x-user-team': userTeam
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error loading assignments');
+        }
+        
+        const data = await response.json();
+        const assignments = data.data?.assignments || data.assignments || [];
+        
+        // Group assignments by project and calculate total hours
+        const projectHoursMap = new Map();
+        
+        assignments.forEach(assignment => {
+            const projectId = assignment.projectId;
+            if (!projectId) return;
+            
+            if (!projectHoursMap.has(projectId)) {
+                projectHoursMap.set(projectId, {
+                    projectId: projectId,
+                    totalHours: 0,
+                    assignedHours: 0
+                });
+            }
+            
+            const hours = parseFloat(assignment.hours) || 0;
+            const projectData = projectHoursMap.get(projectId);
+            projectData.totalHours += hours;
+            
+            // Count assigned hours (with resourceId)
+            if (assignment.resourceId) {
+                projectData.assignedHours += hours;
+            }
+        });
+        
+        // Get project details from allProjects
+        const projectsWithHours = [];
+        
+        if (window.allProjects && Array.isArray(window.allProjects)) {
+            window.allProjects.forEach(project => {
+                const hoursData = projectHoursMap.get(project.id) || { totalHours: 0, assignedHours: 0 };
+                
+                projectsWithHours.push({
+                    id: project.code,
+                    title: project.title,
+                    description: project.description,
+                    domain: getDomainText(project.domain),
+                    priority: project.priority,
+                    totalHours: hoursData.totalHours,
+                    hoursIncurred: hoursData.assignedHours,
+                    status: project.status
+                });
             });
+        }
+        
+        // Sort by total hours and get top 5
+        projectsWithHours.sort((a, b) => b.totalHours - a.totalHours);
+        const top5Projects = projectsWithHours.slice(0, 5);
+        
+        tableBody.innerHTML = '';
+        
+        if (top5Projects.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 1rem; color: #6b7280;">No hay proyectos con horas asignadas</td></tr>';
+            return;
+        }
+        
+        top5Projects.forEach(project => {
+            const row = document.createElement('tr');
+            
+            const priorityClass = getPriorityClass(project.priority);
+            const priorityText = getPriorityText(project.priority);
+            const statusClass = getStatusClass(project.status);
+            const statusText = getStatusText(project.status);
+            
+            const percentageIncurred = project.totalHours > 0 
+                ? ((project.hoursIncurred / project.totalHours) * 100).toFixed(1)
+                : '0.0';
+            
+            row.innerHTML = `
+                <td style="text-align: left;"><strong>${project.id}</strong></td>
+                <td style="text-align: left;">${project.title}</td>
+                <td style="text-align: left;">${truncateText(project.description, 50)}</td>
+                <td style="text-align: left;">${project.domain}</td>
+                <td style="text-align: center;">
+                    <span class="priority-badge ${priorityClass}">${priorityText}</span>
+                </td>
+                <td style="text-align: right;"><strong>${formatNumber(project.totalHours)}</strong></td>
+                <td style="text-align: right;">${formatNumber(project.hoursIncurred)}</td>
+                <td style="text-align: right;"><strong>${percentageIncurred}%</strong></td>
+                <td style="text-align: center;">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
         });
         
-        const progressPercentage = totalHours > 1000 ? 0.45 : (totalHours > 500 ? 0.60 : 0.70);
-        const hoursIncurred = Math.round(totalHours * progressPercentage);
+        console.log(`Top 5 projects table populated with ${top5Projects.length} projects (real data)`);
         
-        projectsWithHours.push({
-            id: projectId,
-            title: metadata.title,
-            description: metadata.description,
-            domain: metadata.dominiosPrincipales,
-            priority: metadata.priority,
-            totalHours: totalHours,
-            hoursIncurred: hoursIncurred,
-            status: metadata.status
-        });
-    });
-    
-    projectsWithHours.sort((a, b) => b.totalHours - a.totalHours);
-    const top5Projects = projectsWithHours.slice(0, 5);
-    
-    tableBody.innerHTML = '';
-    
-    top5Projects.forEach(project => {
-        const row = document.createElement('tr');
-        
-        const priorityClass = getPriorityClass(project.priority);
-        const priorityText = getPriorityText(project.priority);
-        const statusClass = getStatusClass(project.status);
-        const statusText = getStatusText(project.status);
-        
-        const percentageIncurred = project.totalHours > 0 
-            ? ((project.hoursIncurred / project.totalHours) * 100).toFixed(1)
-            : '0.0';
-        
-        row.innerHTML = `
-            <td style="text-align: left;"><strong>${project.id}</strong></td>
-            <td style="text-align: left;">${project.title}</td>
-            <td style="text-align: left;">${project.description}</td>
-            <td style="text-align: left;">${project.domain}</td>
-            <td style="text-align: center;">
-                <span class="priority-badge ${priorityClass}">${priorityText}</span>
-            </td>
-            <td style="text-align: right;"><strong>${formatNumber(project.totalHours)}</strong></td>
-            <td style="text-align: right;">${formatNumber(project.hoursIncurred)}</td>
-            <td style="text-align: right;"><strong>${percentageIncurred}%</strong></td>
-            <td style="text-align: center;">
-                <span class="status-badge ${statusClass}">${statusText}</span>
-            </td>
-        `;
-        
-        tableBody.appendChild(row);
-    });
+    } catch (error) {
+        console.error('Error populating top projects table:', error);
+        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 1rem; color: #ef4444;">Error al cargar proyectos principales</td></tr>';
+    }
 }
 
 /**
@@ -529,9 +585,9 @@ function importFromJira() {
 }
 
 /**
- * Update Matrix KPIs
+ * Update Matrix KPIs with real data
  */
-function updateMatrixKPIs() {
+async function updateMatrixKPIs() {
     // Count projects by type from real data
     let totalProjects = 0;
     let evolutivosCount = 0;
@@ -568,7 +624,103 @@ function updateMatrixKPIs() {
     if (projectsEvolutivosElement) projectsEvolutivosElement.textContent = evolutivosCount;
     if (projectsProyectosElement) projectsProyectosElement.textContent = proyectosCount;
     
+    // Calculate average hours per project from real assignments
+    await updateAverageHoursKPI();
+    
     console.log('Matrix and Projects KPIs updated:', { totalProjects, evolutivosCount, proyectosCount });
+}
+
+/**
+ * Update Average Hours per Project KPI with real data from assignments
+ */
+async function updateAverageHoursKPI() {
+    try {
+        const awsAccessKey = sessionStorage.getItem('aws_access_key');
+        const userTeam = sessionStorage.getItem('user_team');
+        
+        if (!awsAccessKey || !userTeam) {
+            console.warn('No authentication for average hours KPI');
+            return;
+        }
+        
+        // Fetch assignments from API
+        const response = await fetch(`${API_CONFIG.BASE_URL}/assignments`, {
+            headers: {
+                'Authorization': awsAccessKey,
+                'x-user-team': userTeam
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error loading assignments for average hours');
+        }
+        
+        const data = await response.json();
+        const assignments = data.data?.assignments || data.assignments || [];
+        
+        // Calculate total hours per project
+        const projectHours = {};
+        
+        assignments.forEach(assignment => {
+            const projectId = assignment.projectId;
+            if (!projectId) return;
+            
+            const hours = parseFloat(assignment.hours) || 0;
+            
+            if (!projectHours[projectId]) {
+                projectHours[projectId] = 0;
+            }
+            projectHours[projectId] += hours;
+        });
+        
+        // Calculate averages by project type
+        let totalHoursEvolutivos = 0;
+        let totalHoursProyectos = 0;
+        let countEvolutivos = 0;
+        let countProyectos = 0;
+        
+        Object.keys(projectHours).forEach(projectId => {
+            const project = window.allProjects?.find(p => p.id === projectId);
+            if (!project) return;
+            
+            const hours = projectHours[projectId];
+            
+            if (project.type === 'Evolutivo') {
+                totalHoursEvolutivos += hours;
+                countEvolutivos++;
+            } else if (project.type === 'Proyecto') {
+                totalHoursProyectos += hours;
+                countProyectos++;
+            }
+        });
+        
+        // Calculate averages
+        const avgEvolutivos = countEvolutivos > 0 ? Math.round(totalHoursEvolutivos / countEvolutivos) : 0;
+        const avgProyectos = countProyectos > 0 ? Math.round(totalHoursProyectos / countProyectos) : 0;
+        const avgTotal = (countEvolutivos + countProyectos) > 0 
+            ? Math.round((totalHoursEvolutivos + totalHoursProyectos) / (countEvolutivos + countProyectos))
+            : 0;
+        
+        // Update UI elements
+        const avgTotalElement = document.getElementById('matrix-avg-hours-project');
+        const avgEvolutivosElement = document.getElementById('matrix-avg-evolutivos');
+        const avgProyectosElement = document.getElementById('matrix-avg-proyectos');
+        
+        if (avgTotalElement) avgTotalElement.textContent = formatNumber(avgTotal);
+        if (avgEvolutivosElement) avgEvolutivosElement.textContent = formatNumber(avgEvolutivos);
+        if (avgProyectosElement) avgProyectosElement.textContent = formatNumber(avgProyectos);
+        
+        console.log('Average hours KPI updated:', {
+            avgTotal,
+            avgEvolutivos,
+            avgProyectos,
+            countEvolutivos,
+            countProyectos
+        });
+        
+    } catch (error) {
+        console.error('Error updating average hours KPI:', error);
+    }
 }
 
 // Pagination state
@@ -685,14 +837,14 @@ function updateProjectsTable(projects) {
                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                     </svg>
                 </span>
-                <span class="action-icon" data-action="tasks" data-project="${project.code}" title="Gestión de Tareas">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-                    </svg>
-                </span>
-                <span class="action-icon" data-action="resources" data-project="${project.code}" title="Asignación de Recursos">
+                <span class="action-icon" data-action="tasks" data-project="${project.code}" title="Asignación de Recursos">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    </svg>
+                </span>
+                <span class="action-icon" data-action="resources" data-project="${project.code}" title="Gestión de Tareas">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
                     </svg>
                 </span>
                 <span class="action-icon" data-action="delete" data-project="${project.code}" title="Eliminar">
@@ -868,6 +1020,141 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
     initializeApp();
+}
+
+/**
+ * Populate Matrix table with real data from API
+ */
+async function populateMatrixTable() {
+    const tableBody = document.querySelector('.capacity-matrix tbody');
+    if (!tableBody) {
+        console.warn('Matrix table body not found');
+        return;
+    }
+    
+    try {
+        const awsAccessKey = sessionStorage.getItem('aws_access_key');
+        const userTeam = sessionStorage.getItem('user_team');
+        
+        if (!awsAccessKey || !userTeam) {
+            console.warn('No authentication for Matrix table');
+            return;
+        }
+        
+        // Fetch assignments from API
+        const response = await fetch(`${API_CONFIG.BASE_URL}/assignments`, {
+            headers: {
+                'Authorization': awsAccessKey,
+                'x-user-team': userTeam
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error loading assignments for Matrix table');
+        }
+        
+        const data = await response.json();
+        const assignments = data.data?.assignments || data.assignments || [];
+        
+        // Group assignments by project and month (year 2026)
+        const projectMonthHours = {};
+        
+        assignments.forEach(assignment => {
+            const projectId = assignment.projectId;
+            if (!projectId || assignment.year !== 2026) return;
+            
+            if (!projectMonthHours[projectId]) {
+                projectMonthHours[projectId] = new Array(12).fill(0);
+            }
+            
+            const monthIndex = assignment.month - 1; // Convert 1-12 to 0-11
+            const hours = parseFloat(assignment.hours) || 0;
+            projectMonthHours[projectId][monthIndex] += hours;
+        });
+        
+        // Clear existing rows (except last row which is summary)
+        const existingRows = Array.from(tableBody.querySelectorAll('tr'));
+        existingRows.forEach((row, index) => {
+            // Keep the last row (summary row)
+            if (index < existingRows.length - 1) {
+                row.remove();
+            }
+        });
+        
+        // Get summary row
+        const summaryRow = tableBody.querySelector('.summary-row');
+        
+        // Calculate monthly totals
+        const monthlyTotals = new Array(12).fill(0);
+        
+        // Generate rows for each project with hours
+        if (window.allProjects && Array.isArray(window.allProjects)) {
+            window.allProjects.forEach(project => {
+                const hours = projectMonthHours[project.id];
+                if (!hours) return; // Skip projects with no hours
+                
+                const row = document.createElement('tr');
+                row.className = 'project-row';
+                row.setAttribute('data-project', project.code);
+                
+                // Get class for capacity cells
+                const getCapacityClass = (hours) => {
+                    if (hours === 0) return 'empty';
+                    if (hours < 200) return 'low';
+                    if (hours < 400) return 'medium';
+                    return 'high';
+                };
+                
+                // Build month cells
+                const monthCells = hours.map((h, index) => {
+                    monthlyTotals[index] += h;
+                    const className = getCapacityClass(h);
+                    const display = h > 0 ? Math.round(h) : '-';
+                    const title = h > 0 ? `${Math.round(h)} horas` : '0 horas';
+                    return `<td><span class="capacity-cell ${className}" data-project="${project.code}" data-month="${index + 1}" title="${title}">${display}</span></td>`;
+                }).join('');
+                
+                row.innerHTML = `
+                    <td class="project-name">
+                        <span class="expand-icon" data-project="${project.code}">+</span>
+                        <strong>${project.code}</strong> - ${truncateText(project.title, 30)}
+                    </td>
+                    <td>${project.type || '-'}</td>
+                    <td>${getDomainText(project.domain)}</td>
+                    ${monthCells}
+                `;
+                
+                // Insert before summary row
+                if (summaryRow) {
+                    tableBody.insertBefore(row, summaryRow);
+                } else {
+                    tableBody.appendChild(row);
+                }
+            });
+        }
+        
+        // Update summary row with real totals
+        if (summaryRow) {
+            const summaryCells = summaryRow.querySelectorAll('td');
+            // Cell 0: "TOTAL HORAS" (project name)
+            // Cell 1: colspan="2" (covers type and domain columns)
+            // Cells 2-13: Month cells (ENE-DIC)
+            monthlyTotals.forEach((total, index) => {
+                const cellIndex = index + 2; // Skip first 2 cells (name + colspan)
+                if (summaryCells[cellIndex]) {
+                    summaryCells[cellIndex].innerHTML = `<strong>${formatNumber(Math.round(total))}</strong>`;
+                }
+            });
+        }
+        
+        console.log('Matrix table populated with real data:', {
+            projects: Object.keys(projectMonthHours).length,
+            monthlyTotals
+        });
+        
+    } catch (error) {
+        console.error('Error populating Matrix table:', error);
+    }
 }
 
 /**

@@ -1,6 +1,6 @@
 // Charts Initialization Component
 
-import { projectSkillBreakdown, monthKeys, monthLabels } from '../config/data.js';
+import { projectSkillBreakdown, monthKeys, monthLabels, API_CONFIG } from '../config/data.js';
 import { formatNumber, getStatusText, getDomainText, getPriorityText } from '../utils/helpers.js';
 
 // Store chart instances to destroy them before recreating
@@ -8,6 +8,154 @@ const chartInstances = {};
 
 // Flag to prevent multiple simultaneous chart initializations
 let isInitializing = false;
+
+// Cache for API data
+let assignmentsCache = null;
+let resourcesCache = null;
+
+/**
+ * Load assignments and resources from API
+ */
+async function loadAPIData() {
+    const awsAccessKey = sessionStorage.getItem('aws_access_key');
+    const userTeam = sessionStorage.getItem('user_team');
+    
+    if (!awsAccessKey || !userTeam) {
+        console.warn('No authentication for charts');
+        return { assignments: [], resources: [] };
+    }
+    
+    try {
+        const [assignmentsRes, resourcesRes] = await Promise.all([
+            fetch(`${API_CONFIG.BASE_URL}/assignments`, {
+                headers: {
+                    'Authorization': awsAccessKey,
+                    'x-user-team': userTeam
+                }
+            }),
+            fetch(`${API_CONFIG.BASE_URL}/resources`, {
+                headers: {
+                    'Authorization': awsAccessKey,
+                    'x-user-team': userTeam
+                }
+            })
+        ]);
+        
+        if (!assignmentsRes.ok || !resourcesRes.ok) {
+            throw new Error('Error loading data for charts');
+        }
+        
+        const assignmentsData = await assignmentsRes.json();
+        const resourcesData = await resourcesRes.json();
+        
+        const allAssignments = assignmentsData.data?.assignments || assignmentsData.assignments || [];
+        const allResources = resourcesData.data?.resources || resourcesData.resources || [];
+        
+        // FILTRAR recursos por equipo
+        const resources = allResources.filter(r => r.team === userTeam);
+        
+        // Crear Set de IDs de recursos del equipo
+        const teamResourceIds = new Set(resources.map(r => r.id));
+        
+        // FILTRAR assignments: solo los que pertenecen a recursos del equipo
+        const assignments = allAssignments.filter(a => {
+            // Si tiene resourceId, verificar que sea del equipo
+            if (a.resourceId) {
+                return teamResourceIds.has(a.resourceId);
+            }
+            // Si no tiene resourceId asignado aún, NO contar (son assignments sin asignar)
+            return false;
+        });
+        
+        // Cache the data
+        assignmentsCache = assignments;
+        resourcesCache = resources;
+        
+        console.log(`Charts: Filtered by team "${userTeam}" - Resources: ${resources.length}, Assignments: ${assignments.length} (of ${allAssignments.length} total)`);
+        
+        return { assignments, resources };
+    } catch (error) {
+        console.error('Error loading API data for charts:', error);
+        return { assignments: [], resources: [] };
+    }
+}
+
+/**
+ * Calculate hours by month from real assignments (for year 2026)
+ */
+function calculateRealHoursByMonth(assignments) {
+    const currentYear = 2026;
+    const hoursByMonth = new Array(12).fill(0);
+    const hoursByMonthProyecto = new Array(12).fill(0);
+    const hoursByMonthEvolutivo = new Array(12).fill(0);
+    
+    assignments.forEach(assignment => {
+        if (assignment.year === currentYear && assignment.month >= 1 && assignment.month <= 12) {
+            const monthIndex = assignment.month - 1; // Convert 1-12 to 0-11
+            const hours = parseFloat(assignment.hours) || 0;
+            
+            hoursByMonth[monthIndex] += hours;
+            
+            // Get project type from window.allProjects
+            if (window.allProjects && assignment.projectId) {
+                const project = window.allProjects.find(p => p.id === assignment.projectId);
+                if (project) {
+                    if (project.type === 'Proyecto') {
+                        hoursByMonthProyecto[monthIndex] += hours;
+                    } else if (project.type === 'Evolutivo') {
+                        hoursByMonthEvolutivo[monthIndex] += hours;
+                    }
+                }
+            }
+        }
+    });
+    
+    return { hoursByMonth, hoursByMonthProyecto, hoursByMonthEvolutivo };
+}
+
+/**
+ * Calculate capacity by month based on real resources
+ */
+function calculateRealCapacity(resources) {
+    const capacityByMonth = new Array(12).fill(0);
+    const capacityPerMonth = resources.length * 160; // Each resource = 160h/month
+    
+    for (let i = 0; i < 12; i++) {
+        capacityByMonth[i] = capacityPerMonth;
+    }
+    
+    return capacityByMonth;
+}
+
+/**
+ * Calculate hours by skill/profile from real assignments
+ */
+function calculateRealHoursBySkill(assignments) {
+    const currentYear = 2026;
+    const skills = ['Project Management', 'Análisis', 'Diseño', 'Construcción', 'QA', 'General'];
+    const hoursBySkill = {};
+    
+    skills.forEach(skill => {
+        hoursBySkill[skill] = new Array(12).fill(0);
+    });
+    
+    assignments.forEach(assignment => {
+        if (assignment.year === currentYear && assignment.month >= 1 && assignment.month <= 12) {
+            const monthIndex = assignment.month - 1;
+            const hours = parseFloat(assignment.hours) || 0;
+            const skillName = assignment.skillName || 'General';
+            
+            if (hoursBySkill[skillName]) {
+                hoursBySkill[skillName][monthIndex] += hours;
+            } else {
+                // If skill doesn't match, add to General
+                hoursBySkill['General'][monthIndex] += hours;
+            }
+        }
+    });
+    
+    return hoursBySkill;
+}
 
 /**
  * Destroy a chart instance if it exists
@@ -33,10 +181,10 @@ export async function initializeAllCharts() {
     isInitializing = true;
     
     try {
-        // Overview tab charts
-        initializeOverviewCommittedHoursChart();
-        initializeOverviewSkillDistributionChart();
-        initializeOverviewCapacityByProfileChart();
+        // Overview tab charts - now async with real data
+        await initializeOverviewCommittedHoursChart();
+        await initializeOverviewSkillDistributionChart();
+        await initializeOverviewCapacityByProfileChart();
         
         // Projects tab charts
         initializeProjectsByStatusChart();
@@ -53,19 +201,19 @@ export async function initializeAllCharts() {
         await initializeMatrixHoursByDomainChart();
         
         // Resources tab charts
-        initializeResourcesCommittedHoursChart();
+        await initializeResourcesCommittedHoursChart();
         initializeResourcesHoursBySkillChart();
         
-        console.log('All charts initialized');
+        console.log('All charts initialized with real data');
     } finally {
         isInitializing = false;
     }
 }
 
 /**
- * Initialize Overview Committed Hours Chart
+ * Initialize Overview Committed Hours Chart with REAL DATA
  */
-function initializeOverviewCommittedHoursChart() {
+async function initializeOverviewCommittedHoursChart() {
     const chartId = 'overview-committed-hours-chart';
     const ctx = document.getElementById(chartId);
     if (!ctx) return;
@@ -73,94 +221,107 @@ function initializeOverviewCommittedHoursChart() {
     // Destroy existing chart if it exists
     destroyChart(chartId);
     
-    const committedHours = calculateCommittedHoursByMonth();
-    const horasProyectos = committedHours.map(hours => Math.round(hours * 0.8));
-    const horasEvolutivos = committedHours.map(hours => Math.round(hours * 0.2));
-    const availableHours = [1750, 1720, 1760, 1740, 1700, 1780, 1750, 1730, 1760, 1770, 1750, 1740];
+    try {
+        // Load real data from API
+        const { assignments, resources } = await loadAPIData();
+        
+        // Calculate real hours by month
+        const { hoursByMonth, hoursByMonthProyecto, hoursByMonthEvolutivo } = calculateRealHoursByMonth(assignments);
+        const realCapacity = calculateRealCapacity(resources);
+        
+        console.log('Overview Committed Hours Chart - Real Data:', {
+            assignments: assignments.length,
+            resources: resources.length,
+            hoursByMonth,
+            capacity: realCapacity
+        });
 
-    chartInstances[chartId] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: monthLabels,
-            datasets: [
-                {
-                    label: 'Horas Comprometidas Proyectos',
-                    data: horasProyectos,
-                    backgroundColor: 'rgba(49, 151, 149, 0.8)',
-                    borderColor: '#319795',
-                    borderWidth: 1,
-                    stack: 'comprometidas',
-                    order: 2
-                },
-                {
-                    label: 'Horas Comprometidas Evolutivos',
-                    data: horasEvolutivos,
-                    backgroundColor: 'rgba(49, 151, 149, 0.4)',
-                    borderColor: '#4db8b5',
-                    borderWidth: 1,
-                    stack: 'comprometidas',
-                    order: 2
-                },
-                {
-                    label: 'Capacidad Real Disponible',
-                    data: availableHours,
-                    type: 'line',
-                    borderColor: '#dc2626',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    order: 1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: { boxWidth: 12, padding: 8, font: { size: 10 } }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
+        chartInstances[chartId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Horas Comprometidas Proyectos',
+                        data: hoursByMonthProyecto,
+                        backgroundColor: 'rgba(49, 151, 149, 0.8)',
+                        borderColor: '#319795',
+                        borderWidth: 1,
+                        stack: 'comprometidas',
+                        order: 2
+                    },
+                    {
+                        label: 'Horas Comprometidas Evolutivos',
+                        data: hoursByMonthEvolutivo,
+                        backgroundColor: 'rgba(49, 151, 149, 0.4)',
+                        borderColor: '#4db8b5',
+                        borderWidth: 1,
+                        stack: 'comprometidas',
+                        order: 2
+                    },
+                    {
+                        label: 'Capacidad Real Disponible',
+                        data: realCapacity,
+                        type: 'line',
+                        borderColor: '#dc2626',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 8, font: { size: 10 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += formatNumber(context.parsed.y);
+                                }
+                                return label;
                             }
-                            if (context.parsed.y !== null) {
-                                label += formatNumber(context.parsed.y);
-                            }
-                            return label;
                         }
                     }
-                }
-            },
-            scales: {
-                x: { stacked: true },
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    beginAtZero: true,
-                    stacked: true,
-                    title: { display: true, text: 'Horas' },
-                    ticks: {
-                        callback: function(value) {
-                            return formatNumber(value);
+                },
+                scales: {
+                    x: { stacked: true },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        stacked: true,
+                        title: { display: true, text: 'Horas' },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value);
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error initializing Overview Committed Hours Chart:', error);
+    }
 }
 
 /**
- * Initialize Overview Skill Distribution Chart
+ * Initialize Overview Skill Distribution Chart with REAL DATA
  */
-function initializeOverviewSkillDistributionChart() {
+async function initializeOverviewSkillDistributionChart() {
     const chartId = 'overview-skill-distribution-chart';
     const ctx = document.getElementById(chartId);
     if (!ctx) return;
@@ -168,7 +329,20 @@ function initializeOverviewSkillDistributionChart() {
     // Destroy existing chart if it exists
     destroyChart(chartId);
     
-    const skillTotals = calculateSkillTotalsByMonth();
+    // Load real data from API
+    const { assignments, resources } = await loadAPIData();
+    
+    // Calculate real hours by skill
+    const skillTotals = calculateRealHoursBySkill(assignments);
+    const realCapacity = calculateRealCapacity(resources);
+    
+    console.log('Skill Distribution Chart - Real Data:', {
+        assignments: assignments.length,
+        resources: resources.length,
+        skillTotals,
+        capacity: realCapacity
+    });
+    
     const skillColors = {
         'Construcción': '#4db6ac',
         'Análisis': '#64b5f6',
@@ -188,11 +362,10 @@ function initializeOverviewSkillDistributionChart() {
         order: 2
     }));
     
-    // Add the red capacity line
-    const availableHours = [1750, 1720, 1760, 1740, 1700, 1780, 1750, 1730, 1760, 1770, 1750, 1740];
+    // Add the red capacity line with real data
     datasets.push({
         label: 'Capacidad Real Disponible',
-        data: availableHours,
+        data: realCapacity,
         type: 'line',
         borderColor: '#dc2626',
         backgroundColor: 'transparent',
@@ -249,9 +422,9 @@ function initializeOverviewSkillDistributionChart() {
 }
 
 /**
- * Initialize Overview Capacity by Profile Chart
+ * Initialize Overview Capacity by Profile Chart with REAL DATA
  */
-function initializeOverviewCapacityByProfileChart() {
+async function initializeOverviewCapacityByProfileChart() {
     const chartId = 'overview-capacity-by-profile-chart';
     const ctx = document.getElementById(chartId);
     if (!ctx) return;
@@ -259,12 +432,67 @@ function initializeOverviewCapacityByProfileChart() {
     // Destroy existing chart if it exists
     destroyChart(chartId);
     
-    const profiles = ['Project Management', 'Análisis', 'Diseño', 'Construcción', 'QA', 'General'];
-    const currentMonth = 'jul';
+    // Load real data from API
+    const { assignments, resources } = await loadAPIData();
     
-    const committedHours = calculateCommittedHoursByProfile(currentMonth);
-    const horasProyectos = profiles.map(profile => Math.round(committedHours[profile] * 0.8));
-    const horasEvolutivos = profiles.map(profile => Math.round(committedHours[profile] * 0.2));
+    // Get current month
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const currentYear = 2026;
+    
+    // Filter assignments for current month
+    const currentMonthAssignments = assignments.filter(a => 
+        a.month === currentMonth && a.year === currentYear
+    );
+    
+    // Calculate hours by skill and project type
+    const profiles = ['Project Management', 'Análisis', 'Diseño', 'Construcción', 'QA', 'General'];
+    const hoursProyecto = {};
+    const hoursEvolutivo = {};
+    
+    profiles.forEach(profile => {
+        hoursProyecto[profile] = 0;
+        hoursEvolutivo[profile] = 0;
+    });
+    
+    currentMonthAssignments.forEach(assignment => {
+        const hours = parseFloat(assignment.hours) || 0;
+        const skillName = assignment.skillName || 'General';
+        
+        // Get project type
+        let projectType = 'Proyecto';
+        if (window.allProjects && assignment.projectId) {
+            const project = window.allProjects.find(p => p.id === assignment.projectId);
+            if (project && project.type) {
+                projectType = project.type;
+            }
+        }
+        
+        // Add hours to corresponding skill and type
+        if (projectType === 'Proyecto') {
+            if (hoursProyecto[skillName] !== undefined) {
+                hoursProyecto[skillName] += hours;
+            } else {
+                hoursProyecto['General'] += hours;
+            }
+        } else if (projectType === 'Evolutivo') {
+            if (hoursEvolutivo[skillName] !== undefined) {
+                hoursEvolutivo[skillName] += hours;
+            } else {
+                hoursEvolutivo['General'] += hours;
+            }
+        }
+    });
+    
+    const horasProyectos = profiles.map(profile => hoursProyecto[profile]);
+    const horasEvolutivos = profiles.map(profile => hoursEvolutivo[profile]);
+    
+    console.log('Capacity by Profile Chart - Real Data:', {
+        currentMonth,
+        assignments: currentMonthAssignments.length,
+        hoursProyecto,
+        hoursEvolutivo
+    });
 
     chartInstances[chartId] = new Chart(ctx, {
         type: 'bar',
@@ -818,7 +1046,7 @@ function calculateCommittedHoursByProfile(month) {
 }
 
 /**
- * Initialize Matrix Hours by Type Chart (Vertical Bar Chart)
+ * Initialize Matrix Hours by Type Chart (Vertical Bar Chart) with REAL DATA
  */
 async function initializeMatrixHoursByTypeChart() {
     const chartId = 'matrix-hours-by-type-chart';
@@ -828,50 +1056,90 @@ async function initializeMatrixHoursByTypeChart() {
     // Destroy existing chart if it exists
     destroyChart(chartId);
     
-    // Import projectMetadata to get tipo information
-    const module = await import('../config/data.js');
-    const { projectMetadata } = module;
-    
-    const hoursByType = calculateHoursByType(projectMetadata);
-    
-    chartInstances[chartId] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Proyecto', 'Evolutivo'],
-            datasets: [{
-                label: 'Horas Totales',
-                data: [hoursByType.Proyecto, hoursByType.Evolutivo],
-                backgroundColor: ['#4db6ac', '#64b5f6'],
-                borderColor: ['#26a69a', '#42a5f5'],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Horas: ' + formatNumber(context.parsed.y);
+    try {
+        // Load real data from API
+        const { assignments } = await loadAPIData();
+        
+        // Calculate total hours by project type
+        let hoursProyectos = 0;
+        let hoursEvolutivos = 0;
+        
+        // Group hours by project type
+        const projectHours = {};
+        
+        assignments.forEach(assignment => {
+            const projectId = assignment.projectId;
+            if (!projectId) return;
+            
+            const hours = parseFloat(assignment.hours) || 0;
+            
+            if (!projectHours[projectId]) {
+                projectHours[projectId] = 0;
+            }
+            projectHours[projectId] += hours;
+        });
+        
+        // Sum by project type
+        Object.keys(projectHours).forEach(projectId => {
+            const project = window.allProjects?.find(p => p.id === projectId);
+            if (!project) return;
+            
+            const hours = projectHours[projectId];
+            
+            if (project.type === 'Proyecto') {
+                hoursProyectos += hours;
+            } else if (project.type === 'Evolutivo') {
+                hoursEvolutivos += hours;
+            }
+        });
+        
+        console.log('Matrix Hours by Type Chart - Real Data:', {
+            assignments: assignments.length,
+            hoursProyectos,
+            hoursEvolutivos
+        });
+        
+        chartInstances[chartId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Proyecto', 'Evolutivo'],
+                datasets: [{
+                    label: 'Horas Totales',
+                    data: [hoursProyectos, hoursEvolutivos],
+                    backgroundColor: ['#4db6ac', '#64b5f6'],
+                    borderColor: ['#26a69a', '#42a5f5'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Horas: ' + formatNumber(context.parsed.y);
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Horas' },
-                    ticks: {
-                        callback: function(value) {
-                            return formatNumber(value);
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Horas' },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value);
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error initializing Matrix Hours by Type Chart:', error);
+    }
 }
 
 /**
@@ -995,9 +1263,9 @@ function calculateHoursByDomain(projectMetadata) {
 }
 
 /**
- * Initialize Resources Committed Hours Chart (Vertical Bar Chart)
+ * Initialize Resources Committed Hours Chart (Vertical Bar Chart) with REAL DATA
  */
-function initializeResourcesCommittedHoursChart() {
+async function initializeResourcesCommittedHoursChart() {
     const chartId = 'resources-committed-hours-chart';
     const ctx = document.getElementById(chartId);
     if (!ctx) return;
@@ -1005,69 +1273,90 @@ function initializeResourcesCommittedHoursChart() {
     // Destroy existing chart if it exists
     destroyChart(chartId);
     
-    const tableData = extractResourceTableData();
-    const committedHours = tableData.committedByMonth;
-    const availableHours = tableData.availableByMonth;
+    try {
+        // Load real data from API
+        const { assignments, resources } = await loadAPIData();
+        
+        // Calculate real committed hours by month
+        const { hoursByMonth } = calculateRealHoursByMonth(assignments);
+        const realCapacity = calculateRealCapacity(resources);
+        
+        // Calculate available hours = capacity - committed
+        const availableHours = realCapacity.map((capacity, index) => {
+            const available = capacity - hoursByMonth[index];
+            return available > 0 ? available : 0;
+        });
+        
+        console.log('Resources Committed Hours Chart - Real Data:', {
+            assignments: assignments.length,
+            resources: resources.length,
+            committedHours: hoursByMonth,
+            capacity: realCapacity,
+            available: availableHours
+        });
 
-    chartInstances[chartId] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: monthLabels,
-            datasets: [
-                {
-                    label: 'Horas Comprometidas',
-                    data: committedHours,
-                    backgroundColor: '#9ca3af',
-                    borderColor: '#6b7280',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Horas Disponibles',
-                    data: availableHours,
-                    backgroundColor: '#10b981',
-                    borderColor: '#059669',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: { boxWidth: 12, padding: 8, font: { size: 10 } }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
+        chartInstances[chartId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Horas Comprometidas',
+                        data: hoursByMonth,
+                        backgroundColor: '#9ca3af',
+                        borderColor: '#6b7280',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Horas Disponibles',
+                        data: availableHours,
+                        backgroundColor: '#10b981',
+                        borderColor: '#059669',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 8, font: { size: 10 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += formatNumber(context.parsed.y);
+                                }
+                                return label;
                             }
-                            if (context.parsed.y !== null) {
-                                label += formatNumber(context.parsed.y);
-                            }
-                            return label;
                         }
                     }
-                }
-            },
-            scales: {
-                x: { stacked: false },
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Horas' },
-                    ticks: {
-                        callback: function(value) {
-                            return formatNumber(value);
+                },
+                scales: {
+                    x: { stacked: false },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Horas' },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value);
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error initializing Resources Committed Hours Chart:', error);
+    }
 }
 
 /**

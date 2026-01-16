@@ -30,7 +30,7 @@ export const handler = async (
           return await getResourceById(resourceId);
         } else {
           // GET /resources - Listar todos los recursos
-          return await listResources(event.queryStringParameters || {});
+          return await listResources(event.queryStringParameters || {}, event.headers || {});
         }
 
       case 'POST':
@@ -57,8 +57,11 @@ export const handler = async (
 /**
  * GET /resources - Listar recursos con filtros opcionales
  */
-async function listResources(queryParams: Record<string, string | undefined>): Promise<APIGatewayProxyResult> {
-  const { active, skill, team } = queryParams;
+async function listResources(queryParams: Record<string, string | undefined>, headers: Record<string, string | undefined>): Promise<APIGatewayProxyResult> {
+  const { active, skill, team: queryTeam } = queryParams;
+  
+  // Priorizar el team del header x-user-team sobre el query parameter
+  const team = headers['x-user-team'] || queryTeam;
 
   const resources = await prisma.resource.findMany({
     where: {

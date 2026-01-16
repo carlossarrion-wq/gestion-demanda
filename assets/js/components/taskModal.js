@@ -501,23 +501,21 @@ export class TaskModal {
                 headerName: 'Equipo',
                 field: 'equipo',
                 editable: true,
-                width: 120,
-                minWidth: 100,
+                width: 140,
+                minWidth: 120,
                 pinned: 'left',
                 cellEditor: 'agSelectCellEditor',
                 cellEditorParams: {
-                    values: ['PHP', 'Front', 'Mule', 'Backend', 'QA', 'DevOps', 'Análisis', 'Diseño']
+                    values: ['Conceptualización', 'Análisis', 'Diseño', 'Construcción', 'QA', 'Despliegue']
                 },
                 cellStyle: params => {
                     const colors = {
-                        'PHP': { background: 'rgba(77, 182, 172, 0.1)', color: '#00695c' },
-                        'Front': { background: 'rgba(100, 181, 246, 0.1)', color: '#1565c0' },
-                        'Mule': { background: 'rgba(255, 183, 77, 0.1)', color: '#e65100' },
-                        'Backend': { background: 'rgba(129, 199, 132, 0.1)', color: '#2e7d32' },
-                        'QA': { background: 'rgba(186, 104, 200, 0.1)', color: '#6a1b9a' },
-                        'DevOps': { background: 'rgba(144, 164, 174, 0.1)', color: '#455a64' },
+                        'Conceptualización': { background: 'rgba(129, 199, 132, 0.1)', color: '#2e7d32' },
                         'Análisis': { background: 'rgba(66, 153, 225, 0.1)', color: '#3182ce' },
-                        'Diseño': { background: 'rgba(236, 64, 122, 0.1)', color: '#d53f8c' }
+                        'Diseño': { background: 'rgba(236, 64, 122, 0.1)', color: '#d53f8c' },
+                        'Construcción': { background: 'rgba(255, 183, 77, 0.1)', color: '#e65100' },
+                        'QA': { background: 'rgba(186, 104, 200, 0.1)', color: '#6a1b9a' },
+                        'Despliegue': { background: 'rgba(77, 182, 172, 0.1)', color: '#00695c' }
                     };
                     return colors[params.value] || {};
                 }
@@ -819,6 +817,11 @@ export class TaskModal {
                         return;
                     }
                     
+                    // Extract month and year from date for KPI filtering
+                    const dateObj = new Date(key);
+                    const month = dateObj.getMonth() + 1; // 1-12
+                    const year = dateObj.getFullYear();
+                    
                     assignments.push({
                         projectId: this.projectId,
                         resourceId: resource.id,
@@ -826,6 +829,8 @@ export class TaskModal {
                         description: row.detalleTarea || '',
                         team: row.equipo || null,
                         date: key, // YYYY-MM-DD format
+                        month: month, // Add month for KPI filtering
+                        year: year, // Add year for KPI filtering
                         hours: parseFloat(row[key])
                     });
                 }

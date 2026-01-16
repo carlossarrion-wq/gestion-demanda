@@ -102,17 +102,17 @@ export function getPriorityText(priority) {
  * Accepts both numeric IDs and string keys
  */
 export function getStatusClass(status) {
-    // Numeric mapping (from database)
+    // Numeric mapping (from database - matches jiraHandler.ts)
     const numericStatusMap = {
-        1: 'idea',
-        2: 'concepto',
-        3: 'viabilidad',
-        4: 'diseno-detallado',
-        5: 'desarrollo',
+        0: 'cancelado',
+        1: 'concepto',
+        2: 'desarrollo',
+        3: 'diseno-detallado',
+        4: 'finalizado',
+        5: 'idea',
         6: 'implantado',
-        7: 'finalizado',
-        8: 'on-hold',
-        9: 'cancelado'
+        7: 'on-hold',
+        8: 'viabilidad'
     };
     
     // String mapping (legacy)
@@ -141,17 +141,17 @@ export function getStatusClass(status) {
  * Accepts both numeric IDs and string keys
  */
 export function getStatusText(status) {
-    // Numeric mapping (from database - matches validators.ts)
+    // Numeric mapping (from database - matches jiraHandler.ts)
     const numericStatusMap = {
-        1: 'Idea',
-        2: 'Concepto',
-        3: 'Viabilidad (TEC-ECO)',
-        4: 'Diseño Detallado',
-        5: 'Desarrollo',
+        0: 'Cancelado',
+        1: 'Concepto',
+        2: 'DESARROLLO',
+        3: 'Diseño Detallado',
+        4: 'Finalizado',
+        5: 'Idea',
         6: 'Implantado',
-        7: 'Finalizado',
-        8: 'On Hold',
-        9: 'Cancelado'
+        7: 'On hold',
+        8: 'Viabilidad (Tec-Eco)'
     };
     
     // String mapping (legacy)
@@ -180,20 +180,17 @@ export function getStatusText(status) {
  * Accepts both numeric IDs and string keys
  */
 export function getDomainText(domain) {
-    // Numeric mapping (from database - matches validators.ts)
+    // Numeric mapping (from database - matches jiraHandler.ts)
     const numericDomainMap = {
-        1: 'Atención',
-        2: 'Datos',
-        3: 'Facturación y Cobros',
-        4: 'Ciclo de Vida y Producto',
+        0: 'Ninguno',
+        1: 'Ventas | Contratación y SW',
+        2: 'Ciclo de Vida y Producto',
+        3: 'Facturación y Cobro',
+        4: 'Atención',
         5: 'Operación de Sistemas y Ciberseguridad',
-        6: 'Ventas | Contratación y SW',
+        6: 'Datos',
         7: 'Portabilidad',
-        8: 'Integración',
-        9: 'Industrial',
-        10: 'Gen. Distribuida',
-        11: 'IA Gen',
-        12: 'Ninguno'
+        8: 'Integración'
     };
     
     // String mapping (legacy)

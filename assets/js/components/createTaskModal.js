@@ -191,13 +191,33 @@ export class CreateTaskModal {
 
         // Get form data
         const formData = new FormData(form);
+        const month = parseInt(formData.get('month'));
+        const year = parseInt(formData.get('year'));
+        const hours = parseFloat(formData.get('hours'));
+        
+        // Additional validation for month, year, and hours
+        if (!month || isNaN(month) || month < 1 || month > 12) {
+            showNotification('Por favor selecciona un mes válido (1-12)', 'error');
+            return;
+        }
+        
+        if (!year || isNaN(year) || year < 2024 || year > 2030) {
+            showNotification('Por favor selecciona un año válido (2024-2030)', 'error');
+            return;
+        }
+        
+        if (!hours || isNaN(hours) || hours <= 0) {
+            showNotification('Las horas deben ser un número mayor que 0', 'error');
+            return;
+        }
+        
         const taskData = {
             projectId: this.projectId,
             title: formData.get('title'),
             description: formData.get('description') || '',
-            month: parseInt(formData.get('month')),
-            year: parseInt(formData.get('year')),
-            hours: parseFloat(formData.get('hours')),
+            month: month,
+            year: year,
+            hours: hours,
             skillName: formData.get('skillName') || '',
             resourceId: null // Initially unassigned
         };

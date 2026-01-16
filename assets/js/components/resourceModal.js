@@ -356,8 +356,16 @@ export async function saveResource() {
         proficiency: null  // Could be enhanced to allow proficiency selection
     }));
     
+    // Generate resource code from name (initials + timestamp)
+    const resourceName = document.getElementById('resourceName').value.trim();
+    const nameParts = resourceName.split(' ');
+    const initials = nameParts.map(part => part.charAt(0).toUpperCase()).join('');
+    const timestamp = Date.now().toString().slice(-4);
+    const resourceCode = `${initials}${timestamp}`;
+    
     const formData = {
-        name: document.getElementById('resourceName').value.trim(),
+        code: resourceCode,  // Add auto-generated code
+        name: resourceName,
         email: emailValue === '' ? null : emailValue,
         team: document.getElementById('resourceTeam').value,
         defaultCapacity: parseInt(document.getElementById('resourceDefaultCapacity').value, 10),

@@ -19,7 +19,7 @@ const handler = async (event) => {
                     return await getResourceById(resourceId);
                 }
                 else {
-                    return await listResources(event.queryStringParameters || {});
+                    return await listResources(event.queryStringParameters || {}, event.headers || {});
                 }
             case 'POST':
                 return await createResource(event.body);
@@ -39,8 +39,9 @@ const handler = async (event) => {
     }
 };
 exports.handler = handler;
-async function listResources(queryParams) {
-    const { active, skill, team } = queryParams;
+async function listResources(queryParams, headers) {
+    const { active, skill, team: queryTeam } = queryParams;
+    const team = headers['x-user-team'] || queryTeam;
     const resources = await prisma_1.prisma.resource.findMany({
         where: {
             ...(active !== undefined && { active: active === 'true' }),
